@@ -636,7 +636,7 @@ async def seed_security_demo_data(db: AsyncSession) -> dict:
     compliance_count = 0
     for f in COMPLIANCE_FINDINGS:
         card_name = f.get("card_name")
-        card_id: uuid.UUID | None = None
+        card_id = None
         if card_name:
             card_id = name_to_id.get(card_name)
             if not card_id:
