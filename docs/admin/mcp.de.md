@@ -159,6 +159,10 @@ Der MCP-Server bietet **schreibgeschützten** Zugriff auf EA-Daten. Er kann nich
 
 ### Werkzeuge
 
+Der Server stellt 26 schreibgeschützte Werkzeuge in sechs Gruppen bereit.
+
+**Karten & Metamodell**
+
 | Werkzeug | Beschreibung |
 |----------|-------------|
 | `search_cards` | Karten nach Typ, Status oder Freitext suchen und filtern |
@@ -167,8 +171,58 @@ Der MCP-Server bietet **schreibgeschützten** Zugriff auf EA-Daten. Er kann nich
 | `get_card_hierarchy` | Vorfahren und Kinder einer Karte abrufen |
 | `list_card_types` | Alle Kartentypen im Metamodell auflisten |
 | `get_relation_types` | Beziehungstypen auflisten, optional nach Kartentyp gefiltert |
-| `get_dashboard` | KPI-Dashboard-Daten abrufen (Anzahl, Datenqualität, Genehmigungen) |
-| `get_landscape` | Karten gruppiert nach einem verwandten Typ abrufen |
+
+**Dashboards**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `get_dashboard` | KPI-Dashboard (Anzahl, Datenqualität, Genehmigungen, Aktivität) |
+| `get_landscape` | Karten eines Typs gruppiert nach einem verwandten Typ |
+
+**GRC — Risikoregister**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `list_risks` | Paginierte, filterbare Liste der EA-Risiken (TOGAF Phase G) |
+| `get_risk` | Detail eines einzelnen Risikos mit verknüpften Karten und Audit |
+| `get_risk_metrics` | KPIs + 4×4-Matrizen für initial und residual |
+| `get_card_risks` | Alle Risiken, die aktuell mit einer Karte verknüpft sind |
+
+**GRC — Sicherheit & Compliance**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `list_cve_findings` | CVE-Befunde mit Filtern Schweregrad / Wahrscheinlichkeit / Status |
+| `list_compliance_findings` | Compliance-Befunde gebündelt nach Regulierung |
+| `get_security_overview` | KPIs + Risiko-Matrix + Top-kritische Befunde |
+
+**Governance & Bereitstellung**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `list_principles` | Veröffentlichte EA-Prinzipien (Aussage, Begründung, Auswirkungen) |
+| `list_adrs` | Architekturentscheidungen (ADRs), gefiltert nach Initiative / Status |
+| `get_adr` | Einzelnes ADR mit Abschnitten, verknüpften Karten und Unterschriftspfad |
+| `list_soaws` | Statements of Architecture Work einer Initiative |
+
+**Berichte**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `get_portfolio_report` | Bubble-Chart-Daten für einen Kartentyp (Default: funktionaler × technischer Fit) |
+| `get_cost_treemap` | Treemap der Kosten, optional gruppiert nach verwandtem Typ |
+| `get_capability_heatmap` | Hierarchische Business-Capability-Heatmap |
+| `get_data_quality_report` | Vollständigkeits-Aufschlüsselung pro Kartentyp |
+
+**Karten-Kontext**
+
+| Werkzeug | Beschreibung |
+|----------|-------------|
+| `get_card_stakeholders` | Der Karte zugewiesene Nutzer + Rollen |
+| `get_card_comments` | Kommentar-Threads einer Karte |
+| `get_card_documents` | Dokument-Links an einer Karte (URLs, keine Dateien) |
+
+Alle Werkzeuge respektieren das RBAC des authentifizierten Nutzers — eine Viewerin erhält für unzugängliche Bereiche eine leere Liste (oder 403); auf MCP-Ebene ist keine Pro-Tool-Konfiguration nötig.
 
 ### Ressourcen
 

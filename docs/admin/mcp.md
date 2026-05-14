@@ -159,6 +159,10 @@ The MCP server provides **read-only** access to EA data. It cannot create, modif
 
 ### Tools
 
+The server exposes 26 read-only tools grouped into six clusters.
+
+**Cards & metamodel**
+
 | Tool | Description |
 |------|-------------|
 | `search_cards` | Search and filter cards by type, status, or free text |
@@ -167,8 +171,58 @@ The MCP server provides **read-only** access to EA data. It cannot create, modif
 | `get_card_hierarchy` | Get ancestors and children of a card |
 | `list_card_types` | List all card types in the metamodel |
 | `get_relation_types` | List relation types, optionally filtered by card type |
-| `get_dashboard` | Get KPI dashboard data (counts, data quality, approvals) |
-| `get_landscape` | Get cards grouped by a related type |
+
+**Dashboards**
+
+| Tool | Description |
+|------|-------------|
+| `get_dashboard` | KPI dashboard (counts, data quality, approvals, activity) |
+| `get_landscape` | Cards of one type grouped by a related type |
+
+**GRC — Risk Register**
+
+| Tool | Description |
+|------|-------------|
+| `list_risks` | Paginated, filterable EA risk listing (TOGAF Phase G) |
+| `get_risk` | Single risk detail with linked cards + audit trail |
+| `get_risk_metrics` | KPIs + 4×4 initial / residual probability × impact matrices |
+| `get_card_risks` | All risks currently linked to a specific card |
+
+**GRC — Security & Compliance**
+
+| Tool | Description |
+|------|-------------|
+| `list_cve_findings` | CVE findings with severity / probability / status filters |
+| `list_compliance_findings` | Compliance findings bundled by regulation |
+| `get_security_overview` | KPIs + risk matrix + top critical findings |
+
+**Governance & Delivery**
+
+| Tool | Description |
+|------|-------------|
+| `list_principles` | Published EA principles (statement, rationale, implications) |
+| `list_adrs` | Architecture Decision Records, filterable by initiative / status |
+| `get_adr` | Single ADR with sections, linked cards, signature trail |
+| `list_soaws` | Statements of Architecture Work for an initiative |
+
+**Reports**
+
+| Tool | Description |
+|------|-------------|
+| `get_portfolio_report` | Bubble-chart data for a card type (functional × technical fit by default) |
+| `get_cost_treemap` | Treemap of card cost, optionally grouped by a related type |
+| `get_capability_heatmap` | Hierarchical business-capability heatmap |
+| `get_data_quality_report` | Per-card-type completeness breakdown |
+
+**Card context**
+
+| Tool | Description |
+|------|-------------|
+| `get_card_stakeholders` | Users + roles assigned to a card |
+| `get_card_comments` | Threaded comments on a card |
+| `get_card_documents` | Document links attached to a card |
+
+All tools are bound by the authenticated user's RBAC — a viewer will simply get an empty list (or 403) for areas they cannot see; nothing on the MCP layer needs configuring per tool.
 
 ### Resources
 

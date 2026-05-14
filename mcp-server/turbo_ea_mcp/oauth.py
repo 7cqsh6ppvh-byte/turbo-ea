@@ -91,11 +91,15 @@ class OAuthStore:
     def cleanup_expired(self) -> None:
         now = time.time()
         # Pending auths
-        expired = [k for k, v in self.pending.items() if now - v.created_at > AUTH_CODE_TTL]
+        expired = [
+            k for k, v in self.pending.items() if now - v.created_at > AUTH_CODE_TTL
+        ]
         for k in expired:
             del self.pending[k]
         # Auth codes
-        expired = [k for k, v in self.codes.items() if now - v.created_at > AUTH_CODE_TTL]
+        expired = [
+            k for k, v in self.codes.items() if now - v.created_at > AUTH_CODE_TTL
+        ]
         for k in expired:
             del self.codes[k]
 
@@ -123,29 +127,33 @@ async def _get_sso_config() -> dict:
 
 async def protected_resource_metadata(_request: Request) -> Response:
     """RFC 9728 — tells AI tools where our authorization server is."""
-    return JSONResponse({
-        "resource": MCP_PUBLIC_URL,
-        "authorization_servers": [MCP_PUBLIC_URL],
-        "scopes_supported": ["mcp:read"],
-        "bearer_methods_supported": ["header"],
-        "resource_name": "Turbo EA",
-    })
+    return JSONResponse(
+        {
+            "resource": MCP_PUBLIC_URL,
+            "authorization_servers": [MCP_PUBLIC_URL],
+            "scopes_supported": ["mcp:read"],
+            "bearer_methods_supported": ["header"],
+            "resource_name": "Turbo EA",
+        }
+    )
 
 
 async def authorization_server_metadata(_request: Request) -> Response:
     """RFC 8414 — tells AI tools how to authenticate."""
     base = MCP_PUBLIC_URL.rstrip("/")
-    return JSONResponse({
-        "issuer": base,
-        "authorization_endpoint": f"{base}/oauth/authorize",
-        "token_endpoint": f"{base}/oauth/token",
-        "registration_endpoint": f"{base}/oauth/register",
-        "response_types_supported": ["code"],
-        "grant_types_supported": ["authorization_code", "refresh_token"],
-        "code_challenge_methods_supported": ["S256"],
-        "scopes_supported": ["mcp:read"],
-        "token_endpoint_auth_methods_supported": ["none"],
-    })
+    return JSONResponse(
+        {
+            "issuer": base,
+            "authorization_endpoint": f"{base}/oauth/authorize",
+            "token_endpoint": f"{base}/oauth/token",
+            "registration_endpoint": f"{base}/oauth/register",
+            "response_types_supported": ["code"],
+            "grant_types_supported": ["authorization_code", "refresh_token"],
+            "code_challenge_methods_supported": ["S256"],
+            "scopes_supported": ["mcp:read"],
+            "token_endpoint_auth_methods_supported": ["none"],
+        }
+    )
 
 
 # ── Dynamic Client Registration (RFC 7591) ─────────────────────────────────
@@ -162,14 +170,17 @@ async def register_client(request: Request) -> Response:
     client_name = body.get("client_name", "MCP Client")
     redirect_uris = body.get("redirect_uris", [])
 
-    return JSONResponse({
-        "client_id": client_id,
-        "client_name": client_name,
-        "redirect_uris": redirect_uris,
-        "grant_types": ["authorization_code", "refresh_token"],
-        "response_types": ["code"],
-        "token_endpoint_auth_method": "none",
-    }, status_code=201)
+    return JSONResponse(
+        {
+            "client_id": client_id,
+            "client_name": client_name,
+            "redirect_uris": redirect_uris,
+            "grant_types": ["authorization_code", "refresh_token"],
+            "response_types": ["code"],
+            "token_endpoint_auth_method": "none",
+        },
+        status_code=201,
+    )
 
 
 # ── Authorization endpoint ──────────────────────────────────────────────────
@@ -189,9 +200,7 @@ async def authorize(request: Request) -> Response:
     code_challenge_method = params.get("code_challenge_method", "")
 
     if response_type != "code":
-        return JSONResponse(
-            {"error": "unsupported_response_type"}, status_code=400
-        )
+        return JSONResponse({"error": "unsupported_response_type"}, status_code=400)
     if not code_challenge or code_challenge_method != "S256":
         return JSONResponse(
             {"error": "invalid_request", "error_description": "PKCE S256 required"},
@@ -261,9 +270,14 @@ async def sso_callback(request: Request) -> Response:
     params = request.query_params
     error = params.get("error")
     if error:
-        logger.warning("SSO callback error: %s — %s", error, params.get("error_description", ""))
+        logger.warning(
+            "SSO callback error: %s — %s", error, params.get("error_description", "")
+        )
         return JSONResponse(
-            {"error": "access_denied", "error_description": "SSO authentication failed"},
+            {
+                "error": "access_denied",
+                "error_description": "SSO authentication failed",
+            },
             status_code=403,
         )
 
@@ -276,7 +290,10 @@ async def sso_callback(request: Request) -> Response:
     pending = store.pending.pop(internal_state, None)
     if not pending:
         return JSONResponse(
-            {"error": "invalid_request", "error_description": "Unknown or expired state"},
+            {
+                "error": "invalid_request",
+                "error_description": "Unknown or expired state",
+            },
             status_code=400,
         )
 
@@ -287,21 +304,29 @@ async def sso_callback(request: Request) -> Response:
     except Exception:
         logger.exception("Failed to exchange SSO code with Turbo EA backend")
         # Redirect back to the AI tool with an error
-        error_params = urlencode({
-            "error": "server_error",
-            "error_description": "Token exchange failed",
-            "state": pending.state,
-        })
-        return RedirectResponse(f"{pending.redirect_uri}?{error_params}", status_code=302)
+        error_params = urlencode(
+            {
+                "error": "server_error",
+                "error_description": "Token exchange failed",
+                "state": pending.state,
+            }
+        )
+        return RedirectResponse(
+            f"{pending.redirect_uri}?{error_params}", status_code=302
+        )
 
     turbo_jwt = data.get("access_token", "")
     if not turbo_jwt:
-        error_params = urlencode({
-            "error": "server_error",
-            "error_description": "No token received",
-            "state": pending.state,
-        })
-        return RedirectResponse(f"{pending.redirect_uri}?{error_params}", status_code=302)
+        error_params = urlencode(
+            {
+                "error": "server_error",
+                "error_description": "No token received",
+                "state": pending.state,
+            }
+        )
+        return RedirectResponse(
+            f"{pending.redirect_uri}?{error_params}", status_code=302
+        )
 
     # Generate our own authorization code for the AI tool
     our_code = secrets.token_urlsafe(48)
@@ -316,7 +341,9 @@ async def sso_callback(request: Request) -> Response:
 
     # Redirect back to the AI tool with the authorization code
     redirect_params = urlencode({"code": our_code, "state": pending.state})
-    return RedirectResponse(f"{pending.redirect_uri}?{redirect_params}", status_code=302)
+    return RedirectResponse(
+        f"{pending.redirect_uri}?{redirect_params}", status_code=302
+    )
 
 
 # ── Token endpoint ──────────────────────────────────────────────────────────
@@ -398,13 +425,15 @@ async def _handle_code_exchange(body: dict) -> Response:
     )
     store.refresh_tokens[refresh_token] = access_token
 
-    return JSONResponse({
-        "access_token": access_token,
-        "token_type": "Bearer",
-        "expires_in": ACCESS_TOKEN_TTL,
-        "refresh_token": refresh_token,
-        "scope": auth_code.scope,
-    })
+    return JSONResponse(
+        {
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": ACCESS_TOKEN_TTL,
+            "refresh_token": refresh_token,
+            "scope": auth_code.scope,
+        }
+    )
 
 
 async def _handle_refresh(body: dict) -> Response:
@@ -441,7 +470,10 @@ async def _handle_refresh(body: dict) -> Response:
         store.tokens.pop(old_access, None)
         store.refresh_tokens.pop(refresh_token, None)
         return JSONResponse(
-            {"error": "invalid_grant", "error_description": "Session expired, re-authenticate"},
+            {
+                "error": "invalid_grant",
+                "error_description": "Session expired, re-authenticate",
+            },
             status_code=400,
         )
 
@@ -460,13 +492,15 @@ async def _handle_refresh(body: dict) -> Response:
     )
     store.refresh_tokens[new_refresh] = new_access
 
-    return JSONResponse({
-        "access_token": new_access,
-        "token_type": "Bearer",
-        "expires_in": ACCESS_TOKEN_TTL,
-        "refresh_token": new_refresh,
-        "scope": old_entry.scope,
-    })
+    return JSONResponse(
+        {
+            "access_token": new_access,
+            "token_type": "Bearer",
+            "expires_in": ACCESS_TOKEN_TTL,
+            "refresh_token": new_refresh,
+            "scope": old_entry.scope,
+        }
+    )
 
 
 # ── Token resolution (used by the MCP server on each request) ──────────────

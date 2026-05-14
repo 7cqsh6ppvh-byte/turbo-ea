@@ -159,6 +159,10 @@ Le serveur MCP fournit un accès **en lecture seule** aux données EA. Il ne peu
 
 ### Outils
 
+Le serveur expose 26 outils en lecture seule, regroupés en six clusters.
+
+**Fiches & métamodèle**
+
 | Outil | Description |
 |-------|-------------|
 | `search_cards` | Rechercher et filtrer les fiches par type, statut ou texte libre |
@@ -167,8 +171,58 @@ Le serveur MCP fournit un accès **en lecture seule** aux données EA. Il ne peu
 | `get_card_hierarchy` | Obtenir les ancêtres et enfants d'une fiche |
 | `list_card_types` | Lister tous les types de fiche du métamodèle |
 | `get_relation_types` | Lister les types de relation, avec filtre optionnel par type de fiche |
-| `get_dashboard` | Obtenir les données du tableau de bord KPI (comptages, qualité des données, approbations) |
-| `get_landscape` | Obtenir les fiches groupées par un type lié |
+
+**Tableaux de bord**
+
+| Outil | Description |
+|-------|-------------|
+| `get_dashboard` | Tableau de bord KPI (comptages, qualité des données, approbations, activité) |
+| `get_landscape` | Fiches d'un type regroupées par un type lié |
+
+**GRC — Registre des risques**
+
+| Outil | Description |
+|-------|-------------|
+| `list_risks` | Liste paginée et filtrable du registre des risques EA (TOGAF Phase G) |
+| `get_risk` | Détail d'un risque avec fiches liées et piste d'audit |
+| `get_risk_metrics` | KPIs + matrices 4×4 initiales et résiduelles |
+| `get_card_risks` | Tous les risques actuellement liés à une fiche |
+
+**GRC — Sécurité & Conformité**
+
+| Outil | Description |
+|-------|-------------|
+| `list_cve_findings` | Constats CVE filtrables par gravité / probabilité / statut |
+| `list_compliance_findings` | Constats de conformité regroupés par régulation |
+| `get_security_overview` | KPIs + matrice de risque + top constats critiques |
+
+**Gouvernance & Livraison**
+
+| Outil | Description |
+|-------|-------------|
+| `list_principles` | Principes EA publiés (énoncé, justification, implications) |
+| `list_adrs` | Architecture Decision Records, filtrables par initiative / statut |
+| `get_adr` | ADR unique avec sections, fiches liées et piste de signature |
+| `list_soaws` | Statements of Architecture Work d'une initiative |
+
+**Rapports**
+
+| Outil | Description |
+|-------|-------------|
+| `get_portfolio_report` | Données du graphique à bulles pour un type de fiche (défaut : fit fonctionnel × technique) |
+| `get_cost_treemap` | Treemap des coûts, optionnellement groupé par un type lié |
+| `get_capability_heatmap` | Heatmap hiérarchique des capacités métier |
+| `get_data_quality_report` | Ventilation de la complétude par type de fiche |
+
+**Contexte de fiche**
+
+| Outil | Description |
+|-------|-------------|
+| `get_card_stakeholders` | Utilisateurs + rôles affectés à la fiche |
+| `get_card_comments` | Fil de commentaires d'une fiche |
+| `get_card_documents` | Liens documentaires attachés à une fiche (URL, pas de fichiers) |
+
+Tous les outils respectent le RBAC de l'utilisateur authentifié — un visualiseur recevra simplement une liste vide (ou 403) pour ce qu'il ne peut pas voir ; aucune configuration par outil n'est nécessaire au niveau MCP.
 
 ### Ressources
 

@@ -13,6 +13,7 @@ Create Date: 2026-05-14
 from typing import Union
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from alembic import op
 
@@ -54,6 +55,74 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    raise NotImplementedError(
-        "The CVE scanner feature has been removed permanently; this migration is one-way."
+    # Recreates the table + indexes so the rollback test (and any manual
+    # downgrade) can run. Row data — CVE findings, the risks promoted from
+    # them, their card joins and Todos, and the matching analysis-run history —
+    # is destroyed on upgrade and cannot be reconstructed; only the schema is
+    # restored.
+    op.create_table(
+        "turbolens_cve_findings",
+        sa.Column("id", UUID(as_uuid=True), primary_key=True),
+        sa.Column(
+            "run_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("turbolens_analysis_runs.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "card_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("cards.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("card_type", sa.String(64), nullable=False),
+        sa.Column("cve_id", sa.String(32), nullable=False),
+        sa.Column("vendor", sa.String(255), nullable=False, server_default=""),
+        sa.Column("product", sa.String(255), nullable=False, server_default=""),
+        sa.Column("version", sa.String(128), nullable=True),
+        sa.Column("cvss_score", sa.Float(), nullable=True),
+        sa.Column("cvss_vector", sa.String(128), nullable=True),
+        sa.Column("severity", sa.String(16), nullable=False, server_default="unknown"),
+        sa.Column("attack_vector", sa.String(16), nullable=True),
+        sa.Column("exploitability_score", sa.Float(), nullable=True),
+        sa.Column("impact_score", sa.Float(), nullable=True),
+        sa.Column("patch_available", sa.Boolean(), nullable=False, server_default=sa.false()),
+        sa.Column("published_date", sa.Date(), nullable=True),
+        sa.Column("last_modified_date", sa.Date(), nullable=True),
+        sa.Column("description", sa.Text(), nullable=False, server_default=""),
+        sa.Column("nvd_references", JSONB, nullable=True),
+        sa.Column("priority", sa.String(16), nullable=False, server_default="medium"),
+        sa.Column("probability", sa.String(16), nullable=False, server_default="medium"),
+        sa.Column("business_impact", sa.Text(), nullable=True),
+        sa.Column("remediation", sa.Text(), nullable=True),
+        sa.Column("status", sa.String(16), nullable=False, server_default="open"),
+        sa.Column(
+            "risk_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("risks.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
+    op.create_index(
+        "ix_turbolens_cve_findings_card_id_severity",
+        "turbolens_cve_findings",
+        ["card_id", "severity"],
+    )
+    op.create_index("ix_turbolens_cve_findings_run_id", "turbolens_cve_findings", ["run_id"])
+    op.create_index("ix_turbolens_cve_findings_status", "turbolens_cve_findings", ["status"])
+    op.create_index("ix_turbolens_cve_findings_cve_id", "turbolens_cve_findings", ["cve_id"])
+    op.create_index("ix_turbolens_cve_findings_severity", "turbolens_cve_findings", ["severity"])
+    op.create_index("ix_turbolens_cve_findings_priority", "turbolens_cve_findings", ["priority"])
+    op.create_index("ix_turbolens_cve_findings_risk_id", "turbolens_cve_findings", ["risk_id"])

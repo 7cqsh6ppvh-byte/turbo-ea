@@ -70,9 +70,7 @@ async def login(email: str, password: str) -> str:
         ) from exc
     except httpx.HTTPStatusError as exc:
         if exc.response.status_code == 401:
-            raise ValueError(
-                "Login failed: invalid email or password."
-            ) from exc
+            raise ValueError("Login failed: invalid email or password.") from exc
         raise ValueError(
             f"Login failed: HTTP {exc.response.status_code} from {url}"
         ) from exc

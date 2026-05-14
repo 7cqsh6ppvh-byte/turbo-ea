@@ -56,9 +56,13 @@ class TestJwtExpiry:
 
         header = base64.urlsafe_b64encode(b'{"alg":"HS256"}').rstrip(b"=").decode()
         exp = int(time.time()) + 3600
-        payload = base64.urlsafe_b64encode(
-            json.dumps({"sub": "user-id", "exp": exp}).encode()
-        ).rstrip(b"=").decode()
+        payload = (
+            base64.urlsafe_b64encode(
+                json.dumps({"sub": "user-id", "exp": exp}).encode()
+            )
+            .rstrip(b"=")
+            .decode()
+        )
         sig = base64.urlsafe_b64encode(b"fake-signature").rstrip(b"=").decode()
         token = f"{header}.{payload}.{sig}"
 

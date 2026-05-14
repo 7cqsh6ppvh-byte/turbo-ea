@@ -159,6 +159,10 @@ Il server MCP fornisce accesso **in sola lettura** ai dati EA. Non può creare, 
 
 ### Strumenti
 
+Il server espone 26 strumenti in sola lettura raggruppati in sei cluster.
+
+**Card & metamodello**
+
 | Strumento | Descrizione |
 |-----------|-------------|
 | `search_cards` | Cercare e filtrare le card per tipo, stato o testo libero |
@@ -167,8 +171,58 @@ Il server MCP fornisce accesso **in sola lettura** ai dati EA. Non può creare, 
 | `get_card_hierarchy` | Ottenere antenati e figli di una card |
 | `list_card_types` | Elencare tutti i tipi di card nel metamodello |
 | `get_relation_types` | Elencare i tipi di relazione, con filtro opzionale per tipo di card |
-| `get_dashboard` | Ottenere i dati del dashboard KPI (conteggi, qualità dei dati, approvazioni) |
-| `get_landscape` | Ottenere le card raggruppate per un tipo correlato |
+
+**Dashboard**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `get_dashboard` | Dashboard KPI (conteggi, qualità dei dati, approvazioni, attività) |
+| `get_landscape` | Card di un tipo raggruppate per un tipo correlato |
+
+**GRC — Registro dei rischi**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `list_risks` | Elenco paginato e filtrabile dei rischi EA (TOGAF Fase G) |
+| `get_risk` | Dettaglio di un rischio con card collegate e percorso di audit |
+| `get_risk_metrics` | KPI + matrici 4×4 iniziale e residua |
+| `get_card_risks` | Tutti i rischi attualmente collegati a una card |
+
+**GRC — Sicurezza & Conformità**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `list_cve_findings` | Riscontri CVE filtrabili per gravità / probabilità / stato |
+| `list_compliance_findings` | Riscontri di conformità raggruppati per regolamento |
+| `get_security_overview` | KPI + matrice del rischio + riscontri critici principali |
+
+**Governance & Consegna**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `list_principles` | Principi EA pubblicati (enunciato, motivazione, implicazioni) |
+| `list_adrs` | Architecture Decision Records, filtrabili per iniziativa / stato |
+| `get_adr` | ADR singolo con sezioni, card collegate e percorso di firma |
+| `list_soaws` | Statements of Architecture Work di un'iniziativa |
+
+**Report**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `get_portfolio_report` | Dati di grafico a bolle per un tipo di card (default: fit funzionale × tecnico) |
+| `get_cost_treemap` | Treemap dei costi, opzionalmente raggruppato per un tipo correlato |
+| `get_capability_heatmap` | Heatmap gerarchica delle capacità di business |
+| `get_data_quality_report` | Suddivisione della completezza per tipo di card |
+
+**Contesto card**
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `get_card_stakeholders` | Utenti + ruoli assegnati a una card |
+| `get_card_comments` | Thread di commenti di una card |
+| `get_card_documents` | Link a documenti allegati a una card (URL, non file) |
+
+Tutti gli strumenti rispettano l'RBAC dell'utente autenticato — un visualizzatore riceverà semplicemente una lista vuota (o 403) per ciò che non può vedere; non serve alcuna configurazione per-tool a livello MCP.
 
 ### Risorse
 

@@ -159,6 +159,10 @@ El servidor MCP proporciona acceso **solo de lectura** a los datos de EA. No pue
 
 ### Herramientas
 
+El servidor expone 26 herramientas de solo lectura agrupadas en seis clusters.
+
+**Fichas y metamodelo**
+
 | Herramienta | Descripción |
 |-------------|-------------|
 | `search_cards` | Buscar y filtrar fichas por tipo, estado o texto libre |
@@ -167,8 +171,58 @@ El servidor MCP proporciona acceso **solo de lectura** a los datos de EA. No pue
 | `get_card_hierarchy` | Obtener ancestros e hijos de una ficha |
 | `list_card_types` | Listar todos los tipos de ficha del metamodelo |
 | `get_relation_types` | Listar tipos de relación, opcionalmente filtrados por tipo de ficha |
-| `get_dashboard` | Obtener datos del panel de KPIs (conteos, calidad de datos, aprobaciones) |
-| `get_landscape` | Obtener fichas agrupadas por un tipo relacionado |
+
+**Paneles**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `get_dashboard` | Panel de KPIs (conteos, calidad de datos, aprobaciones, actividad) |
+| `get_landscape` | Fichas de un tipo agrupadas por un tipo relacionado |
+
+**GRC — Registro de riesgos**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `list_risks` | Listado paginado y filtrable del registro de riesgos EA (TOGAF Fase G) |
+| `get_risk` | Detalle de un riesgo con fichas vinculadas y pista de auditoría |
+| `get_risk_metrics` | KPIs + matrices 4×4 inicial y residual |
+| `get_card_risks` | Todos los riesgos vinculados a una ficha |
+
+**GRC — Seguridad y cumplimiento**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `list_cve_findings` | Hallazgos CVE con filtros de severidad / probabilidad / estado |
+| `list_compliance_findings` | Hallazgos de cumplimiento agrupados por regulación |
+| `get_security_overview` | KPIs + matriz de riesgo + hallazgos críticos principales |
+
+**Gobernanza y entrega**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `list_principles` | Principios EA publicados (declaración, justificación, implicaciones) |
+| `list_adrs` | Architecture Decision Records, filtrables por iniciativa / estado |
+| `get_adr` | ADR individual con secciones, fichas vinculadas y trazado de firmas |
+| `list_soaws` | Statements of Architecture Work de una iniciativa |
+
+**Informes**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `get_portfolio_report` | Datos de gráfico de burbujas para un tipo de ficha (por defecto: ajuste funcional × técnico) |
+| `get_cost_treemap` | Mapa de árbol de costes, opcionalmente agrupado por un tipo relacionado |
+| `get_capability_heatmap` | Mapa de calor jerárquico de capacidades de negocio |
+| `get_data_quality_report` | Desglose de completitud por tipo de ficha |
+
+**Contexto de ficha**
+
+| Herramienta | Descripción |
+|-------------|-------------|
+| `get_card_stakeholders` | Usuarios + roles asignados a la ficha |
+| `get_card_comments` | Hilo de comentarios de una ficha |
+| `get_card_documents` | Enlaces a documentos adjuntos a una ficha (URL, no archivos) |
+
+Todas las herramientas respetan el RBAC del usuario autenticado — una visualizadora recibirá simplemente una lista vacía (o 403) para lo que no puede ver; no hace falta configurar nada por herramienta a nivel MCP.
 
 ### Recursos
 
