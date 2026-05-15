@@ -119,7 +119,7 @@ Wenn ein aus einem Befund promotetes Risiko geschlossen oder akzeptiert wird, **
 
 ### Compliance auf einer einzelnen Karte
 
-Karten, die im Scope eines Compliance-Scans liegen, zeigen außerdem einen **Compliance**-Reiter auf ihrer Detailseite (durch `security_compliance.view` gesteuert). Er listet jeden Befund, der aktuell mit der Karte verknüpft ist, mit denselben Aktionen Acknowledge / Accept / **Risiko erstellen** / **Risiko öffnen** wie die GRC-Ansicht — sodass ein Application Owner seine Befunde triagieren kann, ohne die Karte zu verlassen.
+Karten, die im Scope eines Compliance-Scans liegen, zeigen außerdem einen **Compliance**-Reiter auf ihrer Detailseite (durch `security_compliance.view` gesteuert). Er listet jeden Befund, der aktuell mit der Karte verknüpft ist, mit denselben Aktionen Acknowledge / Accept / **Risiko erstellen** / **Risiko öffnen** wie die GRC-Ansicht — sodass ein Application Owner seine Befunde triagieren kann, ohne die Karte zu verlassen. Dieselbe Regel gilt für den **Risiken**-Reiter in den Kartendetails: beide Reiter erscheinen nur, wenn die Karte tatsächlich verknüpfte Einträge hat, sodass Karten ohne GRC-Aktivität keine leeren Reiter mitschleppen.
 
 ## Berechtigungen
 

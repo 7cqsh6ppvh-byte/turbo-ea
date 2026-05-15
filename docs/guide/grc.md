@@ -131,7 +131,7 @@ Closing or accepting a Risk that was promoted from a finding **propagates back t
 
 ![Card detail — Compliance tab](../assets/img/en/56_card_compliance_tab.png)
 
-Cards that are in scope of a compliance scan also surface a **Compliance** tab on their detail page (gated on `security_compliance.view`). It lists every finding currently linked to the card with the same Acknowledge / Accept / **Create risk** / **Open risk** actions as the GRC view, so an Application owner can triage their own findings without leaving the card.
+Cards that are in scope of a compliance scan also surface a **Compliance** tab on their detail page (gated on `security_compliance.view`). It lists every finding currently linked to the card with the same Acknowledge / Accept / **Create risk** / **Open risk** actions as the GRC view, so an Application owner can triage their own findings without leaving the card. The same auto-hide rule applies to the **Risks** tab on Card Detail: both tabs only show up when the card actually has linked items, so cards with no GRC activity don't carry empty tabs.
 
 ## Permissions
 

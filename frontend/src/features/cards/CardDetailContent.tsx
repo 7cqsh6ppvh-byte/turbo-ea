@@ -36,7 +36,12 @@ import {
 import { useAuthContext } from "@/hooks/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import SoAWTab from "@/features/cards/sections/SoAWTab";
-import type { Card, CardEffectivePermissions } from "@/types";
+import type {
+  Card,
+  CardEffectivePermissions,
+  Risk,
+  TurboLensComplianceFinding,
+} from "@/types";
 
 interface Props {
   card: Card;
@@ -85,8 +90,57 @@ export default function CardDetailContent({
   const { grcEnabled } = useGrcEnabled();
   const { user } = useAuthContext();
   const { can } = usePermissions(user);
-  const showRisksTab = grcEnabled;
-  const showComplianceTab = grcEnabled && can("security_compliance.view");
+
+  // Card-scoped Risks / Compliance counts. `null` = still loading → render the
+  // tab optimistically so we don't flash it on for cards that DO have items.
+  // After the fetch settles, a 0 count removes the tab so empty surfaces don't
+  // take up tab-strip space.
+  const [risksCount, setRisksCount] = useState<number | null>(null);
+  const [complianceCount, setComplianceCount] = useState<number | null>(null);
+  const canViewCompliance = can("security_compliance.view");
+  const canViewRisks = can("risks.view");
+
+  useEffect(() => {
+    if (!grcEnabled) {
+      setRisksCount(0);
+      setComplianceCount(0);
+      return;
+    }
+    let cancelled = false;
+    if (canViewRisks) {
+      setRisksCount(null);
+      api
+        .get<Risk[]>(`/cards/${card.id}/risks`)
+        .then((rows) => {
+          if (!cancelled) setRisksCount(rows.length);
+        })
+        .catch(() => {
+          if (!cancelled) setRisksCount(0);
+        });
+    } else {
+      setRisksCount(0);
+    }
+    if (canViewCompliance) {
+      setComplianceCount(null);
+      api
+        .get<TurboLensComplianceFinding[]>(`/cards/${card.id}/compliance-findings`)
+        .then((rows) => {
+          if (!cancelled) setComplianceCount(rows.length);
+        })
+        .catch(() => {
+          if (!cancelled) setComplianceCount(0);
+        });
+    } else {
+      setComplianceCount(0);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [card.id, grcEnabled, canViewRisks, canViewCompliance]);
+
+  const showRisksTab = grcEnabled && canViewRisks && (risksCount === null || risksCount > 0);
+  const showComplianceTab =
+    grcEnabled && canViewCompliance && (complianceCount === null || complianceCount > 0);
 
   const [tab, setTab] = useState(initialTab);
   const [relRefresh, setRelRefresh] = useState(0);

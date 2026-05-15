@@ -119,7 +119,7 @@ Quando um Risco promovido a partir de uma conclusão é fechado ou aceito, a aç
 
 ### Conformidade em um único card
 
-Os cards no escopo de uma varredura de conformidade também expõem uma aba **Conformidade** em sua página de detalhe (governada por `security_compliance.view`). Ela lista cada conclusão atualmente vinculada ao card com as mesmas ações Reconhecer / Aceitar / **Criar risco** / **Abrir risco** que a visão GRC — para que um Application Owner possa triar suas conclusões sem sair do card.
+Os cards no escopo de uma varredura de conformidade também expõem uma aba **Conformidade** em sua página de detalhe (governada por `security_compliance.view`). Ela lista cada conclusão atualmente vinculada ao card com as mesmas ações Reconhecer / Aceitar / **Criar risco** / **Abrir risco** que a visão GRC — para que um Application Owner possa triar suas conclusões sem sair do card. A mesma regra de auto-ocultar vale para a aba **Riscos** no detalhe do card: ambas as abas só aparecem quando o card realmente tem itens vinculados, de modo que cards sem atividade de GRC não carregam abas vazias.
 
 ## Permissões
 

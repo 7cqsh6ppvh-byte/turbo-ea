@@ -119,7 +119,7 @@ Lorsqu'un Risque promu depuis un constat est clôturé ou accepté, l'opération
 
 ### Conformité sur une seule fiche
 
-Les fiches dans le périmètre d'un scan de conformité exposent également un onglet **Conformité** sur leur page de détail (gouverné par `security_compliance.view`). Il liste chaque constat actuellement lié à la fiche avec les mêmes actions Acquitter / Accepter / **Créer un risque** / **Ouvrir le risque** que la vue GRC — de sorte qu'un Application Owner peut trier ses constats sans quitter la fiche.
+Les fiches dans le périmètre d'un scan de conformité exposent également un onglet **Conformité** sur leur page de détail (gouverné par `security_compliance.view`). Il liste chaque constat actuellement lié à la fiche avec les mêmes actions Acquitter / Accepter / **Créer un risque** / **Ouvrir le risque** que la vue GRC — de sorte qu'un Application Owner peut trier ses constats sans quitter la fiche. La même règle d'auto-masquage s'applique à l'onglet **Risques** dans le détail de la fiche : les deux onglets n'apparaissent que lorsque la fiche a effectivement des éléments liés, de sorte que les fiches sans activité GRC ne traînent pas d'onglets vides.
 
 ## Permissions
 

@@ -12,6 +12,9 @@ Admins can now toggle the GRC (Governance, Risk, Compliance) module on or off, m
 ### Added
 - **GRC module toggle in admin settings.** New switch on Settings → General → Modules enables or disables the entire Governance, Risk and Compliance workspace. When disabled, the GRC top-level navigation item is hidden, the `/grc` and `/grc/risks/:id` routes render the standard "module disabled" placeholder, **and the card-level Risks and Compliance tabs are hidden from Card Detail** so the surface stays consistent across the platform. The toggle's state is primed at boot via `/settings/bootstrap` so there is no flash. The setting is persisted in `app_settings.general_settings.grcEnabled`, defaults to `True` for existing installs, and exposes the same admin-only `GET / PATCH /settings/grc-enabled` endpoints as the other module toggles. The underlying `risks.*`, `security_compliance.*` and `grc.*` permissions are unchanged — disabling the module hides the UI surface without revoking access.
 
+### Changed
+- **Card-level Risks and Compliance tabs auto-hide when empty.** Card Detail now fetches the per-card risk list and compliance-finding list on mount and only renders the corresponding tab when the count is greater than zero. Cards with no GRC content no longer carry empty tabs that take up tab-strip space. Manage users who need to seed the first risk on a card can do so from the GRC Risk Register's **+ Create Risk** flow with the card linked.
+
 ## [1.12.0] - 2026-05-14
 
 The TurboLens CVE scanner has been removed. The Security tab is now Compliance-only, and the on-demand regulation gap analysis remains fully intact.

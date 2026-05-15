@@ -119,7 +119,7 @@ Quando un Rischio promosso da un riscontro viene chiuso o accettato, l'operazion
 
 ### Conformità su una singola card
 
-Le card nell'ambito di una scansione di conformità espongono anche una scheda **Conformità** nella loro pagina di dettaglio (governata da `security_compliance.view`). Elenca ogni riscontro attualmente collegato alla card con le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della vista GRC — così che un Application Owner possa triagiare i propri riscontri senza lasciare la card.
+Le card nell'ambito di una scansione di conformità espongono anche una scheda **Conformità** nella loro pagina di dettaglio (governata da `security_compliance.view`). Elenca ogni riscontro attualmente collegato alla card con le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della vista GRC — così che un Application Owner possa triagiare i propri riscontri senza lasciare la card. La stessa regola di auto-nascondimento vale per la scheda **Rischi** nel dettaglio della card: entrambe le schede compaiono solo quando la card ha effettivamente elementi collegati, così le card senza attività GRC non si portano dietro schede vuote.
 
 ## Permessi
 
