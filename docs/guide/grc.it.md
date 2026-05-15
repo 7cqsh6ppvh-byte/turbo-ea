@@ -2,6 +2,9 @@
 
 Il modulo **GRC** riunisce Governance, Rischio e Conformità in un unico spazio di lavoro a `/grc`. Consolida attività che prima vivevano tra Consegna EA e TurboLens, in modo che un'architetta, un proprietario di rischio e un revisore di conformità lavorino su un terreno comune.
 
+!!! note
+    Il modulo GRC può essere abilitato o disabilitato da un amministratore nelle [Impostazioni](../admin/settings.md). Quando disabilitato, la navigazione e le funzionalità GRC sono nascoste.
+
 GRC ha tre schede:
 
 Puoi puntare direttamente a una scheda con `/grc?tab=governance`, `/grc?tab=risk` o `/grc?tab=compliance`.
@@ -116,7 +119,7 @@ Quando un Rischio promosso da un riscontro viene chiuso o accettato, l'operazion
 
 ### Conformità su una singola card
 
-Le card nell'ambito di una scansione di conformità espongono anche una scheda **Conformità** nella loro pagina di dettaglio (governata da `security_compliance.view`). Elenca ogni riscontro attualmente collegato alla card con le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della vista GRC — così che un Application Owner possa triagiare i propri riscontri senza lasciare la card.
+Le card nell'ambito di una scansione di conformità espongono anche una scheda **Conformità** nella loro pagina di dettaglio (governata da `security_compliance.view`). Elenca ogni riscontro attualmente collegato alla card con le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della vista GRC — così che un Application Owner possa triagiare i propri riscontri senza lasciare la card. La stessa regola di auto-nascondimento vale per la scheda **Rischi** nel dettaglio della card: entrambe le schede compaiono solo quando la card ha effettivamente elementi collegati, così le card senza attività GRC non si portano dietro schede vuote.
 
 ## Permessi
 

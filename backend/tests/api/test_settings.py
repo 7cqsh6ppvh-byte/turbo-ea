@@ -185,6 +185,52 @@ class TestBpmEnabledSettings:
 
 
 # -------------------------------------------------------------------
+# GET /settings/grc-enabled + PATCH /settings/grc-enabled
+# -------------------------------------------------------------------
+
+
+class TestGrcEnabledSettings:
+    async def test_get_default_grc_enabled(self, client, db, settings_env):
+        """GRC enabled endpoint is public and defaults to True."""
+        resp = await client.get("/api/v1/settings/grc-enabled")
+        assert resp.status_code == 200
+        assert resp.json()["enabled"] is True
+
+    async def test_admin_can_toggle_grc(self, client, db, settings_env):
+        admin = settings_env["admin"]
+
+        resp = await client.patch(
+            "/api/v1/settings/grc-enabled",
+            json={"enabled": False},
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 200
+        assert resp.json()["ok"] is True
+
+        get_resp = await client.get("/api/v1/settings/grc-enabled")
+        assert get_resp.json()["enabled"] is False
+
+        resp2 = await client.patch(
+            "/api/v1/settings/grc-enabled",
+            json={"enabled": True},
+            headers=auth_headers(admin),
+        )
+        assert resp2.status_code == 200
+
+        get_resp2 = await client.get("/api/v1/settings/grc-enabled")
+        assert get_resp2.json()["enabled"] is True
+
+    async def test_member_cannot_toggle_grc(self, client, db, settings_env):
+        member = settings_env["member"]
+        resp = await client.patch(
+            "/api/v1/settings/grc-enabled",
+            json={"enabled": False},
+            headers=auth_headers(member),
+        )
+        assert resp.status_code == 403
+
+
+# -------------------------------------------------------------------
 # GET /settings/registration + PATCH /settings/registration
 # -------------------------------------------------------------------
 
@@ -289,6 +335,7 @@ class TestBootstrapSettings:
         assert data["bpm_enabled"] is True
         assert data["ppm_enabled"] is False
         assert data["turbolens_enabled"] is True
+        assert data["grc_enabled"] is True
         assert "en" in data["enabled_locales"]
         assert data["fiscal_year_start"] == 1
         assert data["bpm_row_order"] == ["management", "core", "support"]

@@ -5,6 +5,22 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.14.0] - 2026-05-15
+
+Admins can now toggle the GRC (Governance, Risk, Compliance) module on or off, mirroring the existing BPM, PPM and TurboLens toggles.
+
+### Added
+- **GRC module toggle in admin settings.** New switch on Settings → General → Modules enables or disables the entire Governance, Risk and Compliance workspace. When disabled, the GRC top-level navigation item is hidden, the `/grc` and `/grc/risks/:id` routes render the standard "module disabled" placeholder, **and the card-level Risks and Compliance tabs are hidden from Card Detail** so the surface stays consistent across the platform. The toggle's state is primed at boot via `/settings/bootstrap` so there is no flash. The setting is persisted in `app_settings.general_settings.grcEnabled`, defaults to `True` for existing installs, and exposes the same admin-only `GET / PATCH /settings/grc-enabled` endpoints as the other module toggles. The underlying `risks.*`, `security_compliance.*` and `grc.*` permissions are unchanged — disabling the module hides the UI surface without revoking access.
+
+### Changed
+- **Card-level Risks and Compliance tabs auto-hide when empty.** Card Detail now fetches the per-card risk list and compliance-finding list on mount and only renders the corresponding tab when the count is greater than zero. Cards with no GRC content no longer carry empty tabs that take up tab-strip space. Manage users who need to seed the first risk on a card can do so from the GRC Risk Register's **+ Create Risk** flow with the card linked.
+- **Mitigation tasks panel — one-shot tasks read at a glance.** Four UX fixes to the per-task row on Risk Detail:
+  1. A coloured **Done** (green) or **Skipped** (amber) chip is rendered on the task row the moment its single occurrence terminates, replacing the misleading "Inactive" chip that didn't convey what happened.
+  2. The meta line now carries the completion timestamp + completer inline (`Completed: 5 Jun 2026, 17:03 · by Vincent Verdet`), so the user no longer has to expand the history to see how a one-shot task closed.
+  3. The "Cycle #1" sequence label is suppressed in the expanded history when the task is one-shot — single-occurrence tasks aren't a cycle stream, and the surrounding row already tells the whole story. Recurring tasks keep the cycle labels.
+  4. The "One-shot" recurrence chip is dropped from one-shot task rows — once a task is shown as Done / Skipped / Open with a due date, repeating "One-shot" is just noise. Recurring tasks keep their cadence chip ("Every 6 months", etc.).
+- **All mitigation-task dates respect the user's date-format preference.** Target dates, completion timestamps, activation dates, and the "Next scheduled" chip are now formatted through the shared `useDateFormat` hook instead of mixing ISO strings (`2026-06-05`) with locale defaults (`15/05/2026, 17:03:38`) on the same row.
+
 ## [1.13.2] - 2026-05-15
 
 Lead-time gated recurrence for mitigation tasks. Recurring control reviews stop landing in the assignee's Todo list the moment the previous cycle closes — instead, each new cycle sits in a dormant `scheduled` state until the daily promotion loop activates it close to the due date. Auditors still see the future cycle ("next review: due 2026-11-15"), but the assignee only gets the reminder when it actually matters.

@@ -255,6 +255,7 @@
   "iconPicker.categories.miscellaneous": "Varios",
   "modules.bpm": "BPM",
   "modules.ppm": "PPM",
+  "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
   "moduleDisabled.title": "{{module}} está desactivado",
   "moduleDisabled.body": "El módulo {{module}} está actualmente desactivado por un administrador. Actívelo en la configuración de administración para acceder a esta sección.",

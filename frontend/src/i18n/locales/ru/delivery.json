@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Не назначена",
   "risks.tasks.history.closedAt": "Закрыта {{timestamp}}",
   "risks.tasks.history.completedBy": "Выполнил(а): {{name}} · ответственный на момент: {{owner}}",
+  "risks.tasks.history.byShort": "автор: {{name}}",
   "risks.tasks.field.reference": "ID задачи",
   "risks.tasks.actions.exportHistory": "Экспорт истории (Excel)",
   "risks.tasks.history.targetLabel": "Цель",

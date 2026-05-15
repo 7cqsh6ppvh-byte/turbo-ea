@@ -156,8 +156,8 @@ function AppRoutes() {
                 <Route path="/ea-delivery/adr/:id" element={<ADREditor />} />
                 <Route path="/ea-delivery/risks" element={<Navigate to="/grc?tab=risk" replace />} />
                 <Route path="/ea-delivery/risks/:id" element={<LegacyRiskDetailRedirect />} />
-                <Route path="/grc" element={<GrcPage />} />
-                <Route path="/grc/risks/:id" element={<RiskDetailPage />} />
+                <Route path="/grc" element={<ModuleGate module="grc"><GrcPage /></ModuleGate>} />
+                <Route path="/grc/risks/:id" element={<ModuleGate module="grc"><RiskDetailPage /></ModuleGate>} />
                 <Route path="/todos" element={<TodosPage />} />
                 <Route path="/surveys" element={<Navigate to="/todos?tab=surveys" />} />
                 <Route path="/surveys/:surveyId/respond/:cardId" element={<SurveyRespond />} />

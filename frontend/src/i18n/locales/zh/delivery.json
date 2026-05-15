@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "未指派",
   "risks.tasks.history.closedAt": "于 {{timestamp}} 关闭",
   "risks.tasks.history.completedBy": "由 {{name}} 完成 · 当时负责人：{{owner}}",
+  "risks.tasks.history.byShort": "由 {{name}}",
   "risks.tasks.field.reference": "任务编号",
   "risks.tasks.actions.exportHistory": "导出历史（Excel）",
   "risks.tasks.history.targetLabel": "目标",

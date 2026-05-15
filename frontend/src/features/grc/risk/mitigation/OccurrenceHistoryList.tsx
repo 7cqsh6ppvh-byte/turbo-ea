@@ -18,6 +18,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
+import { useDateFormat } from "@/hooks/useDateFormat";
 import type { MitigationTask, MitigationTaskOccurrence } from "@/types";
 import { activationDate } from "./leadTime";
 
@@ -28,21 +29,21 @@ interface Props {
    *  omitted, scheduled cycles still render but without the "Activates
    *  on" sub-line. */
   leadTimeDays?: MitigationTask["lead_time_days"];
+  /** Suppress the per-row "Cycle #N" / status header for one-shot tasks
+   *  where there is exactly one occurrence and the label is just noise.
+   *  The task-row chips already convey the status. */
+  hideCycleLabel?: boolean;
 }
 
 const COLLAPSED_LIMIT = 5;
 
-function formatDateTime(iso: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
-export default function OccurrenceHistoryList({ occurrences, leadTimeDays }: Props) {
+export default function OccurrenceHistoryList({
+  occurrences,
+  leadTimeDays,
+  hideCycleLabel = false,
+}: Props) {
   const { t } = useTranslation("delivery");
+  const { formatDate, formatDateTime } = useDateFormat();
   const [expanded, setExpanded] = useState(false);
 
   const sorted = useMemo(
@@ -105,24 +106,29 @@ export default function OccurrenceHistoryList({ occurrences, leadTimeDays }: Pro
               <MaterialSymbol icon={icon} size={20} />
             </Box>
             <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
-                <Typography variant="body2" fontWeight={600}>
-                  {t("risks.tasks.history.cycleLabel", { sequence: occ.sequence })}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {t(`risks.tasks.status.${occ.status}`)}
-                </Typography>
-              </Stack>
+              {!hideCycleLabel && (
+                <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
+                  <Typography variant="body2" fontWeight={600}>
+                    {t("risks.tasks.history.cycleLabel", { sequence: occ.sequence })}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {t(`risks.tasks.status.${occ.status}`)}
+                  </Typography>
+                </Stack>
+              )}
               {/* Target date — always render for cycles that have one
                   so auditors can compare scheduled vs. actual. */}
               <Typography variant="caption" color="text.secondary">
-                {t("risks.tasks.history.targetLabel")}: {occ.due_date ?? "—"}
+                {t("risks.tasks.history.targetLabel")}:{" "}
+                {occ.due_date ? formatDate(occ.due_date) : "—"}
               </Typography>
               {isScheduled ? (
                 <>
                   {activatesOn && (
                     <Typography variant="caption" color="text.secondary">
-                      {t("risks.tasks.history.activatesOn", { date: activatesOn })}
+                      {t("risks.tasks.history.activatesOn", {
+                        date: formatDate(activatesOn),
+                      })}
                     </Typography>
                   )}
                   <Typography variant="caption" color="text.secondary">
@@ -153,7 +159,8 @@ export default function OccurrenceHistoryList({ occurrences, leadTimeDays }: Pro
               ) : (
                 <>
                   <Typography variant="caption" color="text.secondary">
-                    {t(closeLabelKey)}: {formatDateTime(occ.completed_at)}
+                    {t(closeLabelKey)}:{" "}
+                    {occ.completed_at ? formatDateTime(occ.completed_at) : "—"}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {t("risks.tasks.history.completedBy", {

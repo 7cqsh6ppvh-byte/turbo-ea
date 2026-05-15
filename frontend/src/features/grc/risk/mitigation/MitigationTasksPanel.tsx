@@ -24,6 +24,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { api, ApiError } from "@/api/client";
+import { useDateFormat } from "@/hooks/useDateFormat";
 import type { MitigationTask, MitigationTaskOccurrence } from "@/types";
 import CompleteOccurrenceDialog, {
   type CompleteMode,
@@ -96,6 +97,17 @@ function liveOccurrence(task: MitigationTask): MitigationTaskOccurrence | null {
   );
 }
 
+function latestOccurrence(task: MitigationTask): MitigationTaskOccurrence | null {
+  // Highest-sequence occurrence regardless of status. Used by one-shot
+  // tasks to surface terminal state (done/skipped) inline on the task
+  // row so the user doesn't have to expand to see the completion.
+  let latest: MitigationTaskOccurrence | null = null;
+  for (const occ of task.occurrences) {
+    if (!latest || occ.sequence > latest.sequence) latest = occ;
+  }
+  return latest;
+}
+
 export default function MitigationTasksPanel({
   riskId,
   riskReference,
@@ -105,6 +117,7 @@ export default function MitigationTasksPanel({
   onSummaryChange,
 }: Props) {
   const { t } = useTranslation("delivery");
+  const { formatDate, formatDateTime } = useDateFormat();
 
   const [tasks, setTasks] = useState<MitigationTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -247,15 +260,24 @@ export default function MitigationTasksPanel({
         <Stack spacing={1.5}>
           {tasks.map((task) => {
             const live = liveOccurrence(task);
+            const latest = latestOccurrence(task);
+            const isOneShot = task.recurrence_unit === "none";
             const isOpen = live?.status === "open";
             const isScheduled = live?.status === "scheduled";
             const isOverdue = isOpen && !!live?.due_date && live.due_date < today;
+            const isDone = !live && latest?.status === "done";
+            const isSkipped = !live && latest?.status === "skipped";
             const isExpanded = !!expanded[task.id];
             const canCompleteSelf =
               isOpen && live?.assigned_owner_id === currentUserId;
             const activatesOn = isScheduled
               ? activationDate(live?.due_date ?? null, task.lead_time_days)
               : null;
+            // For one-shot tasks the meta line carries everything the user
+            // needs without expanding — due + (when terminal) completion
+            // timestamp + closer. Recurring tasks keep just due_date here
+            // since their per-cycle history lives in the expanded section.
+            const headlineOccurrence = live ?? latest;
             return (
               <Box
                 key={task.id}
@@ -284,22 +306,35 @@ export default function MitigationTasksPanel({
                       <Typography variant="body1" fontWeight={600}>
                         {task.title}
                       </Typography>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        icon={
-                          <MaterialSymbol
-                            icon={task.recurrence_unit === "none" ? "task_alt" : "autorenew"}
-                            size={14}
-                          />
-                        }
-                        label={formatRecurrence(
-                          task.recurrence_unit,
-                          task.recurrence_interval,
-                          t,
-                        )}
-                      />
-                      {!task.is_active && (
+                      {!isOneShot && (
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          icon={<MaterialSymbol icon="autorenew" size={14} />}
+                          label={formatRecurrence(
+                            task.recurrence_unit,
+                            task.recurrence_interval,
+                            t,
+                          )}
+                        />
+                      )}
+                      {isDone && (
+                        <Chip
+                          size="small"
+                          color="success"
+                          icon={<MaterialSymbol icon="check_circle" size={14} />}
+                          label={t("risks.tasks.status.done")}
+                        />
+                      )}
+                      {isSkipped && (
+                        <Chip
+                          size="small"
+                          color="warning"
+                          icon={<MaterialSymbol icon="skip_next" size={14} />}
+                          label={t("risks.tasks.status.skipped")}
+                        />
+                      )}
+                      {!task.is_active && !isDone && !isSkipped && (
                         <Chip
                           size="small"
                           variant="outlined"
@@ -321,8 +356,10 @@ export default function MitigationTasksPanel({
                           label={
                             activatesOn
                               ? t("risks.tasks.badge.nextScheduled", {
-                                  date: live?.due_date ?? "—",
-                                  activates: activatesOn,
+                                  date: live?.due_date
+                                    ? formatDate(live.due_date)
+                                    : "—",
+                                  activates: formatDate(activatesOn),
                                 })
                               : t("risks.tasks.status.scheduled")
                           }
@@ -345,9 +382,28 @@ export default function MitigationTasksPanel({
                         {t("risks.tasks.field.owner")}:{" "}
                         {task.owner_name ?? t("risks.tasks.history.unassigned")}
                       </Typography>
-                      {live?.due_date && (
+                      {headlineOccurrence?.due_date && (
                         <Typography variant="caption">
-                          {t("risks.tasks.field.dueDate")}: {live.due_date}
+                          {t("risks.tasks.field.dueDate")}:{" "}
+                          {formatDate(headlineOccurrence.due_date)}
+                        </Typography>
+                      )}
+                      {isDone && latest?.completed_at && (
+                        <Typography variant="caption">
+                          {t("risks.tasks.history.completedLabel")}:{" "}
+                          {formatDateTime(latest.completed_at)}
+                          {latest.completed_by_name
+                            ? ` · ${t("risks.tasks.history.byShort", { name: latest.completed_by_name })}`
+                            : ""}
+                        </Typography>
+                      )}
+                      {isSkipped && latest?.completed_at && (
+                        <Typography variant="caption">
+                          {t("risks.tasks.history.skippedLabel")}:{" "}
+                          {formatDateTime(latest.completed_at)}
+                          {latest.completed_by_name
+                            ? ` · ${t("risks.tasks.history.byShort", { name: latest.completed_by_name })}`
+                            : ""}
                         </Typography>
                       )}
                     </Stack>
@@ -465,6 +521,7 @@ export default function MitigationTasksPanel({
                     <OccurrenceHistoryList
                       occurrences={task.occurrences}
                       leadTimeDays={task.lead_time_days}
+                      hideCycleLabel={isOneShot}
                     />
                   </Box>
                 </Collapse>

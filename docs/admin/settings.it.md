@@ -80,3 +80,14 @@ Attivate/disattivate il modulo **Project Portfolio Management** (PPM). Quando di
 - Le card Iniziativa rimangono nel database ma le funzionalità specifiche del PPM (report di stato, monitoraggio budget e costi, registro rischi, board delle attività, diagramma di Gantt) non sono accessibili
 
 Quando abilitato, le card Iniziativa ottengono una scheda **PPM** nella vista di dettaglio e la dashboard del portfolio PPM diventa disponibile nella navigazione principale. Consultate [Project Portfolio Management](../guide/ppm.md) per la guida completa delle funzionalità.
+
+## Modulo GRC
+
+Attivate/disattivate il modulo **Governance, Rischio e Conformità** (GRC). Quando disabilitato:
+
+- L'elemento di navigazione **GRC** è nascosto a tutti gli utenti
+- Lo spazio `/grc` (Principi di Governance e ADR, Registro dei Rischi, finding di Conformità) non è raggiungibile e mostra il placeholder standard «modulo disabilitato» per chi arriva da un link diretto
+- Le schede **Rischi** e **Conformità** nel dettaglio della card vengono nascoste, così le singole card non espongono più dati GRC
+- I rischi e i finding di conformità rimangono nel database — i permessi sottostanti `risks.*` e `security_compliance.*` restano invariati, quindi i dati si conservano e ricompaiono invariati se il modulo viene riabilitato
+
+Consultate la [guida GRC](../guide/grc.md) per il riferimento completo delle funzionalità.

@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Non assegnata",
   "risks.tasks.history.closedAt": "Chiusa il {{timestamp}}",
   "risks.tasks.history.completedBy": "Da {{name}} · responsabile al momento: {{owner}}",
+  "risks.tasks.history.byShort": "da {{name}}",
   "risks.tasks.field.reference": "ID attività",
   "risks.tasks.actions.exportHistory": "Esporta cronologia (Excel)",
   "risks.tasks.history.targetLabel": "Obiettivo",

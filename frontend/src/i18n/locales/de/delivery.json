@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Nicht zugewiesen",
   "risks.tasks.history.closedAt": "Abgeschlossen am {{timestamp}}",
   "risks.tasks.history.completedBy": "Von {{name}} · Verantwortlich zu diesem Zeitpunkt: {{owner}}",
+  "risks.tasks.history.byShort": "von {{name}}",
   "risks.tasks.field.reference": "Maßnahmen-ID",
   "risks.tasks.actions.exportHistory": "Verlauf exportieren (Excel)",
   "risks.tasks.history.targetLabel": "Ziel",

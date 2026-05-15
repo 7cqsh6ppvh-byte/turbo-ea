@@ -25,6 +25,7 @@ import NotificationPreferencesDialog from "@/components/NotificationPreferencesD
 import { api } from "@/api/client";
 import { useEventStream } from "@/hooks/useEventStream";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
+import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 import { useThemeMode } from "@/hooks/useThemeMode";
@@ -106,6 +107,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
   const isCondensed = useMediaQuery("(max-width:1279px)");
   const { bpmEnabled } = useBpmEnabled();
   const { ppmEnabled } = usePpmEnabled();
+  const { grcEnabled } = useGrcEnabled();
   const { turboLensReady } = useTurboLensReady();
   const { enabledLocales } = useEnabledLocales();
   const { mode, toggleMode } = useThemeMode();
@@ -131,6 +133,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     let items = NAV_ITEM_DEFS as NavItemDef[];
     if (!bpmEnabled) items = items.filter((item) => item.labelKey !== "bpm");
     if (!ppmEnabled) items = items.filter((item) => item.labelKey !== "ppm");
+    if (!grcEnabled) items = items.filter((item) => item.labelKey !== "grc");
 
     // When PPM is disabled, EA Delivery has no parent tab to live under —
     // promote it to a top-level nav item, sitting in PPM's old slot (between
@@ -177,7 +180,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     });
 
     return items.filter((item) => hasPerm(item.permission)).map(resolve);
-  }, [bpmEnabled, ppmEnabled, turboLensReady, can, t]);
+  }, [bpmEnabled, ppmEnabled, grcEnabled, turboLensReady, can, t]);
 
   // Resolve admin item labels via i18n and filter based on permissions
   const adminItems = useMemo(() => {

@@ -80,3 +80,14 @@ Alterne o módulo de **Gestão de Portfólio de Projetos** (PPM) ligado ou desli
 - Cards de Iniciativa permanecem no banco de dados, mas recursos específicos de PPM (relatórios de status, acompanhamento de orçamento e custos, registro de riscos, quadro de tarefas, gráfico de Gantt) não estão acessíveis
 
 Quando habilitado, cards de Iniciativa ganham uma aba **PPM** na sua visualização de detalhes e o painel do portfólio PPM fica disponível na navegação principal. Veja [Gestão de Portfólio de Projetos](../guide/ppm.md) para o guia completo de funcionalidades.
+
+## Módulo GRC
+
+Alterne o módulo de **Governança, Risco e Conformidade** (GRC) ligado ou desligado. Quando desabilitado:
+
+- O item de navegação **GRC** é oculto para todos os usuários
+- O workspace `/grc` (princípios de Governança e ADRs, Registro de Riscos, achados de Conformidade) deixa de estar acessível e exibe o placeholder padrão «módulo desabilitado» para quem chega por um link direto
+- As abas **Riscos** e **Conformidade** no detalhe do card ficam ocultas, de modo que os cards individuais também não exibem mais dados de GRC
+- Os riscos e os achados de conformidade permanecem no banco de dados — as permissões subjacentes `risks.*` e `security_compliance.*` continuam inalteradas, de modo que os dados são preservados e reaparecem sem alterações se o módulo for reativado
+
+Consulte o [guia do GRC](../guide/grc.md) para a referência completa de funcionalidades.

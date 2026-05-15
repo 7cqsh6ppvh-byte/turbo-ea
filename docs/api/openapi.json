@@ -3763,6 +3763,19 @@
         "title": "FiscalYearStartPayload",
         "type": "object"
       },
+      "GrcEnabledPayload": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "GrcEnabledPayload",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -24799,6 +24812,64 @@
           }
         },
         "summary": "Update Fiscal Year Start",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/grc-enabled": {
+      "get": {
+        "description": "Public endpoint \u2014 returns whether the GRC module is enabled.",
+        "operationId": "get_grc_enabled_api_v1_settings_grc_enabled_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Grc Enabled",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "description": "Admin endpoint \u2014 enable or disable the GRC module (Governance, Risk, Compliance).",
+        "operationId": "update_grc_enabled_api_v1_settings_grc_enabled_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrcEnabledPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Grc Enabled",
         "tags": [
           "settings"
         ]

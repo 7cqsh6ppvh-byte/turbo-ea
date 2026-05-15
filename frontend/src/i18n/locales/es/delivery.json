@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Sin asignar",
   "risks.tasks.history.closedAt": "Cerrada el {{timestamp}}",
   "risks.tasks.history.completedBy": "Por {{name}} · responsable en ese momento: {{owner}}",
+  "risks.tasks.history.byShort": "por {{name}}",
   "risks.tasks.field.reference": "ID de tarea",
   "risks.tasks.actions.exportHistory": "Exportar historial (Excel)",
   "risks.tasks.history.targetLabel": "Objetivo",

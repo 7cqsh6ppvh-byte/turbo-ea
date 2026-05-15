@@ -315,6 +315,7 @@
   "iconPicker.categories.miscellaneous": "Miscellaneous",
   "modules.bpm": "BPM",
   "modules.ppm": "PPM",
+  "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
   "moduleDisabled.title": "{{module}} is disabled",
   "moduleDisabled.body": "The {{module}} module is currently disabled by an administrator. Enable it from the admin settings to access this area.",

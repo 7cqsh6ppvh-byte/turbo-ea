@@ -80,3 +80,14 @@ Toggle the **Project Portfolio Management** module on or off. When disabled:
 - Initiative cards remain in the database but PPM-specific features (status reports, budget & cost tracking, risk register, task board, Gantt chart) are not accessible
 
 When enabled, Initiative cards gain a **PPM** tab in their detail view and the PPM portfolio dashboard becomes available in the main navigation. See [Project Portfolio Management](../guide/ppm.md) for the full feature guide.
+
+## GRC Module
+
+Toggle the **Governance, Risk and Compliance** module on or off. When disabled:
+
+- The **GRC** navigation item is hidden from all users
+- The `/grc` workspace (Governance principles and ADRs, Risk Register, Compliance findings) is unreachable and shows the standard "module disabled" placeholder for anyone with a direct link
+- The **Risks** and **Compliance** tabs on Card Detail are hidden, so individual cards no longer surface GRC data either
+- Risks and compliance findings remain in the database — the underlying `risks.*` and `security_compliance.*` permissions are unchanged, so the data is preserved and re-appears unchanged if the module is re-enabled
+
+See the [GRC guide](../guide/grc.md) for the full feature reference.

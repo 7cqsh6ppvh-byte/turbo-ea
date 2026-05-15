@@ -14,10 +14,11 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
+import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 
-type ModuleKey = "bpm" | "ppm" | "turbolens";
+type ModuleKey = "bpm" | "ppm" | "turbolens" | "grc";
 
 interface Props {
   module: ModuleKey;
@@ -28,12 +29,14 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
   bpm: "/admin/settings?tab=bpm",
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
+  grc: "/admin/settings",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
   bpm: "schema",
   ppm: "rocket_launch",
   turbolens: "psychology",
+  grc: "policy",
 };
 
 export default function ModuleGate({ module, children }: Props) {
@@ -42,11 +45,24 @@ export default function ModuleGate({ module, children }: Props) {
   const { bpmEnabled, bpmLoaded } = useBpmEnabled();
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
+  const { grcEnabled, grcLoaded } = useGrcEnabled();
 
   const enabled =
-    module === "bpm" ? bpmEnabled : module === "ppm" ? ppmEnabled : turboLensEnabled;
+    module === "bpm"
+      ? bpmEnabled
+      : module === "ppm"
+        ? ppmEnabled
+        : module === "grc"
+          ? grcEnabled
+          : turboLensEnabled;
   const loaded =
-    module === "bpm" ? bpmLoaded : module === "ppm" ? ppmLoaded : turboLensLoaded;
+    module === "bpm"
+      ? bpmLoaded
+      : module === "ppm"
+        ? ppmLoaded
+        : module === "grc"
+          ? grcLoaded
+          : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.

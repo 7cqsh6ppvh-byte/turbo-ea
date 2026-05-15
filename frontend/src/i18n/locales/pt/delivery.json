@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Não atribuída",
   "risks.tasks.history.closedAt": "Fechada em {{timestamp}}",
   "risks.tasks.history.completedBy": "Por {{name}} · responsável no momento: {{owner}}",
+  "risks.tasks.history.byShort": "por {{name}}",
   "risks.tasks.field.reference": "ID da tarefa",
   "risks.tasks.actions.exportHistory": "Exportar histórico (Excel)",
   "risks.tasks.history.targetLabel": "Alvo",

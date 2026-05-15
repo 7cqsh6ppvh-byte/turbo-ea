@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Non assignée",
   "risks.tasks.history.closedAt": "Clôturée le {{timestamp}}",
   "risks.tasks.history.completedBy": "Par {{name}} · responsable à ce moment : {{owner}}",
+  "risks.tasks.history.byShort": "par {{name}}",
   "risks.tasks.field.reference": "Identifiant",
   "risks.tasks.actions.exportHistory": "Exporter l'historique (Excel)",
   "risks.tasks.history.targetLabel": "Cible",

@@ -165,6 +165,7 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "bpm_enabled": general.get("bpmEnabled", True),
         "ppm_enabled": general.get("ppmEnabled", False),
         "turbolens_enabled": general.get("turboLensEnabled", True),
+        "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
         "fiscal_year_start": general.get("fiscalYearStart", 1),
         "bpm_row_order": general.get("bpmRowOrder", ["management", "core", "support"]),
@@ -456,6 +457,37 @@ async def update_ppm_enabled(
     row = await _get_or_create_row(db)
     general = dict(row.general_settings or {})
     general["ppmEnabled"] = body.enabled
+    row.general_settings = general
+
+    await db.commit()
+    return {"ok": True}
+
+
+class GrcEnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/grc-enabled")
+async def get_grc_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the GRC module is enabled."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {"enabled": general.get("grcEnabled", True)}
+
+
+@router.patch("/grc-enabled")
+async def update_grc_enabled(
+    body: GrcEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — enable or disable the GRC module (Governance, Risk, Compliance)."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["grcEnabled"] = body.enabled
     row.general_settings = general
 
     await db.commit()

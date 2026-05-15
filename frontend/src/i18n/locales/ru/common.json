@@ -255,6 +255,7 @@
   "iconPicker.categories.miscellaneous": "Разное",
   "modules.bpm": "BPM",
   "modules.ppm": "PPM",
+  "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
   "moduleDisabled.title": "{{module}} отключён",
   "moduleDisabled.body": "Модуль {{module}} в настоящее время отключён администратором. Включите его в настройках администратора, чтобы получить доступ к этому разделу.",

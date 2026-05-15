@@ -255,6 +255,7 @@
   "iconPicker.categories.miscellaneous": "其他",
   "modules.bpm": "BPM",
   "modules.ppm": "PPM",
+  "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
   "moduleDisabled.title": "{{module}} 已停用",
   "moduleDisabled.body": "{{module}} 模块当前已被管理员停用。请在管理员设置中启用以访问此区域。",

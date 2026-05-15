@@ -28,6 +28,7 @@ import {
   type DateFormatKey,
 } from "@/hooks/useDateFormat";
 import { invalidateAppTitle } from "@/hooks/useAppTitle";
+import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
 import { useMetamodel } from "@/hooks/useMetamodel";
 import { useEnabledLocales } from "@/hooks/useEnabledLocales";
 import { SUPPORTED_LOCALES, LOCALE_LABELS, type SupportedLocale } from "@/i18n";
@@ -163,6 +164,10 @@ function GeneralTab() {
   const [ppmEnabled, setPpmEnabled] = useState(false);
   const [savingPpm, setSavingPpm] = useState(false);
 
+  // GRC toggle state
+  const [grcEnabled, setGrcEnabled] = useState(true);
+  const [savingGrc, setSavingGrc] = useState(false);
+
   // Fiscal year start
   const [fiscalYearStart, setFiscalYearStart] = useState(1);
   const [savingFiscal, setSavingFiscal] = useState(false);
@@ -197,8 +202,9 @@ function GeneralTab() {
       api.get<{ month: number }>("/settings/fiscal-year-start"),
       api.get<{ app_title: string }>("/settings/app-title"),
       api.get<{ date_format: string }>("/settings/date-format"),
+      api.get<{ enabled: boolean }>("/settings/grc-enabled"),
     ])
-      .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData]) => {
+      .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData]) => {
         setSmtpHost(emailData.smtp_host);
         setSmtpPort(emailData.smtp_port);
         setSmtpUser(emailData.smtp_user);
@@ -212,6 +218,7 @@ function GeneralTab() {
         setSelectedCurrency(currencyData.currency);
         setBpmEnabled(bpmData.enabled);
         setPpmEnabled(ppmData.enabled);
+        setGrcEnabled(grcData.enabled);
         setFiscalYearStart(fiscalData.month);
         setAppTitle(appTitleData.app_title || "Turbo EA");
         const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
@@ -369,6 +376,21 @@ function GeneralTab() {
       setError(e instanceof Error ? e.message : t("common:errors.generic"));
     } finally {
       setSavingPpm(false);
+    }
+  };
+
+  const handleGrcToggle = async (enabled: boolean) => {
+    setSavingGrc(true);
+    setError("");
+    try {
+      await api.patch("/settings/grc-enabled", { enabled });
+      setGrcEnabled(enabled);
+      invalidateGrcEnabled(enabled);
+      setSnack(enabled ? t("settings.grc.enabledSuccess") : t("settings.grc.disabledSuccess"));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("common:errors.generic"));
+    } finally {
+      setSavingGrc(false);
     }
   };
 
@@ -894,6 +916,35 @@ function GeneralTab() {
             />
           }
           label={ppmEnabled ? t("settings.ppm.visible") : t("settings.ppm.hidden")}
+        />
+      </Paper>
+
+      {/* GRC Module Toggle */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
+          <MaterialSymbol icon="policy" size={22} color="#555" />
+          <Typography variant="h6" fontWeight={600}>
+            {t("settings.grc.title")}
+          </Typography>
+          <Chip
+            label={grcEnabled ? t("settings.grc.enabled") : t("settings.grc.disabled")}
+            size="small"
+            color={grcEnabled ? "success" : "default"}
+            sx={{ ml: 1 }}
+          />
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("settings.grc.description")}
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={grcEnabled}
+              onChange={(e) => handleGrcToggle(e.target.checked)}
+              disabled={savingGrc}
+            />
+          }
+          label={grcEnabled ? t("settings.grc.visible") : t("settings.grc.hidden")}
         />
       </Paper>
 

@@ -2,6 +2,9 @@
 
 El módulo **GRC** reúne Gobernanza, Riesgo y Cumplimiento en un único espacio de trabajo en `/grc`. Consolida tareas que antes vivían entre Entrega EA y TurboLens, de modo que arquitectas, propietarios de riesgo y revisores de cumplimiento operen sobre una base común.
 
+!!! note
+    El módulo GRC puede ser habilitado o deshabilitado por un administrador en [Configuración](../admin/settings.es.md). Cuando está deshabilitado, la navegación y las funcionalidades de GRC se ocultan.
+
 GRC tiene tres pestañas:
 
 Puedes apuntar directamente a cualquier pestaña con `/grc?tab=governance`, `/grc?tab=risk` o `/grc?tab=compliance`.
@@ -116,7 +119,7 @@ Cuando un Riesgo promovido desde un hallazgo se cierra o se acepta, el cambio **
 
 ### Cumplimiento en una sola ficha
 
-Las fichas dentro del alcance de un escaneo de cumplimiento también muestran una pestaña **Cumplimiento** en su página de detalle (gobernada por `security_compliance.view`). Lista cada hallazgo actualmente vinculado a la ficha con las mismas acciones Reconocer / Aceptar / **Crear riesgo** / **Abrir riesgo** que la vista GRC — de modo que un Application Owner pueda clasificar sus hallazgos sin salir de la ficha.
+Las fichas dentro del alcance de un escaneo de cumplimiento también muestran una pestaña **Cumplimiento** en su página de detalle (gobernada por `security_compliance.view`). Lista cada hallazgo actualmente vinculado a la ficha con las mismas acciones Reconocer / Aceptar / **Crear riesgo** / **Abrir riesgo** que la vista GRC — de modo que un Application Owner pueda clasificar sus hallazgos sin salir de la ficha. La misma regla de ocultamiento automático se aplica a la pestaña **Riesgos** en el detalle de la ficha: ambas pestañas solo aparecen cuando la ficha realmente tiene elementos vinculados, de modo que las fichas sin actividad GRC no arrastran pestañas vacías.
 
 ## Permisos
 

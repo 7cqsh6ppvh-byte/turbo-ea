@@ -639,6 +639,7 @@
   "risks.tasks.history.unassigned": "Unassigned",
   "risks.tasks.history.closedAt": "Closed on {{timestamp}}",
   "risks.tasks.history.completedBy": "By {{name}} · owner at the time: {{owner}}",
+  "risks.tasks.history.byShort": "by {{name}}",
   "risks.tasks.field.reference": "Task ID",
   "risks.tasks.actions.exportHistory": "Export history (Excel)",
   "risks.tasks.history.targetLabel": "Target",
