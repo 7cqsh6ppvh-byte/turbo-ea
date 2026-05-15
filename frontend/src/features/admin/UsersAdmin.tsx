@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { AgGridReact } from "ag-grid-react";
+import type { ColDef } from "ag-grid-community";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import Table from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableBody from "@mui/material/TableBody";
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import Select from "@mui/material/Select";
@@ -28,11 +24,22 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
+import Drawer from "@mui/material/Drawer";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import { api } from "@/api/client";
 import { useDateFormat } from "@/hooks/useDateFormat";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import type { User, SsoInvitation, AppRole } from "@/types";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import RolesAdmin from "@/features/admin/RolesAdmin";
+import UsersFilterSidebar, {
+  EMPTY_USER_FILTERS,
+  DEFAULT_USER_COLUMNS,
+  type UserFilters,
+} from "./UsersFilterSidebar";
 
 interface InviteFormState {
   email: string;
@@ -58,9 +65,40 @@ interface EditFormState {
   auth_provider: string;
 }
 
+/* ---- localStorage persistence helpers ---- */
+const LS_KEY = "turboea_usersAdmin";
+const DEFAULT_SIDEBAR_WIDTH = 280;
+
+interface UsersAdminPrefs {
+  filters?: UserFilters;
+  columns?: string[];
+  sidebarWidth?: number;
+  sidebarCollapsed?: boolean;
+}
+
+function loadPrefs(): UsersAdminPrefs | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as UsersAdminPrefs) : null;
+  } catch {
+    return null;
+  }
+}
+
+function savePrefs(prefs: UsersAdminPrefs) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(prefs));
+  } catch {
+    // ignore quota errors
+  }
+}
+
 export default function UsersAdmin() {
   const { t } = useTranslation(["admin", "common"]);
   const { formatDate, formatDateTime } = useDateFormat();
+  const { mode } = useThemeMode();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [tab, setTab] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +132,35 @@ export default function UsersAdmin() {
   const [invitations, setInvitations] = useState<SsoInvitation[]>([]);
   const [ssoEnabled, setSsoEnabled] = useState(false);
 
+  // Sidebar + filters + columns
+  const savedPrefsRef = useRef(loadPrefs());
+  const [filters, setFilters] = useState<UserFilters>(
+    () => savedPrefsRef.current?.filters ?? EMPTY_USER_FILTERS,
+  );
+  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(
+    () =>
+      savedPrefsRef.current?.columns
+        ? new Set(savedPrefsRef.current.columns)
+        : new Set(DEFAULT_USER_COLUMNS),
+  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => savedPrefsRef.current?.sidebarCollapsed ?? false,
+  );
+  const [sidebarWidth, setSidebarWidth] = useState(
+    () => savedPrefsRef.current?.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
+  );
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Persist prefs whenever they change
+  useEffect(() => {
+    savePrefs({
+      filters,
+      columns: Array.from(selectedColumns),
+      sidebarWidth,
+      sidebarCollapsed,
+    });
+  }, [filters, selectedColumns, sidebarWidth, sidebarCollapsed]);
+
   const fetchRoles = useCallback(async () => {
     try {
       const data = await api.get<AppRole[]>("/roles");
@@ -114,7 +181,7 @@ export default function UsersAdmin() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const fetchInvitations = useCallback(async () => {
     try {
@@ -142,7 +209,7 @@ export default function UsersAdmin() {
   }, [fetchRoles, fetchUsers, fetchInvitations, fetchSsoStatus]);
 
   // --- Inline role update ---
-  const updateRole = async (userId: string, role: string) => {
+  const updateRole = useCallback(async (userId: string, role: string) => {
     try {
       await api.patch(`/users/${userId}`, { role });
       setUsers((prev) =>
@@ -151,10 +218,10 @@ export default function UsersAdmin() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common:errors.generic"));
     }
-  };
+  }, [t]);
 
   // --- Toggle active/inactive ---
-  const toggleActive = async (user: User) => {
+  const toggleActive = useCallback(async (user: User) => {
     try {
       const updated = await api.patch<User>(`/users/${user.id}`, {
         is_active: !user.is_active,
@@ -167,10 +234,10 @@ export default function UsersAdmin() {
         err instanceof Error ? err.message : t("common:errors.generic")
       );
     }
-  };
+  }, [t]);
 
   // --- Delete (soft-delete) ---
-  const handleDelete = async (user: User) => {
+  const handleDelete = useCallback(async (user: User) => {
     const confirmed = window.confirm(
       t("users.deleteConfirm", { name: user.display_name || user.email })
     );
@@ -181,7 +248,7 @@ export default function UsersAdmin() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common:errors.generic"));
     }
-  };
+  }, [t]);
 
   // --- Invite dialog ---
   const openInvite = () => {
@@ -219,7 +286,6 @@ export default function UsersAdmin() {
       } else {
         setWarning(null);
       }
-      // Refresh invitations since one was created alongside the user
       fetchInvitations();
     } catch (err) {
       setInviteError(
@@ -231,7 +297,7 @@ export default function UsersAdmin() {
   };
 
   // --- Edit dialog ---
-  const openEdit = (user: User) => {
+  const openEdit = useCallback((user: User) => {
     setEditingUser(user);
     setEditForm({
       email: user.email,
@@ -242,7 +308,7 @@ export default function UsersAdmin() {
     });
     setEditError(null);
     setEditOpen(true);
-  };
+  }, []);
 
   const handleEdit = async () => {
     if (!editingUser) return;
@@ -280,45 +346,51 @@ export default function UsersAdmin() {
     }
   };
 
-  // --- Resend invitation (from the Pending Invitations table) ---
-  const handleResendInvitationRow = async (inv: SsoInvitation) => {
-    setSuccess(null);
-    setError(null);
-    setWarning(null);
-    try {
-      await api.post(`/users/invitations/${inv.id}/resend`, {});
-      setSuccess(t("users.resendInviteSuccess", { email: inv.email }));
-    } catch (err) {
-      setError(
-        t("users.resendInviteFailed", {
-          error: err instanceof Error ? err.message : t("common:errors.generic"),
-        })
-      );
-    }
-  };
+  // --- Resend invitation ---
+  const handleResendInvitationRow = useCallback(
+    async (inv: SsoInvitation) => {
+      setSuccess(null);
+      setError(null);
+      setWarning(null);
+      try {
+        await api.post(`/users/invitations/${inv.id}/resend`, {});
+        setSuccess(t("users.resendInviteSuccess", { email: inv.email }));
+      } catch (err) {
+        setError(
+          t("users.resendInviteFailed", {
+            error: err instanceof Error ? err.message : t("common:errors.generic"),
+          }),
+        );
+      }
+    },
+    [t],
+  );
 
   // --- Delete invitation ---
-  const handleDeleteInvitation = async (inv: SsoInvitation) => {
-    try {
-      await api.delete(`/users/invitations/${inv.id}`);
-      setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t("common:errors.generic")
-      );
-    }
-  };
+  const handleDeleteInvitation = useCallback(
+    async (inv: SsoInvitation) => {
+      try {
+        await api.delete(`/users/invitations/${inv.id}`);
+        setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : t("common:errors.generic"),
+        );
+      }
+    },
+    [t],
+  );
 
   // Build a map from role key to AppRole for quick lookups
-  const roleMap = new Map(roles.map((r) => [r.key, r]));
-  const activeRoles = roles.filter((r) => !r.is_archived);
+  const roleMap = useMemo(() => new Map(roles.map((r) => [r.key, r])), [roles]);
+  const activeRoles = useMemo(() => roles.filter((r) => !r.is_archived), [roles]);
 
-  // Helper: get role chip for a user's role
-  const getRoleChip = (roleKey: string) => {
-    const role = roleMap.get(roleKey);
-    if (role) {
-      return (
-        <Stack direction="row" spacing={0.5} alignItems="center">
+  // Helper: render a role chip
+  const renderRoleChip = useCallback(
+    (roleKey: string) => {
+      const role = roleMap.get(roleKey);
+      if (role) {
+        return (
           <Chip
             size="small"
             label={role.label}
@@ -329,39 +401,413 @@ export default function UsersAdmin() {
               border: `1px solid ${role.color}44`,
             }}
           />
-          {role.is_archived && (
-            <Tooltip title={t("users.archivedRoleTooltip")}>
-              <span style={{ display: "inline-flex", alignItems: "center" }}>
-                <MaterialSymbol icon="warning" size={16} color="#ed6c02" />
-              </span>
-            </Tooltip>
-          )}
-        </Stack>
-      );
-    }
-    // Fallback when role is not found in the list (e.g., roles not loaded yet)
-    return <Chip size="small" label={roleKey} variant="outlined" />;
-  };
+        );
+      }
+      return <Chip size="small" label={roleKey} variant="outlined" />;
+    },
+    [roleMap],
+  );
+
+  // Map invitations by email so we can flag invited users in the main grid.
+  // Email is the natural key — invitations and users carry the same address
+  // and the backend builds the invitations list as the subset of users that
+  // never logged in.
+  const invitationByEmail = useMemo(() => {
+    const m = new Map<string, SsoInvitation>();
+    for (const inv of invitations) m.set(inv.email.toLowerCase(), inv);
+    return m;
+  }, [invitations]);
+
+  const getInvitation = useCallback(
+    (u: User) => invitationByEmail.get(u.email.toLowerCase()),
+    [invitationByEmail],
+  );
+
+  const userStatus = useCallback(
+    (u: User): "active" | "invited" | "inactive" => {
+      if (!u.is_active) return "inactive";
+      if (getInvitation(u)) return "invited";
+      return "active";
+    },
+    [getInvitation],
+  );
+
+  // Apply client-side filtering
+  const filteredUsers = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return users.filter((u) => {
+      if (q) {
+        const inEmail = u.email.toLowerCase().includes(q);
+        const inName = (u.display_name || "").toLowerCase().includes(q);
+        if (!inEmail && !inName) return false;
+      }
+      if (filters.roles.length > 0 && !filters.roles.includes(u.role)) {
+        return false;
+      }
+      if (filters.statuses.length > 0) {
+        if (!filters.statuses.includes(userStatus(u))) return false;
+      }
+      if (filters.authMethods.length > 0) {
+        const auth = u.auth_provider === "sso" ? "sso" : "local";
+        if (!filters.authMethods.includes(auth)) return false;
+      }
+      if (filters.invited && !getInvitation(u)) return false;
+      return true;
+    });
+  }, [users, filters, userStatus, getInvitation]);
+
+  const handleResetColumns = useCallback(() => {
+    setSelectedColumns(new Set(DEFAULT_USER_COLUMNS));
+  }, []);
+
+  /* ---- AG Grid column defs ---- */
+  const columnDefs = useMemo<ColDef<User>[]>(
+    () => [
+      {
+        field: "display_name",
+        headerName: t("users.columns.name"),
+        minWidth: 280,
+        flex: 1,
+        pinned: "left",
+        hide: false, // always shown (locked)
+        sortable: true,
+        cellRenderer: (p: { data?: User; value: string }) => {
+          const u = p.data;
+          if (!u) return null;
+          const inv = getInvitation(u);
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ flex: 1, minWidth: 0 }}
+                title={p.value}
+              >
+                {p.value}
+              </Typography>
+              <Box
+                sx={{ display: "flex", gap: 0.25, alignItems: "center", flexShrink: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Tooltip title={t("users.editTooltip")}>
+                  <IconButton size="small" onClick={() => openEdit(u)}>
+                    <MaterialSymbol icon="edit" size={18} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    u.is_active ? t("users.deactivateTooltip") : t("users.activateTooltip")
+                  }
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => toggleActive(u)}
+                    color={u.is_active ? "warning" : "success"}
+                  >
+                    <MaterialSymbol
+                      icon={u.is_active ? "person_off" : "person"}
+                      size={18}
+                    />
+                  </IconButton>
+                </Tooltip>
+                {inv && (
+                  <Tooltip title={t("users.resendInviteTooltip")}>
+                    <IconButton size="small" onClick={() => handleResendInvitationRow(inv)}>
+                      <MaterialSymbol icon="forward_to_inbox" size={18} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {inv && (
+                  <Tooltip title={t("users.invitations.revokeTooltip")}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteInvitation(inv)}
+                    >
+                      <MaterialSymbol icon="cancel_schedule_send" size={18} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {!u.is_active && (
+                  <Tooltip title={t("users.deleteTooltip")}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleDelete(u)}
+                    >
+                      <MaterialSymbol icon="delete" size={18} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "email",
+        headerName: t("users.columns.email"),
+        flex: 1.2,
+        minWidth: 180,
+        hide: !selectedColumns.has("email"),
+        sortable: true,
+      },
+      {
+        field: "role",
+        headerName: t("users.columns.role"),
+        width: 180,
+        hide: !selectedColumns.has("role"),
+        sortable: true,
+        cellRenderer: (p: { data?: User; value: string }) => {
+          const u = p.data;
+          if (!u) return null;
+          if (activeRoles.length > 0) {
+            return (
+              <Stack
+                direction="row"
+                spacing={0.5}
+                alignItems="center"
+                sx={{ height: "100%" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Select
+                  size="small"
+                  value={u.role}
+                  onChange={(e) => updateRole(u.id, e.target.value)}
+                  sx={{
+                    minWidth: 120,
+                    "& .MuiSelect-select": { py: 0.25 },
+                  }}
+                  renderValue={(val) => {
+                    const r = roleMap.get(val);
+                    return r ? (
+                      <Chip
+                        size="small"
+                        label={r.label}
+                        sx={{
+                          bgcolor: r.color + "22",
+                          color: r.color,
+                          fontWeight: 600,
+                          border: `1px solid ${r.color}44`,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    ) : (
+                      val
+                    );
+                  }}
+                >
+                  {activeRoles.map((r) => (
+                    <MenuItem key={r.key} value={r.key}>
+                      <Chip
+                        size="small"
+                        label={r.label}
+                        sx={{
+                          bgcolor: r.color + "22",
+                          color: r.color,
+                          fontWeight: 600,
+                          border: `1px solid ${r.color}44`,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </MenuItem>
+                  ))}
+                  {roleMap.get(u.role)?.is_archived && (
+                    <MenuItem value={u.role} disabled>
+                      <Chip
+                        size="small"
+                        label={roleMap.get(u.role)!.label}
+                        sx={{
+                          bgcolor: roleMap.get(u.role)!.color + "22",
+                          color: roleMap.get(u.role)!.color,
+                          fontWeight: 600,
+                          border: `1px solid ${roleMap.get(u.role)!.color}44`,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </MenuItem>
+                  )}
+                </Select>
+                {roleMap.get(u.role)?.is_archived && (
+                  <Tooltip title={t("users.archivedRoleWarning")}>
+                    <span style={{ display: "inline-flex", alignItems: "center" }}>
+                      <MaterialSymbol icon="warning" size={18} color="#ed6c02" />
+                    </span>
+                  </Tooltip>
+                )}
+              </Stack>
+            );
+          }
+          return renderRoleChip(p.value);
+        },
+      },
+      {
+        field: "auth_provider",
+        headerName: t("users.columns.auth"),
+        width: 140,
+        hide: !selectedColumns.has("auth"),
+        sortable: true,
+        cellRenderer: (p: { data?: User }) => {
+          const u = p.data;
+          if (!u) return null;
+          if (u.auth_provider === "sso") {
+            return (
+              <Chip size="small" label={t("users.auth.sso")} color="info" variant="outlined" />
+            );
+          }
+          if (u.pending_setup) {
+            return (
+              <Chip
+                size="small"
+                label={t("users.auth.pendingSetup")}
+                color="warning"
+                variant="outlined"
+              />
+            );
+          }
+          return (
+            <Chip size="small" label={t("users.auth.local")} color="default" variant="outlined" />
+          );
+        },
+      },
+      {
+        field: "is_active",
+        headerName: t("users.columns.status"),
+        width: 130,
+        hide: !selectedColumns.has("status"),
+        sortable: true,
+        valueGetter: (p: { data?: User }) =>
+          p.data ? userStatus(p.data) : "inactive",
+        cellRenderer: (p: { data?: User }) => {
+          const u = p.data;
+          if (!u) return null;
+          const status = userStatus(u);
+          if (status === "invited") {
+            return (
+              <Chip
+                size="small"
+                icon={<MaterialSymbol icon="mail" size={14} />}
+                label={t("users.status.invited")}
+                color="warning"
+                variant="outlined"
+              />
+            );
+          }
+          return (
+            <Chip
+              size="small"
+              label={
+                status === "active"
+                  ? t("users.status.active")
+                  : t("users.status.disabled")
+              }
+              color={status === "active" ? "success" : "default"}
+            />
+          );
+        },
+      },
+      {
+        field: "last_login",
+        headerName: t("users.columns.lastLogin"),
+        width: 170,
+        hide: !selectedColumns.has("last_login"),
+        sortable: true,
+        valueFormatter: (p: { value?: string }) =>
+          p.value ? formatDateTime(p.value) : "—",
+      },
+      {
+        field: "created_at",
+        headerName: t("users.columns.createdAt"),
+        width: 140,
+        hide: !selectedColumns.has("created_at"),
+        sortable: true,
+        valueFormatter: (p: { value?: string }) =>
+          p.value ? formatDate(p.value) : "—",
+      },
+      {
+        field: "locale",
+        headerName: t("users.columns.locale"),
+        width: 100,
+        hide: !selectedColumns.has("locale"),
+        sortable: true,
+        valueFormatter: (p: { value?: string }) => p.value || "—",
+      },
+      {
+        field: "pending_setup",
+        headerName: t("users.columns.pendingSetup"),
+        width: 140,
+        hide: !selectedColumns.has("pending_setup"),
+        sortable: true,
+        cellRenderer: (p: { value: boolean }) =>
+          p.value ? (
+            <MaterialSymbol icon="hourglass_top" size={18} color="#ed6c02" />
+          ) : (
+            <Typography variant="body2" color="text.disabled">
+              —
+            </Typography>
+          ),
+      },
+    ],
+    [
+      t,
+      selectedColumns,
+      activeRoles,
+      roleMap,
+      updateRole,
+      renderRoleChip,
+      formatDate,
+      formatDateTime,
+      openEdit,
+      toggleActive,
+      handleDelete,
+      getInvitation,
+      userStatus,
+      handleResendInvitationRow,
+      handleDeleteInvitation,
+    ],
+  );
+
+  const defaultColDef = useMemo<ColDef>(
+    () => ({ sortable: true, filter: true, resizable: true }),
+    [],
+  );
+  const getRowId = useCallback((p: { data: User }) => p.data.id, []);
+  const getRowStyle = useCallback(
+    (p: { data?: User }) =>
+      p.data && !p.data.is_active ? { opacity: 0.7 } : undefined,
+    [],
+  );
 
   const isEditingSsoUser = editForm.auth_provider === "sso";
 
-  // Helper to get auth status chip
-  const getAuthChip = (u: User) => {
-    if (u.auth_provider === "sso") {
-      if (u.has_password) {
-        return (
-          <Chip size="small" label={t("users.auth.ssoPassword")} color="info" variant="outlined" />
-        );
+  // Sidebar render — extracted so we can reuse it in Drawer + inline
+  const renderSidebar = (collapsed: boolean) => (
+    <UsersFilterSidebar
+      roles={roles}
+      filters={filters}
+      onFiltersChange={setFilters}
+      collapsed={collapsed}
+      onToggleCollapse={() =>
+        isMobile
+          ? setFilterDrawerOpen((v) => !v)
+          : setSidebarCollapsed((v) => !v)
       }
-      return <Chip size="small" label={t("users.auth.sso")} color="info" variant="outlined" />;
-    }
-    if (u.pending_setup) {
-      return (
-        <Chip size="small" label={t("users.auth.pendingSetup")} color="warning" variant="outlined" />
-      );
-    }
-    return <Chip size="small" label={t("users.auth.local")} color="default" variant="outlined" />;
-  };
+      width={isMobile ? 300 : sidebarWidth}
+      onWidthChange={isMobile ? () => {} : setSidebarWidth}
+      selectedColumns={selectedColumns}
+      onSelectedColumnsChange={setSelectedColumns}
+      onResetColumns={handleResetColumns}
+    />
+  );
 
   return (
     <Box>
@@ -377,515 +823,357 @@ export default function UsersAdmin() {
       {/* ============================================================ */}
       {/*  TAB 0 -- Users                                              */}
       {/* ============================================================ */}
-      {tab === 0 && (<Box>
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
-        <Button
-          variant="contained"
-          startIcon={<MaterialSymbol icon="person_add" size={20} />}
-          onClick={openInvite}
-        >
-          {t("users.inviteUser")}
-        </Button>
-      </Box>
-
-      {/* Error banner */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Warning banner — surfaces non-fatal issues such as failed invitation emails */}
-      {warning && (
-        <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setWarning(null)}>
-          {warning}
-        </Alert>
-      )}
-
-      {/* Success banner — confirms admin actions like resending an invite */}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {/* Users table */}
-      <TableContainer component={Paper} variant="outlined">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>{t("users.columns.name")}</TableCell>
-              <TableCell>{t("users.columns.email")}</TableCell>
-              <TableCell>{t("users.columns.role")}</TableCell>
-              <TableCell>{t("users.columns.auth")}</TableCell>
-              <TableCell>{t("users.columns.status")}</TableCell>
-              <TableCell>{t("users.columns.lastLogin")}</TableCell>
-              <TableCell align="right">{t("users.columns.actions")}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading && (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">
-                    {t("users.loadingUsers")}
-                  </Typography>
-                </TableCell>
-              </TableRow>
+      {tab === 0 && (
+        <Box>
+          {/* Toolbar */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1.5,
+              flexWrap: "wrap",
+            }}
+          >
+            {isMobile && (
+              <Tooltip title={t("users.filter.title")}>
+                <IconButton onClick={() => setFilterDrawerOpen(true)} size="small">
+                  <MaterialSymbol icon="filter_list" size={22} />
+                </IconButton>
+              </Tooltip>
             )}
-            {!loading && users.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">
-                    {t("users.noUsers")}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-            {!loading &&
-              users.map((u) => (
-                <TableRow key={u.id} hover>
-                  <TableCell>{u.display_name}</TableCell>
-                  <TableCell>{u.email}</TableCell>
-                  <TableCell>
-                    {roles.length > 0 ? (
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Select
-                          size="small"
-                          value={u.role}
-                          onChange={(e) => updateRole(u.id, e.target.value)}
-                          sx={{ minWidth: 130 }}
-                          renderValue={(val) => {
-                            const r = roleMap.get(val);
-                            return r ? (
-                              <Chip
-                                size="small"
-                                label={r.label}
-                                sx={{
-                                  bgcolor: r.color + "22",
-                                  color: r.color,
-                                  fontWeight: 600,
-                                  border: `1px solid ${r.color}44`,
-                                }}
-                              />
-                            ) : val;
-                          }}
-                        >
-                          {activeRoles.map((r) => (
-                            <MenuItem key={r.key} value={r.key}>
-                              <Chip
-                                size="small"
-                                label={r.label}
-                                sx={{
-                                  bgcolor: r.color + "22",
-                                  color: r.color,
-                                  fontWeight: 600,
-                                  border: `1px solid ${r.color}44`,
-                                  pointerEvents: "none",
-                                }}
-                              />
-                            </MenuItem>
-                          ))}
-                          {/* Keep current role as option if it is archived */}
-                          {roleMap.get(u.role)?.is_archived && (
-                            <MenuItem value={u.role} disabled>
-                              <Chip
-                                size="small"
-                                label={roleMap.get(u.role)!.label}
-                                sx={{
-                                  bgcolor: roleMap.get(u.role)!.color + "22",
-                                  color: roleMap.get(u.role)!.color,
-                                  fontWeight: 600,
-                                  border: `1px solid ${roleMap.get(u.role)!.color}44`,
-                                  pointerEvents: "none",
-                                }}
-                              />
-                            </MenuItem>
-                          )}
-                        </Select>
-                        {roleMap.get(u.role)?.is_archived && (
-                          <Tooltip title={t("users.archivedRoleWarning")}>
-                            <span style={{ display: "inline-flex", alignItems: "center" }}>
-                              <MaterialSymbol icon="warning" size={18} color="#ed6c02" />
-                            </span>
-                          </Tooltip>
-                        )}
-                      </Stack>
-                    ) : (
-                      getRoleChip(u.role)
-                    )}
-                  </TableCell>
-                  <TableCell>{getAuthChip(u)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={u.is_active ? t("users.status.active") : t("users.status.disabled")}
-                      color={u.is_active ? "success" : "default"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {u.last_login ? formatDateTime(u.last_login) : "—"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title={t("users.editTooltip")}>
-                      <IconButton size="small" onClick={() => openEdit(u)}>
-                        <MaterialSymbol icon="edit" size={20} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip
-                      title={u.is_active ? t("users.deactivateTooltip") : t("users.activateTooltip")}
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => toggleActive(u)}
-                        color={u.is_active ? "warning" : "success"}
-                      >
-                        <MaterialSymbol
-                          icon={u.is_active ? "person_off" : "person"}
-                          size={20}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                    {!u.is_active && (
-                      <Tooltip title={t("users.deleteTooltip")}>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(u)}
-                        >
-                          <MaterialSymbol icon="delete" size={20} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pending Invitations */}
-      {invitations.length > 0 && (
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-            {t("users.pendingInvitations")}
-          </Typography>
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t("users.invitations.email")}</TableCell>
-                  <TableCell>{t("users.invitations.role")}</TableCell>
-                  <TableCell>{t("users.invitations.invited")}</TableCell>
-                  <TableCell align="right">{t("users.columns.actions")}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {invitations.map((inv) => (
-                  <TableRow key={inv.id} hover>
-                    <TableCell>{inv.email}</TableCell>
-                    <TableCell>
-                      {getRoleChip(inv.role)}
-                    </TableCell>
-                    <TableCell>
-                      {inv.created_at ? formatDate(inv.created_at) : "—"}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title={t("users.resendInviteTooltip")}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleResendInvitationRow(inv)}
-                        >
-                          <MaterialSymbol icon="forward_to_inbox" size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={t("users.invitations.revokeTooltip")}>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteInvitation(inv)}
-                        >
-                          <MaterialSymbol icon="delete" size={20} />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      )}
-
-      {/* Invite User Dialog */}
-      <Dialog
-        open={inviteOpen}
-        onClose={() => setInviteOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("users.invite.title")}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
-            {ssoEnabled && (
-              <Alert severity="info" variant="outlined">
-                {t("users.invite.ssoHint")}
-              </Alert>
-            )}
-            {!ssoEnabled && (
-              <Alert severity="info" variant="outlined">
-                {t("users.invite.emailHint")}
-              </Alert>
-            )}
-            <TextField
-              label={t("users.invite.displayName")}
-              value={inviteForm.display_name}
-              onChange={(e) =>
-                setInviteForm((p) => ({ ...p, display_name: e.target.value }))
-              }
-              fullWidth
-              required
-              autoFocus
+            <Chip
+              label={t("common:items", { count: filteredUsers.length })}
               size="small"
             />
-            <TextField
-              label={t("users.columns.email")}
-              type="email"
-              value={inviteForm.email}
-              onChange={(e) =>
-                setInviteForm((p) => ({ ...p, email: e.target.value }))
-              }
-              fullWidth
-              required
-              size="small"
-            />
-            <TextField
-              label={
-                ssoEnabled
-                  ? t("users.invite.passwordOptional")
-                  : t("users.invite.password")
-              }
-              type="password"
-              value={inviteForm.password}
-              onChange={(e) =>
-                setInviteForm((p) => ({ ...p, password: e.target.value }))
-              }
-              fullWidth
-              size="small"
-              required={!ssoEnabled}
-              helperText={
-                ssoEnabled
-                  ? t("users.invite.passwordSsoHelperText")
-                  : t("users.invite.passwordHelperText")
-              }
-            />
-            <FormControl fullWidth size="small">
-              <InputLabel>{t("users.columns.role")}</InputLabel>
-              <Select
-                label={t("users.columns.role")}
-                value={inviteForm.role}
-                onChange={(e) =>
-                  setInviteForm((p) => ({
-                    ...p,
-                    role: e.target.value as string,
-                  }))
-                }
+            <Box sx={{ flex: 1 }} />
+            <Button
+              variant="contained"
+              startIcon={<MaterialSymbol icon="person_add" size={20} />}
+              onClick={openInvite}
+            >
+              {t("users.inviteUser")}
+            </Button>
+          </Box>
+
+          {/* Banners */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
+          {warning && (
+            <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setWarning(null)}>
+              {warning}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+              {success}
+            </Alert>
+          )}
+
+          {/* Sidebar + Grid */}
+          <Paper
+            variant="outlined"
+            sx={{
+              display: "flex",
+              height: 560,
+              overflow: "hidden",
+              borderRadius: 1,
+            }}
+          >
+            {isMobile ? (
+              <Drawer
+                open={filterDrawerOpen}
+                onClose={() => setFilterDrawerOpen(false)}
+                PaperProps={{ sx: { width: 300 } }}
               >
-                {activeRoles.map((r) => (
-                  <MenuItem key={r.key} value={r.key}>
-                    <Chip
-                      size="small"
-                      label={r.label}
-                      sx={{
-                        bgcolor: r.color + "22",
-                        color: r.color,
-                        fontWeight: 600,
-                        border: `1px solid ${r.color}44`,
-                        pointerEvents: "none",
-                      }}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={inviteForm.send_email}
+                {renderSidebar(false)}
+              </Drawer>
+            ) : (
+              renderSidebar(sidebarCollapsed)
+            )}
+
+            <Box
+              className={mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"}
+              sx={{ flex: 1, minHeight: 0 }}
+            >
+              <AgGridReact<User>
+                rowData={filteredUsers}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                getRowId={getRowId}
+                getRowStyle={getRowStyle}
+                loading={loading}
+                animateRows
+                rowHeight={48}
+                overlayNoRowsTemplate={`<span style="padding: 12px;">${t("users.noUsers")}</span>`}
+              />
+            </Box>
+          </Paper>
+
+          {/* Invite User Dialog */}
+          <Dialog
+            open={inviteOpen}
+            onClose={() => setInviteOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>{t("users.invite.title")}</DialogTitle>
+            <DialogContent>
+              <Stack spacing={2.5} sx={{ mt: 1 }}>
+                {ssoEnabled && (
+                  <Alert severity="info" variant="outlined">
+                    {t("users.invite.ssoHint")}
+                  </Alert>
+                )}
+                {!ssoEnabled && (
+                  <Alert severity="info" variant="outlined">
+                    {t("users.invite.emailHint")}
+                  </Alert>
+                )}
+                <TextField
+                  label={t("users.invite.displayName")}
+                  value={inviteForm.display_name}
                   onChange={(e) =>
-                    setInviteForm((p) => ({
-                      ...p,
-                      send_email: e.target.checked,
-                    }))
+                    setInviteForm((p) => ({ ...p, display_name: e.target.value }))
+                  }
+                  fullWidth
+                  required
+                  autoFocus
+                  size="small"
+                />
+                <TextField
+                  label={t("users.columns.email")}
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) =>
+                    setInviteForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                  fullWidth
+                  required
+                  size="small"
+                />
+                <TextField
+                  label={
+                    ssoEnabled
+                      ? t("users.invite.passwordOptional")
+                      : t("users.invite.password")
+                  }
+                  type="password"
+                  value={inviteForm.password}
+                  onChange={(e) =>
+                    setInviteForm((p) => ({ ...p, password: e.target.value }))
+                  }
+                  fullWidth
+                  size="small"
+                  required={!ssoEnabled}
+                  helperText={
+                    ssoEnabled
+                      ? t("users.invite.passwordSsoHelperText")
+                      : t("users.invite.passwordHelperText")
                   }
                 />
-              }
-              label={t("users.invite.sendEmail")}
-            />
-            {inviteError && <Alert severity="error">{inviteError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={() => setInviteOpen(false)}
-            disabled={inviteSubmitting}
-          >
-            {t("common:actions.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleInvite}
-            disabled={inviteSubmitting}
-          >
-            {inviteSubmitting ? t("users.invite.inviting") : t("users.inviteUser")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Edit User Dialog */}
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t("users.edit.title")}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
-            <TextField
-              label={t("users.invite.displayName")}
-              value={editForm.display_name}
-              onChange={(e) =>
-                setEditForm((p) => ({ ...p, display_name: e.target.value }))
-              }
-              fullWidth
-              required
-              size="small"
-            />
-            <TextField
-              label={t("users.columns.email")}
-              type="email"
-              value={editForm.email}
-              onChange={(e) =>
-                setEditForm((p) => ({ ...p, email: e.target.value }))
-              }
-              fullWidth
-              required
-              size="small"
-            />
-            {ssoEnabled && (
-              <FormControl fullWidth size="small">
-                <InputLabel>{t("users.edit.authMethod")}</InputLabel>
-                <Select
-                  label={t("users.edit.authMethod")}
-                  value={editForm.auth_provider}
-                  onChange={(e) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      auth_provider: e.target.value as string,
-                      password: "",
-                    }))
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t("users.columns.role")}</InputLabel>
+                  <Select
+                    label={t("users.columns.role")}
+                    value={inviteForm.role}
+                    onChange={(e) =>
+                      setInviteForm((p) => ({
+                        ...p,
+                        role: e.target.value as string,
+                      }))
+                    }
+                  >
+                    {activeRoles.map((r) => (
+                      <MenuItem key={r.key} value={r.key}>
+                        <Chip
+                          size="small"
+                          label={r.label}
+                          sx={{
+                            bgcolor: r.color + "22",
+                            color: r.color,
+                            fontWeight: 600,
+                            border: `1px solid ${r.color}44`,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={inviteForm.send_email}
+                      onChange={(e) =>
+                        setInviteForm((p) => ({
+                          ...p,
+                          send_email: e.target.checked,
+                        }))
+                      }
+                    />
                   }
-                >
-                  <MenuItem value="local">{t("users.auth.local")}</MenuItem>
-                  <MenuItem value="sso">{t("users.auth.sso")}</MenuItem>
-                </Select>
-              </FormControl>
-            )}
-            {!isEditingSsoUser && (
-              <TextField
-                label={t("users.edit.passwordKeep")}
-                type="password"
-                value={editForm.password}
-                onChange={(e) =>
-                  setEditForm((p) => ({ ...p, password: e.target.value }))
-                }
-                fullWidth
-                size="small"
-              />
-            )}
-            {isEditingSsoUser && (
-              <Alert severity="info" variant="outlined">
-                {t("users.edit.ssoPasswordHint")}
-              </Alert>
-            )}
-            <FormControl fullWidth size="small">
-              <InputLabel>{t("users.columns.role")}</InputLabel>
-              <Select
-                label={t("users.columns.role")}
-                value={editForm.role}
-                onChange={(e) =>
-                  setEditForm((p) => ({
-                    ...p,
-                    role: e.target.value as string,
-                  }))
-                }
+                  label={t("users.invite.sendEmail")}
+                />
+                {inviteError && <Alert severity="error">{inviteError}</Alert>}
+              </Stack>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={() => setInviteOpen(false)}
+                disabled={inviteSubmitting}
               >
-                {activeRoles.map((r) => (
-                  <MenuItem key={r.key} value={r.key}>
-                    <Chip
-                      size="small"
-                      label={r.label}
-                      sx={{
-                        bgcolor: r.color + "22",
-                        color: r.color,
-                        fontWeight: 600,
-                        border: `1px solid ${r.color}44`,
-                        pointerEvents: "none",
-                      }}
-                    />
-                  </MenuItem>
-                ))}
-                {/* Keep current role as option if it is archived */}
-                {editForm.role && roleMap.get(editForm.role)?.is_archived && (
-                  <MenuItem value={editForm.role} disabled>
-                    <Chip
-                      size="small"
-                      label={roleMap.get(editForm.role)!.label}
-                      sx={{
-                        bgcolor: roleMap.get(editForm.role)!.color + "22",
-                        color: roleMap.get(editForm.role)!.color,
-                        fontWeight: 600,
-                        border: `1px solid ${roleMap.get(editForm.role)!.color}44`,
-                        pointerEvents: "none",
-                      }}
-                    />
-                  </MenuItem>
-                )}
-              </Select>
-            </FormControl>
-            {editForm.role && roleMap.get(editForm.role)?.is_archived && (
-              <Alert severity="warning" variant="outlined">
-                {t("users.edit.archivedRoleWarning")}
-              </Alert>
-            )}
-            {editError && <Alert severity="error">{editError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setEditOpen(false)} disabled={editSubmitting}>
-            {t("common:actions.cancel")}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleEdit}
-            disabled={editSubmitting}
+                {t("common:actions.cancel")}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleInvite}
+                disabled={inviteSubmitting}
+              >
+                {inviteSubmitting
+                  ? t("users.invite.inviting")
+                  : t("users.inviteUser")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Edit User Dialog */}
+          <Dialog
+            open={editOpen}
+            onClose={() => setEditOpen(false)}
+            maxWidth="sm"
+            fullWidth
           >
-            {editSubmitting ? t("users.edit.saving") : t("users.edit.saveChanges")}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      </Box>)}
+            <DialogTitle>{t("users.edit.title")}</DialogTitle>
+            <DialogContent>
+              <Stack spacing={2.5} sx={{ mt: 1 }}>
+                <TextField
+                  label={t("users.invite.displayName")}
+                  value={editForm.display_name}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, display_name: e.target.value }))
+                  }
+                  fullWidth
+                  required
+                  size="small"
+                />
+                <TextField
+                  label={t("users.columns.email")}
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                  fullWidth
+                  required
+                  size="small"
+                />
+                {ssoEnabled && (
+                  <FormControl fullWidth size="small">
+                    <InputLabel>{t("users.edit.authMethod")}</InputLabel>
+                    <Select
+                      label={t("users.edit.authMethod")}
+                      value={editForm.auth_provider}
+                      onChange={(e) =>
+                        setEditForm((p) => ({
+                          ...p,
+                          auth_provider: e.target.value as string,
+                          password: "",
+                        }))
+                      }
+                    >
+                      <MenuItem value="local">{t("users.auth.local")}</MenuItem>
+                      <MenuItem value="sso">{t("users.auth.sso")}</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
+                {!isEditingSsoUser && (
+                  <TextField
+                    label={t("users.edit.passwordKeep")}
+                    type="password"
+                    value={editForm.password}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, password: e.target.value }))
+                    }
+                    fullWidth
+                    size="small"
+                  />
+                )}
+                {isEditingSsoUser && (
+                  <Alert severity="info" variant="outlined">
+                    {t("users.edit.ssoPasswordHint")}
+                  </Alert>
+                )}
+                <FormControl fullWidth size="small">
+                  <InputLabel>{t("users.columns.role")}</InputLabel>
+                  <Select
+                    label={t("users.columns.role")}
+                    value={editForm.role}
+                    onChange={(e) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        role: e.target.value as string,
+                      }))
+                    }
+                  >
+                    {activeRoles.map((r) => (
+                      <MenuItem key={r.key} value={r.key}>
+                        <Chip
+                          size="small"
+                          label={r.label}
+                          sx={{
+                            bgcolor: r.color + "22",
+                            color: r.color,
+                            fontWeight: 600,
+                            border: `1px solid ${r.color}44`,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </MenuItem>
+                    ))}
+                    {editForm.role && roleMap.get(editForm.role)?.is_archived && (
+                      <MenuItem value={editForm.role} disabled>
+                        <Chip
+                          size="small"
+                          label={roleMap.get(editForm.role)!.label}
+                          sx={{
+                            bgcolor: roleMap.get(editForm.role)!.color + "22",
+                            color: roleMap.get(editForm.role)!.color,
+                            fontWeight: 600,
+                            border: `1px solid ${roleMap.get(editForm.role)!.color}44`,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+                {editForm.role && roleMap.get(editForm.role)?.is_archived && (
+                  <Alert severity="warning" variant="outlined">
+                    {t("users.edit.archivedRoleWarning")}
+                  </Alert>
+                )}
+                {editError && <Alert severity="error">{editError}</Alert>}
+              </Stack>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button onClick={() => setEditOpen(false)} disabled={editSubmitting}>
+                {t("common:actions.cancel")}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleEdit}
+                disabled={editSubmitting}
+              >
+                {editSubmitting ? t("users.edit.saving") : t("users.edit.saveChanges")}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+      )}
 
       {/* ============================================================ */}
       {/*  TAB 1 -- Roles                                              */}

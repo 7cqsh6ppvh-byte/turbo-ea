@@ -5,6 +5,13 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.15.0] - 2026-05-15
+
+The admin user list now reuses the Inventory grid experience — same AG Grid Quartz styling, same resizable filter sidebar, and a column picker. The pending invitations table below the grid is unchanged.
+
+### Added
+- **Inventory-style user list at `/admin/users`.** The active/inactive user MUI table is replaced by an AG Grid backed by the Quartz theme so headers, row hover, and grid affordances match the Inventory page exactly. A new `UsersFilterSidebar` mounts to the left of the grid (Drawer on mobile, inline resizable on desktop, 220–500px) with two tabs: **Filters** (search by name/email, multi-select Role chips coloured from each `AppRole`, multi-select Status, multi-select Auth method, plus an "Advanced" section with a "Pending password setup only" toggle) and **Columns** (per-user toggle visibility for Name [locked], Email, Role, Auth, Status, Last login, Created, Locale, Pending setup). Inline role-edit dropdown, edit/activate/delete actions, and the invite & edit dialogs are preserved. Filter values, visible columns, sidebar width, and collapsed state persist per browser via `localStorage` under the `turboea_usersAdmin` key. The pending invitations table below the grid is unchanged.
+
 ## [1.14.0] - 2026-05-15
 
 Admins can now toggle the GRC (Governance, Risk, Compliance) module on or off, mirroring the existing BPM, PPM and TurboLens toggles.
