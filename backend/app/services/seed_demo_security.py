@@ -28,7 +28,7 @@ from app.models.turbolens import (
     TurboLensAnalysisRun,
     TurboLensComplianceFinding,
 )
-from app.services.turbolens_security import compute_finding_key
+from app.services.compliance_scanner import compute_finding_key
 
 # ===================================================================
 # COMPLIANCE FINDINGS — 12 entries across all six built-in regulations,

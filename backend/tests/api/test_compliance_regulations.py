@@ -333,7 +333,7 @@ class TestRescanPreservesUserWork:
         ``vanished`` branch and exercise the preservation logic.
         """
         from app.api.v1.turbolens import AnalysisStatus, AnalysisType
-        from app.services.turbolens_security import run_compliance_scan
+        from app.services.compliance_scanner import run_compliance_scan
 
         scan_run = TurboLensAnalysisRun(
             id=uuid.uuid4(),

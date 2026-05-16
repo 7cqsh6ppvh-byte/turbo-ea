@@ -19,7 +19,7 @@ from app.models.turbolens import (
     TurboLensAnalysisRun,
     TurboLensComplianceFinding,
 )
-from app.services import turbolens_security
+from app.services import compliance_scanner
 from tests.conftest import create_card
 
 
@@ -70,11 +70,11 @@ def patch_compliance_pipeline(monkeypatch):
         return None
 
     monkeypatch.setattr(
-        turbolens_security, "load_enabled_regulations", fake_load_enabled_regulations
+        compliance_scanner, "load_enabled_regulations", fake_load_enabled_regulations
     )
-    monkeypatch.setattr(turbolens_security, "assess_regulation", fake_assess_regulation)
-    monkeypatch.setattr(turbolens_security, "detect_ai_bearing_cards", fake_detect_ai)
-    monkeypatch.setattr(turbolens_security, "_progress_cb", lambda db, run_id: _noop_cb)
+    monkeypatch.setattr(compliance_scanner, "assess_regulation", fake_assess_regulation)
+    monkeypatch.setattr(compliance_scanner, "detect_ai_bearing_cards", fake_detect_ai)
+    monkeypatch.setattr(compliance_scanner, "_progress_cb", lambda db, run_id: _noop_cb)
     return state
 
 
@@ -110,7 +110,7 @@ async def test_rescan_with_rephrased_requirement_does_not_duplicate(db, patch_co
         _emission(card.id, requirement="Maintain a registry of high-risk systems."),
     ]
     run1 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run1, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run1, user_id=None)
     assert await _count_findings(db) == 1
 
     # Run 2 emits the same finding with completely different phrasing.
@@ -118,7 +118,7 @@ async def test_rescan_with_rephrased_requirement_does_not_duplicate(db, patch_co
         _emission(card.id, requirement="High-risk AI systems must comply with Annex III."),
     ]
     run2 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run2, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run2, user_id=None)
     assert await _count_findings(db) == 1, "rephrased requirement must NOT create a duplicate"
 
 
@@ -132,25 +132,25 @@ async def test_rescan_with_different_article_prefix_does_not_duplicate(
     # Run 1: "Art. 6"
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article="Art. 6")]
     run1 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run1, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run1, user_id=None)
     assert await _count_findings(db) == 1
 
     # Run 2: "Article 6" — same article, different phrasing.
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article="Article 6")]
     run2 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run2, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run2, user_id=None)
     assert await _count_findings(db) == 1
 
     # Run 3: " article  6 " — leading whitespace, internal whitespace.
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article=" article  6 ")]
     run3 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run3, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run3, user_id=None)
     assert await _count_findings(db) == 1
 
     # Run 4: "§6" — flush prefix.
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article="§6")]
     run4 = await _make_run(db)
-    await turbolens_security.run_compliance_scan(db, run4, user_id=None)
+    await compliance_scanner.run_compliance_scan(db, run4, user_id=None)
     assert await _count_findings(db) == 1
 
 
@@ -162,10 +162,10 @@ async def test_rescan_with_genuinely_different_article_inserts_new_row(
     patch_compliance_pipeline["regulations"] = [reg]
 
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article="Art. 6")]
-    await turbolens_security.run_compliance_scan(db, await _make_run(db), user_id=None)
+    await compliance_scanner.run_compliance_scan(db, await _make_run(db), user_id=None)
     assert await _count_findings(db) == 1
 
     # Different article number → genuinely a new finding.
     patch_compliance_pipeline["emissions"] = [_emission(card.id, article="Art. 7")]
-    await turbolens_security.run_compliance_scan(db, await _make_run(db), user_id=None)
+    await compliance_scanner.run_compliance_scan(db, await _make_run(db), user_id=None)
     assert await _count_findings(db) == 2

@@ -919,7 +919,7 @@ async def trigger_compliance_scan(
     user_id = str(user.id)
 
     async def _service(db_: AsyncSession) -> dict[str, Any]:
-        from app.services.turbolens_security import run_compliance_scan
+        from app.services.compliance_scanner import run_compliance_scan
 
         return await run_compliance_scan(db_, run.id, user_id, regulations=regulations)
 
@@ -965,7 +965,7 @@ async def security_overview(
     await PermissionService.require_permission(db, user, "security_compliance.view")
 
     from app.schemas.turbolens import SecurityScanRunOut
-    from app.services.turbolens_security import compliance_score
+    from app.services.compliance_scanner import compliance_score
 
     async def _latest(scan_type: AnalysisType) -> SecurityScanRunOut:
         result = await db.execute(
@@ -1038,7 +1038,7 @@ async def list_compliance(
     """
     await PermissionService.require_permission(db, user, "security_compliance.view")
 
-    from app.services.turbolens_security import (
+    from app.services.compliance_scanner import (
         compliance_score,
         compliance_to_dict,
         load_regulation_meta,
@@ -1198,7 +1198,7 @@ async def create_compliance_finding_manual(
     db.add(run)
     await db.flush()
 
-    from app.services.turbolens_security import (
+    from app.services.compliance_scanner import (
         compliance_to_dict,
         compute_finding_key,
     )
@@ -1271,7 +1271,7 @@ async def bulk_update_compliance_findings(
     ``PATCH /security/compliance-findings/{finding_id}`` so FastAPI
     matches the literal ``bulk`` segment first. Don't reorder.
     """
-    from app.services.turbolens_security import compliance_lifecycle_allowed
+    from app.services.compliance_scanner import compliance_lifecycle_allowed
 
     await PermissionService.require_permission(db, user, "security_compliance.manage")
 
@@ -1336,14 +1336,14 @@ async def update_compliance_finding_decision(
     """Transition a compliance finding's lifecycle state.
 
     Allowed transitions follow ``compliance_lifecycle_allowed`` in
-    ``services.turbolens_security``. ``accepted`` requires a
+    ``services.compliance_scanner``. ``accepted`` requires a
     ``review_note``. ``risk_tracked`` is set by
     ``POST /risks/promote/compliance/{id}`` (not here) and once a
     finding is risk-tracked, manual transitions are blocked until the
     linked Risk closes — the Risk lifecycle drives the finding via
     ``compliance_risk_sync.propagate_risk_to_findings``.
     """
-    from app.services.turbolens_security import compliance_lifecycle_allowed
+    from app.services.compliance_scanner import compliance_lifecycle_allowed
 
     await PermissionService.require_permission(db, user, "security_compliance.manage")
     decision = (body.decision or "").strip()
@@ -1381,7 +1381,7 @@ async def update_compliance_finding_decision(
     await db.commit()
     await db.refresh(row)
 
-    from app.services.turbolens_security import (
+    from app.services.compliance_scanner import (
         compliance_to_dict,
         load_reviewer_names,
         load_risk_references,
@@ -1551,7 +1551,7 @@ async def submit_ai_verdict(
     await db.commit()
     await db.refresh(row)
 
-    from app.services.turbolens_security import (
+    from app.services.compliance_scanner import (
         compliance_to_dict,
         load_reviewer_names,
         load_risk_references,
@@ -1597,7 +1597,7 @@ async def list_card_compliance_findings(
         stmt = stmt.where(TurboLensComplianceFinding.auto_resolved.is_(False))
     rows = list((await db.execute(stmt)).scalars().all())
 
-    from app.services.turbolens_security import (
+    from app.services.compliance_scanner import (
         compliance_to_dict,
         load_reviewer_names,
         load_risk_references,

@@ -15,12 +15,12 @@ from __future__ import annotations
 
 import pytest
 
+from app.services.compliance_scanner import COMPLIANCE_LIFECYCLE_STATES
 from app.services.seed_demo import APPLICATIONS, IT_COMPONENTS
 from app.services.seed_demo_security import (
     COMPLIANCE_FINDINGS,
     seed_security_demo_data,
 )
-from app.services.turbolens_security import COMPLIANCE_LIFECYCLE_STATES
 from tests.conftest import create_card
 
 # Built-in regulation keys registered by ``seed_metamodel`` (see seed.py).

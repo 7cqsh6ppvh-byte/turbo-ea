@@ -11,8 +11,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.services import turbolens_security
-from app.services.turbolens_security import (
+from app.services import compliance_scanner
+from app.services.compliance_scanner import (
     ScanCard,
     _landscape_summary,
     _normalise_article,
@@ -92,7 +92,7 @@ def test_compliance_score_weights_statuses():
 
 
 def test_service_exposes_compliance_scan_entry_point():
-    from app.services import turbolens_security as svc
+    from app.services import compliance_scanner as svc
 
     assert hasattr(svc, "run_compliance_scan")
     # The legacy combined entry point and the CVE scan must be gone.
@@ -179,8 +179,8 @@ async def test_detect_ai_includes_user_confirmed_cards_when_subtype_is_not_ai(mo
     async def _fake_get_ai_config(db):
         return {}
 
-    monkeypatch.setattr(turbolens_security, "get_ai_config", _fake_get_ai_config)
-    monkeypatch.setattr(turbolens_security, "is_ai_configured", lambda cfg: False)
+    monkeypatch.setattr(compliance_scanner, "get_ai_config", _fake_get_ai_config)
+    monkeypatch.setattr(compliance_scanner, "is_ai_configured", lambda cfg: False)
 
     confirmed = _scan_card(
         type="Application",
@@ -210,8 +210,8 @@ async def test_detect_ai_excludes_user_flagged_not_ai_cards(monkeypatch):
     async def _fake_get_ai_config(db):
         return {}
 
-    monkeypatch.setattr(turbolens_security, "get_ai_config", _fake_get_ai_config)
-    monkeypatch.setattr(turbolens_security, "is_ai_configured", lambda cfg: False)
+    monkeypatch.setattr(compliance_scanner, "get_ai_config", _fake_get_ai_config)
+    monkeypatch.setattr(compliance_scanner, "is_ai_configured", lambda cfg: False)
 
     rejected_subtype_ai = _scan_card(
         type="Application",
