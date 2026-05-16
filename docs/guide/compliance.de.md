@@ -2,7 +2,6 @@
 
 Der **Compliance**-Reiter des [GRC-Moduls](grc.md) unter `/grc?tab=compliance` ist ein **Register mit zwei Quellen**: jeder Befund wurde entweder von einer Reviewerin erfasst oder von einem KI-Scan gegen eine Regulierung erzeugt — und beide Arten von Befunden leben und werden Seite an Seite in derselben Tabelle triagiert.
 
-![GRC — Compliance-Scanner](../assets/img/de/54_grc_compliance.png)
 
 !!! note
     Sechs Regulierungen sind standardmäßig aktiviert — **EU AI Act**, **GDPR**, **NIS2**, **DORA**, **SOC 2**, **ISO/IEC 27001**. Administratoren können sie aktivieren, deaktivieren oder benutzerdefinierte Regulierungen hinzufügen (z.B. HIPAA, interne Richtlinien-Frameworks) unter [**Administration → Metamodell → Regulierungen**](../admin/metamodel.md#compliance-regulations).

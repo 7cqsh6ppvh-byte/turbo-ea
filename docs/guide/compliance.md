@@ -2,7 +2,6 @@
 
 The **Compliance** tab of the [GRC module](grc.md) at `/grc?tab=compliance` is a **dual-source register**: every finding either was authored by a reviewer or was produced by an AI scan against a regulation, and both kinds of finding live and are triaged side-by-side in the same grid.
 
-![GRC — Compliance scanner](../assets/img/en/54_grc_compliance.png)
 
 !!! note
     Six regulations ship enabled by default — **EU AI Act**, **GDPR**, **NIS2**, **DORA**, **SOC 2**, **ISO/IEC 27001**. Admins can enable, disable or add custom regulations (e.g. HIPAA, internal policy frameworks) under [**Administration → Metamodel → Regulations**](../admin/metamodel.md#compliance-regulations).

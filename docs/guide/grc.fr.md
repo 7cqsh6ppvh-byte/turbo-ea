@@ -98,7 +98,6 @@ Intègre le **Registre des risques** TOGAF Phase G. Le cycle de vie complet, le 
 
 ## Conformité
 
-![GRC — scanner de conformité](../assets/img/fr/54_grc_conformite.png)
 
 L'onglet Conformité est un registre à deux sources — les constats peuvent être **saisis manuellement** par un examinateur **ou** produits par un **scan IA** à la demande contre les réglementations activées (EU AI Act, RGPD, NIS2, DORA, SOC 2, ISO 27001 sont activées par défaut). Les deux types de constats partagent le même cycle de vie, peuvent être promus en Risque et bulk-actionnés depuis la grille. Voir le [guide Conformité](compliance.md) pour le cycle de vie complet, le dialogue de création manuelle, le workflow de scan, le détecteur sémantique EU AI Act et la boucle de promotion en Risque.
 

@@ -2,7 +2,6 @@
 
 A aba **Conformidade** do [módulo GRC](grc.md) em `/grc?tab=compliance` é um **registro de fonte dupla**: cada descoberta foi escrita por um revisor ou produzida por uma varredura de IA contra uma regulamentação — e ambos os tipos de descoberta convivem e são triados lado a lado na mesma grade.
 
-![GRC — scanner de conformidade](../assets/img/pt/54_grc_conformidade.png)
 
 !!! note
     Seis regulamentações vêm habilitadas por padrão — **EU AI Act**, **LGPD/GDPR**, **NIS2**, **DORA**, **SOC 2**, **ISO/IEC 27001**. Administradores podem habilitar, desabilitar ou adicionar regulamentações personalizadas (p.ex. HIPAA, frameworks de política interna) em [**Administração → Metamodelo → Regulamentações**](../admin/metamodel.md#compliance-regulations).

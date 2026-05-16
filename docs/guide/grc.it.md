@@ -98,7 +98,6 @@ Incorpora il **Registro dei rischi** TOGAF Fase G. Ciclo di vita completo, workf
 
 ## Conformità
 
-![GRC — scanner di conformità](../assets/img/it/54_grc_conformita.png)
 
 La scheda Conformità è un registro a doppia fonte — le rilevazioni possono essere **scritte manualmente** da un revisore **oppure** prodotte da una **scansione IA** on-demand contro le regolamentazioni abilitate (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001 sono abilitate per default). Entrambi i tipi di rilevazione condividono lo stesso ciclo di vita, possono essere promossi a un Rischio e bulk-azionabili dalla griglia. Vedi la [guida Conformità](compliance.md) per il ciclo di vita completo, il dialogo di creazione manuale, il workflow di scansione, il rilevatore semantico EU AI Act e il loop di promozione a Rischio.
 

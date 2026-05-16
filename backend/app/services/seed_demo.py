@@ -2238,6 +2238,22 @@ IT_COMPONENTS = [
         },
     ),
 ]
+
+# Default lifecycle for IT Components — every component has been in production
+# for several years, is currently active, and has a vendor-style end-of-life
+# planned several years out. Per-card overrides remain possible via _fs().
+# Drives the Technology Lifecycle report (`/reports/lifecycle?type=ITComponent`)
+# and gives the demo a populated timeline out of the box.
+_ITC_DEFAULT_LIFECYCLE = {
+    "phaseIn": "2022-06-01",
+    "active": "2023-01-01",
+    "phaseOut": "2028-06-01",
+    "eol": "2030-12-31",
+}
+for _c in IT_COMPONENTS:
+    if not _c.get("lifecycle"):
+        _c["lifecycle"] = dict(_ITC_DEFAULT_LIFECYCLE)
+
 # ── Interfaces ────────────────────────────────────────────────────
 INTERFACES = [
     _fs(

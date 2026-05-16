@@ -106,7 +106,6 @@ Embeds the TOGAF Phase G **Risk Register**. The full lifecycle, status workflow,
 
 ## Compliance
 
-![GRC — Compliance scanner](../assets/img/en/54_grc_compliance.png)
 
 The Compliance tab is a dual-source register — findings can be **authored manually** by a reviewer **or** produced by an on-demand **AI scan** against any of the enabled regulations (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001 ship enabled by default). Both kinds of finding share the same lifecycle, can be promoted to a Risk, and are bulk-actionable from the grid. See the [Compliance guide](compliance.md) for the full lifecycle, the manual-create dialog, the scan workflow, the EU AI Act semantic detector, and the promotion-to-Risk loop.
 

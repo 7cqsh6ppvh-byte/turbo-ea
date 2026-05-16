@@ -286,7 +286,12 @@ async function executeActions(
   for (const action of actions) {
     switch (action.type) {
       case "scroll":
-        if (action.target === "bottom") {
+        if (typeof action.pixels === "number") {
+          // Absolute pixel scroll — use when neither "bottom" nor a selector
+          // give us the right framing.
+          const y = action.pixels;
+          await page.evaluate((py) => window.scrollTo(0, py), y);
+        } else if (action.target === "bottom") {
           await page.evaluate(() =>
             window.scrollTo(0, document.body.scrollHeight)
           );

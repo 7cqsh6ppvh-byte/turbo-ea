@@ -2,7 +2,6 @@
 
 L'onglet **Conformité** du [module GRC](grc.md) à `/grc?tab=compliance` est un **registre à deux sources** : chaque constat a soit été saisi par un examinateur, soit produit par un scan IA contre une réglementation — et les deux types de constats vivent et sont triés côte à côte dans la même grille.
 
-![GRC — scanner de conformité](../assets/img/fr/54_grc_conformite.png)
 
 !!! note
     Six réglementations sont activées par défaut — **EU AI Act**, **RGPD**, **NIS2**, **DORA**, **SOC 2**, **ISO/CEI 27001**. Les administrateurs peuvent en activer, désactiver ou ajouter des réglementations personnalisées (p.ex. HIPAA, frameworks de politique interne) sous [**Administration → Métamodèle → Réglementations**](../admin/metamodel.md#compliance-regulations).

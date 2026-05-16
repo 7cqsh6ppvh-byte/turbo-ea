@@ -2,7 +2,6 @@
 
 [GRC 模块](grc.md)在 `/grc?tab=compliance` 路径下的 **合规** 标签页是一个 **双来源登记册**：每条发现要么由审核员手工撰写，要么由 AI 扫描针对某项法规生成 — 两类发现在同一个网格中并肩生存并被分诊。
 
-![GRC — 合规扫描器](../assets/img/zh/54_grc_compliance.png)
 
 !!! note
     六项法规默认启用 — **EU AI Act**、**GDPR**、**NIS2**、**DORA**、**SOC 2**、**ISO/IEC 27001**。管理员可在 [**管理 → 元模型 → 法规**](../admin/metamodel.md#compliance-regulations) 下启用、禁用或新增自定义法规（例如 HIPAA、内部政策框架）。

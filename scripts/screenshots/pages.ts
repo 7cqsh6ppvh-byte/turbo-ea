@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 export type ScreenshotAction =
-  | { type: "scroll"; target: "bottom" | "top" | string }
+  | { type: "scroll"; target: "bottom" | "top" | string; pixels?: number }
   | { type: "click"; selector: string }
   | { type: "wait"; ms: number }
   | { type: "hover"; selector: string };
@@ -172,9 +172,13 @@ export const DOC_PAGES: PageDef[] = [
     id: "02_dashboard_bottom",
     route: "/",
     waitFor: ".recharts-responsive-container",
+    // Scroll partway down so the chart row (Cards by Type, Approval Status,
+    // Data Quality, Lifecycle) is the focal point — going all the way to
+    // "bottom" lands on the activity feed alone, which is not what the doc
+    // page promises ("Dashboard - Bottom View with Charts").
     actions: [
       { type: "wait", ms: 800 },
-      { type: "scroll", target: "bottom" },
+      { type: "scroll", target: "", pixels: 360 },
       { type: "wait", ms: 400 },
     ],
     filenames: {
@@ -362,9 +366,19 @@ export const DOC_PAGES: PageDef[] = [
   },
   {
     id: "12_lifecycle",
+    // Filter to IT Components — the lifecycle view is more visually
+    // meaningful for tech assets that actually carry end-of-life dates.
+    // The page doesn't read `?type=` from the URL (config comes from saved
+    // reports / localStorage), so drive the Card Type Select widget directly.
     route: "/reports/lifecycle",
-    waitFor: ".recharts-responsive-container, [class*='Lifecycle']",
-    actions: [{ type: "wait", ms: 1800 }],
+    waitFor: "[role='combobox']",
+    actions: [
+      { type: "wait", ms: 800 },
+      { type: "click", selector: "[role='combobox']" },
+      { type: "wait", ms: 300 },
+      { type: "click", selector: "li[data-value='ITComponent']" },
+      { type: "wait", ms: 1800 },
+    ],
     filenames: {
       en: "12_lifecycle",
       de: "12_lebenszyklus",
@@ -395,9 +409,16 @@ export const DOC_PAGES: PageDef[] = [
   {
     id: "13b_dependencies_c4",
     route: "/reports/dependencies",
-    waitFor: ".react-flow",
+    // Wait for the toggle group, not `.react-flow` — the latter only mounts
+    // after the LDV toggle is clicked.
+    waitFor: "[value='c4']",
+    // Switch to the Layered Dependency View, then center on SAP S/4HANA
+    // (the demo seed's flagship Application with rich relations) so the
+    // screenshot actually shows the diagram, not the empty picker.
     actions: [
       { type: "click", selector: "[value='c4']" },
+      { type: "wait", ms: 800 },
+      { type: "click", selector: "text=SAP S/4HANA" },
       // React Flow runs an auto-layout + fit-view animation; allow it to settle.
       { type: "wait", ms: 2500 },
     ],
@@ -1212,7 +1233,14 @@ export const DOC_PAGES: PageDef[] = [
     id: "53_grc_risk_register",
     route: "/grc?tab=risk",
     waitFor: ".MuiPaper-root",
-    actions: [{ type: "wait", ms: 1000 }],
+    // Scroll past the KPI tiles + matrix so the actual register table is
+    // the centerpiece of the screenshot — the user-facing "Risk Register"
+    // is the list of risks, not just the header summary.
+    actions: [
+      { type: "wait", ms: 1000 },
+      { type: "scroll", target: "", pixels: 420 },
+      { type: "wait", ms: 400 },
+    ],
     filenames: {
       en: "53_grc_risk_register",
       de: "53_grc_risikoregister",
@@ -1226,22 +1254,11 @@ export const DOC_PAGES: PageDef[] = [
   },
 
   // ── GRC — Compliance tab ─────────────────────────────────────────────────
-  {
-    id: "54_grc_compliance",
-    route: "/grc?tab=compliance",
-    waitFor: ".MuiPaper-root",
-    actions: [{ type: "wait", ms: 1000 }],
-    filenames: {
-      en: "54_grc_compliance",
-      de: "54_grc_compliance",
-      fr: "54_grc_conformite",
-      es: "54_grc_cumplimiento",
-      it: "54_grc_conformita",
-      pt: "54_grc_conformidade",
-      zh: "54_grc_compliance",
-      ru: "54_grc_sootvetstvie",
-    },
-  },
+  // Deliberately not captured: the Compliance tab is gated behind an AI
+  // provider being configured. Without one (the default for the demo seed)
+  // the only thing visible is the "AI provider is not configured" empty
+  // state, which is misleading as documentation. Re-enable this entry once
+  // we have a way to capture the page with real findings present.
 
   // ── Initiative card — SoAW tab ───────────────────────────────────────────
   {

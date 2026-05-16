@@ -98,7 +98,6 @@ Incorpora o **Registro de riscos** TOGAF Fase G. Ciclo de vida completo, fluxo d
 
 ## Conformidade
 
-![GRC — scanner de conformidade](../assets/img/pt/54_grc_conformidade.png)
 
 A aba Conformidade é um registro de fonte dupla — descobertas podem ser **redigidas manualmente** por um revisor **ou** produzidas por uma **varredura IA** sob demanda contra as regulamentações habilitadas (EU AI Act, LGPD/GDPR, NIS2, DORA, SOC 2, ISO 27001 vêm habilitadas por padrão). Ambos os tipos de descoberta compartilham o mesmo ciclo de vida, podem ser promovidos a um Risco e bulk-actionados a partir da grade. Veja o [guia de Conformidade](compliance.md) para o ciclo de vida completo, o diálogo de criação manual, o fluxo de varredura, o detector semântico EU AI Act e o loop de promoção a Risco.
 

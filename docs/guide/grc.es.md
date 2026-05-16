@@ -98,7 +98,6 @@ Incrusta el **Registro de riesgos** TOGAF Fase G. El ciclo de vida completo, el 
 
 ## Cumplimiento
 
-![GRC — escáner de cumplimiento](../assets/img/es/54_grc_cumplimiento.png)
 
 La pestaña Cumplimiento es un registro de doble fuente — los hallazgos pueden ser **redactados manualmente** por un revisor **o** producidos por un **escaneo IA** bajo demanda contra las regulaciones habilitadas (EU AI Act, RGPD, NIS2, DORA, SOC 2, ISO 27001 vienen habilitadas por defecto). Ambos tipos de hallazgo comparten el mismo ciclo de vida, pueden promoverse a un Riesgo y son bulk-actionables desde la cuadrícula. Consulta la [guía de Cumplimiento](compliance.md) para el ciclo de vida completo, el diálogo de creación manual, el flujo de escaneo, el detector semántico de EU AI Act y el bucle de promoción a Riesgo.
 

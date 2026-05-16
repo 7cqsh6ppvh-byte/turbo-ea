@@ -2,7 +2,6 @@
 
 La pestaña **Cumplimiento** del [módulo GRC](grc.md) en `/grc?tab=compliance` es un **registro de doble fuente**: cada hallazgo o bien fue redactado por un revisor o fue producido por un escaneo IA contra una regulación — y ambos tipos de hallazgos viven y se triagean lado a lado en la misma cuadrícula.
 
-![GRC — escáner de cumplimiento](../assets/img/es/54_grc_cumplimiento.png)
 
 !!! note
     Seis regulaciones vienen habilitadas por defecto — **EU AI Act**, **RGPD**, **NIS2**, **DORA**, **SOC 2**, **ISO/IEC 27001**. Los administradores pueden habilitar, deshabilitar o añadir regulaciones personalizadas (p.ej. HIPAA, frameworks de política interna) bajo [**Administración → Metamodelo → Regulaciones**](../admin/metamodel.md#compliance-regulations).

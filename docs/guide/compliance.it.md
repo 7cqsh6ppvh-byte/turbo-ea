@@ -2,7 +2,6 @@
 
 La scheda **Conformità** del [modulo GRC](grc.md) all'indirizzo `/grc?tab=compliance` è un **registro a doppia fonte**: ogni rilevazione è stata scritta da un revisore oppure prodotta da una scansione IA contro una regolamentazione — ed entrambi i tipi di rilevazione convivono e vengono triagiati fianco a fianco nella stessa griglia.
 
-![GRC — scanner di conformità](../assets/img/it/54_grc_conformita.png)
 
 !!! note
     Sei regolamentazioni sono abilitate per impostazione predefinita — **EU AI Act**, **GDPR**, **NIS2**, **DORA**, **SOC 2**, **ISO/IEC 27001**. Gli amministratori possono abilitare, disabilitare o aggiungere regolamentazioni personalizzate (es. HIPAA, framework di policy interne) sotto [**Amministrazione → Metamodello → Regolamentazioni**](../admin/metamodel.md#compliance-regulations).
