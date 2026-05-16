@@ -217,63 +217,11 @@ Ein ADR-Entwurf wird automatisch zusammen mit der Initiative erstellt mit:
 
 Klicken Sie auf **Andere Auswahl**, um zu den Lösungsoptionen zurückzukehren und einen anderen Ansatz zu wählen. Alle Ihre Antworten aus Phase 1 und Phase 2 bleiben erhalten — nur die nachgelagerten Daten (Gap-Analyse, Abhängigkeiten, Zielarchitektur) werden zurückgesetzt. Nach Auswahl einer neuen Option durchläuft der Assistent erneut die Gap-Analyse und Abhängigkeitsanalyse. Sie können die aktualisierte Bewertung speichern oder übernehmen, wenn Sie bereit sind.
 
-## Sicherheit & Compliance
+## Compliance-Scans
 
-Der Tab **Sicherheit & Compliance** führt einen On-Demand-Scan gegen die aktuelle Landschaft durch und erzeugt einen standardkonformen Risikobericht plus eine regulatorische Lückenanalyse.
+Der Compliance-Scanner ist eine TurboLens-Analyse, die Compliance-Befunde gegen die aktivierten Regulierungen produziert. Die Befunde, der Lebenszyklus, der manuelle Erstellungs-Pfad, der Promote-to-Risk-Workflow und die Bulk-Aktionen sind alle im dedizierten [**Compliance-Leitfaden**](compliance.md) dokumentiert — nur der Scan-Auslöse-Button selbst lebt hinter dem TurboLens-Flag.
 
-### Was gescannt wird
-
-### Einen Scan ausführen
-
-Nur Benutzer mit `security_compliance.manage` können Scans auslösen (standardmässig admin). Der Übersichts-Tab zeigt **zwei unabhängige Scan-Karten**:
-
-Ein Seiten-Refresh **unterbricht einen laufenden Scan nicht** — die Hintergrund-Task läuft serverseitig weiter, und die UI hängt sich beim Neuladen automatisch wieder an die Fortschrittsabfrage.
-
-### Struktur des Risikoberichts
-
-### Befunde überleben Re-Scans
-
-Nutzerentscheidungen und Reviewer-Metadaten sind **über Re-Scans hinweg dauerhaft**:
-
-### Einen Befund ins Risikoregister überführen
-
-Erreicht das verknüpfte Risiko später `mitigated`, `monitoring`, `closed` oder `accepted` (oder wird gelöscht), bewegt die Back-Propagation-Engine automatisch jeden verknüpften Compliance-Befund in den passenden Zustand (`mitigated`, `verified`, `accepted` oder zurück auf `in_review`). Die im Risiko erfasste Akzeptanzbegründung wird in die Prüfnotiz des Befunds gespiegelt, damit der Audit-Pfad konsistent bleibt.
-
-### Bulk-Aktionen im Compliance-Grid
-
-Mit `security_compliance.manage` zeigt das Compliance-Grid eine filter-bewusste Mehrfachauswahl. Setze das Häkchen im Header, um alle Zeilen zu wählen, die den aktiven Filtern entsprechen, und nutze dann die angeheftete Symbolleiste:
-
-- **Entscheidung bearbeiten** — überführe jeden ausgewählten Befund per Batch in einen gewählten Zustand (z. B. einen Schwung Befunde nach einem Scope-Review als `not_applicable` markieren). Illegale Übergänge werden je Zeile in einer Teil-Erfolg-Zusammenfassung gemeldet, statt den gesamten Batch scheitern zu lassen.
-- **Löschen** — Befunde dauerhaft entfernen (nützlich, um Befunde einer inzwischen deaktivierten Regulierung aufzuräumen).
-
-Das Überführen in ein Risiko bleibt eine Einzelaktion — ein Bulk-Promote wird bewusst nicht angeboten, um die kontextbezogene Erfassung pro Befund zu erhalten.
-
-### Semantische EU-AI-Act-Erkennung
-
-KI-Funktionen sind häufig in universelle Anwendungen eingebettet. Der EU-AI-Act-Durchlauf **verlässt sich deshalb nicht nur auf die Subtyp-Filterung**: Er lässt das LLM jede Karte markieren, deren Name, Beschreibung, Hersteller oder verbundene Schnittstellen auf KI- / ML-Fähigkeiten hindeuten — LLMs, Empfehlungs-Engines, Computer Vision, Betrugs- oder Kredit-Scoring, Chatbots, Predictive Analytics, Anomalieerkennung. Befunde aus diesem semantischen Durchlauf sind als **KI-erkannt** markiert, um sie von Karten zu unterscheiden, die bereits als `AI Agent` / `AI Model` klassifiziert sind.
-
-### Fortschritt und Wiederaufnahme
-
-### Statusworkflow
-
-```
-open → acknowledged → in progress → mitigated
-                                  ↘ accepted (formelle Risikoakzeptanz)
-                                  ↘ reopen → open
-```
-
-**Compliance-Befunde** (in v1.11.0 neu gestaltet)
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (Seitenzweig, Begründung erforderlich)
-                      ↘ not_applicable    (Seitenzweig, Scope-Review)
-                      ↘ risk_tracked      (automatisch bei Überführung in ein Risiko)
-```
-
-`risk_tracked` wird nie von Hand gesetzt — es wird automatisch geschrieben, sobald du auf einem Befund **Risiko anlegen** klickst, und von der Back-Propagation-Engine geräumt, wenn das verknüpfte Risiko schliesst (siehe *Einen Befund ins Risikoregister überführen* oben).
-
-Für vollständige Governance-Workflows (Eigentümerschaft, Rest-Bewertung, Akzeptanzbegründung, Todos und Benachrichtigungen) überführe den Befund in ein Risiko — der volle Lebenszyklus liegt im [Risikoregister](risks.md).
+Compliance-Befunde können auch **manuell erfasst** werden, ohne dass ein KI-Provider konfiguriert sein muss, sodass der Compliance-Reiter auch in Bereitstellungen ohne LLM funktioniert.
 
 ## Analyseverlauf
 

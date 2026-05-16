@@ -217,63 +217,11 @@ Una bozza di ADR viene automaticamente creata insieme all'iniziativa con:
 
 Fai clic su **Scegli un'alternativa** per tornare alle opzioni di soluzione e selezionare un approccio diverso. Tutte le tue risposte della Fase 1 e della Fase 2 vengono preservate — solo i dati a valle (analisi dei gap, dipendenze, architettura target) vengono reimpostati. Dopo aver selezionato una nuova opzione, la procedura guidata ripercorre l'analisi dei gap e l'analisi delle dipendenze. Puoi salvare la valutazione aggiornata o confermare quando sei pronto.
 
-## Sicurezza e conformità
+## Scansioni di conformità
 
-La scheda **Sicurezza e conformità** esegue una scansione on-demand sul panorama corrente e produce un report di rischio conforme agli standard più un'analisi delle lacune normative.
+Lo scanner di conformità è un'analisi TurboLens che produce rilevazioni di conformità contro le regolamentazioni abilitate. Le rilevazioni, il ciclo di vita, il percorso di scrittura manuale, il workflow di promozione a Rischio e le azioni in batch sono tutti documentati nella [**guida Conformità**](compliance.md) dedicata — solo il pulsante di avvio scansione stesso vive dietro il flag TurboLens.
 
-### Cosa viene analizzato
-
-### Eseguire una scansione
-
-Solo gli utenti con `security_compliance.manage` possono avviare scansioni (admin di default). La scheda Panoramica mostra **due riquadri di scansione indipendenti**:
-
-Aggiornare la pagina **non interrompe una scansione in corso** — il task in background continua lato server e l'interfaccia si riaggancia automaticamente al polling di avanzamento al ricaricamento.
-
-### Struttura del report di rischio
-
-### Le evidenze sopravvivono alle ri-scansioni
-
-Le decisioni utente e i metadati di revisione sono **durevoli tra le ri-scansioni**:
-
-### Promuovere un'evidenza al Registro dei Rischi
-
-Quando il Rischio collegato raggiunge in seguito `mitigated`, `monitoring`, `closed` o `accepted` (o viene eliminato), il motore di back-propagation transiziona automaticamente ogni evidenza di conformità collegata allo stato corrispondente (`mitigated`, `verified`, `accepted` o di nuovo `in_review`). La motivazione di accettazione catturata sul Rischio viene rispecchiata nella nota di revisione dell'evidenza così che la pista di audit resti coerente.
-
-### Azioni in batch sulla griglia Conformità
-
-Quando è concesso `security_compliance.manage`, la griglia Conformità espone la selezione multipla consapevole dei filtri. Spunta la casella nell'header per selezionare tutte le righe che corrispondono ai filtri attivi, quindi usa la barra strumenti agganciata:
-
-- **Modifica decisione** — transiziona in batch ogni evidenza selezionata a uno stato scelto (ad es. segnare un lotto di evidenze come `not_applicable` dopo una revisione di ambito). Le transizioni illegali vengono segnalate riga per riga in un riepilogo di successo parziale invece di far fallire l'intero batch.
-- **Elimina** — rimuove definitivamente le evidenze (utile per ripulire evidenze di una normativa che hai disabilitato in seguito).
-
-La promozione a Rischio rimane un'azione su singola riga — il promote in massa non è offerto intenzionalmente per preservare la cattura di contesto per evidenza.
-
-### Rilevamento semantico della Legge UE sull'IA
-
-Le funzionalità IA sono spesso incorporate in applicazioni general-purpose. La passata Legge UE sull'IA **non si basa quindi solo sul filtro per sottotipo**: chiede all'LLM di segnalare ogni card il cui nome, descrizione, fornitore o interfacce correlate suggeriscano capacità IA / ML — LLM, motori di raccomandazione, computer vision, scoring di frode o credito, chatbot, analisi predittiva, rilevamento anomalie. Le evidenze prodotte da questa passata semantica sono marcate **Rilevato dall'IA** per distinguerle dalle card già classificate come `AI Agent` / `AI Model`.
-
-### Avanzamento e ripresa
-
-### Flusso di stato
-
-```
-open → acknowledged → in progress → mitigated
-                                  ↘ accepted (accettazione formale del rischio)
-                                  ↘ reopen → open
-```
-
-**Evidenze di conformità** (ridisegnate in v1.11.0)
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (ramo laterale, motivazione richiesta)
-                      ↘ not_applicable    (ramo laterale, revisione dell'ambito)
-                      ↘ risk_tracked      (impostato automaticamente alla promozione a Rischio)
-```
-
-`risk_tracked` non viene mai impostato a mano — viene scritto automaticamente quando clicchi **Crea rischio** su un'evidenza, e viene azzerato dal motore di back-propagation quando il Rischio collegato si chiude (vedi *Promuovere un'evidenza al Registro dei Rischi* sopra).
-
-Per workflow di governance completi (titolarità, valutazione residua, motivazione di accettazione, Todo e notifiche) promuovi l'evidenza a Rischio — il ciclo di vita completo vive nel [Registro dei Rischi](risks.md).
+Le rilevazioni di conformità possono anche essere **scritte manualmente** senza un provider IA configurato, in modo che la scheda Conformità funzioni in deployment senza un LLM configurato.
 
 ## Cronologia delle analisi
 

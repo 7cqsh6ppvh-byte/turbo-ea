@@ -11,7 +11,7 @@ Fare clic sull'icona dell'utente nell'angolo in alto a destra dell'app, quindi s
 ## Cosa si vede
 
 - **Intestazione** — la versione attiva del catalogo, il numero di capacità contenute e (per gli amministratori) i controlli per verificare e ottenere gli aggiornamenti.
-- **Barra dei filtri** — ricerca testuale completa su id, nome, descrizione e alias, oltre a chip di livello (L1 → L4), un selettore multiplo di settore e un interruttore «Mostra deprecate». Resta ancorata appena sotto la barra di navigazione superiore mentre si scorre la pagina.
+- **Barra dei filtri** — ricerca testuale completa su id, nome, descrizione e alias, oltre a chip di livello (Macro → L1 → L4), un selettore multiplo di settore e un interruttore «Mostra deprecate». Resta ancorata appena sotto la barra di navigazione superiore mentre si scorre la pagina.
 - **Barra delle azioni** — contatori di corrispondenze, lo stepper globale di livello (apre/chiude tutti gli L1 di un livello alla volta), espandi/comprimi tutto, seleziona visibili, pulisci selezione. Resta ancorata accanto alla barra dei filtri così i controlli rimangono raggiungibili anche in profondità all'interno di un sottoalbero L1.
 - **Griglia di L1** — una carta per ogni capacità di primo livello, **raggruppata sotto intestazioni di settore**. Le capacità **Cross-Industry** sono fissate in cima; gli altri settori seguono in ordine alfabetico; le capacità senza etichetta di settore finiscono in fondo in un blocco **Generale**. Il nome dell'L1 è inserito in una fascia di intestazione blu chiaro; le capacità figlie sono elencate sotto, indentate con una sottile linea verticale per indicare la profondità — la stessa convenzione gerarchica usata nel resto dell'app, in modo che la pagina non porti un'identità visiva propria. I nomi lunghi vanno a capo su più righe invece di essere troncati. Ogni intestazione di L1 espone inoltre il proprio stepper `−` / `+`: `+` apre il livello successivo dei discendenti solo per quell'L1, `−` chiude il livello aperto più profondo. Entrambi i pulsanti sono sempre visibili (la direzione non disponibile è disabilitata), l'azione è limitata a quel singolo L1 — gli altri rami restano fermi — e lo stepper globale in cima alla pagina non viene influenzato.
 - **Pulsante torna su** — non appena si scorre oltre l'intestazione, in basso a destra appare una freccia circolare flottante. Un clic riporta dolcemente in cima alla pagina. Il pulsante si sposta automaticamente verso l'alto quando la barra ancorata **Crea N capacità** è attiva, così le due non si sovrappongono mai.
@@ -46,6 +46,19 @@ Eseguire di nuovo la stessa importazione è sicuro — è idempotente.
 
 - Selezionando solo un figlio il cui **genitore di catalogo esiste già** come carta, il nuovo figlio viene innestato automaticamente sotto quel genitore esistente.
 - Selezionando solo un genitore i cui **figli di catalogo esistono già** come carte, quei figli vengono ri-collegati sotto la nuova carta — indipendentemente da dove si trovino al momento (al primo livello o annidati a mano sotto un'altra carta). In fase di importazione il catalogo fa fede sulla gerarchia; se si preferisce un genitore diverso per una carta specifica, modificarla dopo l'importazione. La finestra di risultato indica quante carte sono state ri-collegate accanto ai conteggi di create e saltate.
+
+## Capacità Macro (Livello 0)
+
+Sopra i livelli L1 / L2 / L3 / L4, il catalogo fornisce un livello **Macro** aggiuntivo — un piccolo set di raggruppamenti di livello business che inquadrano intere famiglie L1. Esempi includono *Customer Engagement* (inquadra gli L1 Sales, Marketing, Service) o *Talent & Workforce* (inquadra gli L1 HR).
+
+Le Macro sono voci di catalogo di prima classe:
+
+- Atterrano nel tuo inventario come card `BusinessCapability` con `attributes.capabilityLevel = "Macro"` e un `catalogueId` con prefisso `MC-` (ad es. `MC-10`).
+- Si trovano **sopra** i loro figli L1 — il limite di profondità della gerarchia si rilassa da 5 a 6 per accogliere il livello aggiuntivo (`Macro → L1 → L2 → L3 → L4 → L5`).
+- Quando importi una Macro, qualsiasi figlio L1 esistente segnato come appartenente a quella Macro viene automaticamente ri-padronato sotto la nuova card — lo stesso collegamento bidirezionale che si applica tra L1 e i livelli inferiori.
+- **Le Macro non corrispondono mai a card esistenti per nome** — solo per `catalogueId`. Questo evita collisioni accidentali con gruppi di capacità nominati dal cliente che condividano per caso un'etichetta con una Macro del catalogo.
+
+Le Macro sono selezionabili dalla pagina del catalogo proprio come gli L1 — spunta la casella e il sottoalbero viene selezionato di conseguenza.
 
 ## Vista di dettaglio
 

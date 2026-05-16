@@ -108,30 +108,9 @@ Embeds the TOGAF Phase G **Risk Register**. The full lifecycle, status workflow,
 
 ![GRC — Compliance scanner](../assets/img/en/54_grc_compliance.png)
 
-On-demand, per-regulation AI gap analysis against the enabled regulations. Six frameworks ship enabled by default (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001); admins can enable or disable any of them — and add custom regulations like HIPAA or internal policies — under [**Administration → Metamodel → Regulations**](../admin/metamodel.md#compliance-regulations).
+The Compliance tab is a dual-source register — findings can be **authored manually** by a reviewer **or** produced by an on-demand **AI scan** against any of the enabled regulations (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001 ship enabled by default). Both kinds of finding share the same lifecycle, can be promoted to a Risk, and are bulk-actionable from the grid. See the [Compliance guide](compliance.md) for the full lifecycle, the manual-create dialog, the scan workflow, the EU AI Act semantic detector, and the promotion-to-Risk loop.
 
-`SEED_DEMO=true` populates a hand-curated set of example compliance findings (across all six built-in regulations and a mix of lifecycle states) against the NexaTech demo cards, so the tab is usable out of the box without an AI provider configured.
-
-Findings are **durable across re-scans** — user decisions, reviewer notes, the user's AI verdict on a card, and the back-link to a promoted Risk all survive subsequent scans. A finding the next pass no longer reports is flagged `auto_resolved` and hidden by default; the previously-promoted Risk is left intact so its audit trail isn't broken.
-
-The Compliance grid mirrors the Inventory grid: filter sidebar with column visibility toggles, persisted sort, full-text search, and a detail drawer that shows the finding's compliance lifecycle as a horizontal phase timeline:
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (requires rationale)
-                      ↘ not_applicable    (scope review)
-                      ↘ risk_tracked      (set automatically on promote-to-Risk)
-```
-
-When `security_compliance.manage` is granted, tick the header checkbox for a **filter-aware select-all**, then use the sticky toolbar to **Edit decision** (batch transition) or **Delete** the selected findings. Illegal transitions are reported per row in a partial-success summary so a single bad row doesn't fail the batch. See [TurboLens → Security & Compliance](turbolens.md#bulk-actions-on-the-compliance-grid) for the full action reference.
-
-Closing or accepting a Risk that was promoted from a finding **propagates back to the finding** automatically — the linked compliance row moves to `mitigated` / `verified` / `accepted` / `in_review` to match, so the two registers stay in sync without manual upkeep.
-
-### Compliance on a single card
-
-![Card detail — Compliance tab](../assets/img/en/56_card_compliance_tab.png)
-
-Cards that are in scope of a compliance scan also surface a **Compliance** tab on their detail page (gated on `security_compliance.view`). It lists every finding currently linked to the card with the same Acknowledge / Accept / **Create risk** / **Open risk** actions as the GRC view, so an Application owner can triage their own findings without leaving the card. The same auto-hide rule applies to the **Risks** tab on Card Detail: both tabs only show up when the card actually has linked items, so cards with no GRC activity don't carry empty tabs.
+The same Compliance tab also appears on Card Detail (auto-hides when the card has no linked findings) so an Application owner can triage their own findings without leaving the card.
 
 ## Permissions
 

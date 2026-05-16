@@ -217,74 +217,11 @@ A draft ADR is automatically created alongside the initiative with:
 
 Click **Choose Different** to return to the solution options and select a different approach. All your Phase 1 and Phase 2 answers are preserved — only the downstream data (gap analysis, dependencies, target architecture) is reset. After selecting a new option, the wizard proceeds through gap analysis and dependency analysis again. You can save the updated assessment or commit when ready.
 
-## Compliance
+## Compliance scans
 
-> The Compliance scanner now lives under [**GRC → Compliance**](grc.md#compliance) at `/grc?tab=compliance`. The scan engine, finding lifecycle and APIs are unchanged — only the navigation moved.
+The Compliance scanner is a TurboLens analysis that produces compliance findings against the enabled regulations. The findings, lifecycle, manual-authoring path, promote-to-Risk flow and bulk actions are all documented in the dedicated [**Compliance guide**](compliance.md) — only the scan-trigger button itself lives behind the TurboLens flag.
 
-The Compliance scanner runs on-demand against the live landscape and produces a regulatory gap analysis.
-
-### What it scans
-
-The landscape is checked against **EU AI Act**, **GDPR**, **NIS2**, **DORA**, **SOC 2** and **ISO/IEC 27001** by the configured LLM. Each regulation has a dedicated checklist; findings are either **card-scoped** (one specific card is the source of the gap) or **landscape-wide** (systemic issue).
-
-### Running a scan
-
-Only users with `security_compliance.manage` can trigger scans (admin by default). Tick the regulations to include in the scan and click **Run compliance scan** — AI gap analysis runs against the regulations you scoped, replacing compliance findings for those regulations only.
-
-The scan reports a phase-aware progress bar (loading cards → semantic AI detection → per-regulation check).
-
-Refreshing the page **does not interrupt a running scan** — the background task keeps going server-side, and the UI automatically reattaches the progress poll on reload.
-
-### Report structure
-
-- **Overview** — overall compliance KPI and a compact compliance heatmap you can click through to the details.
-- **Compliance** — an AG Grid that mirrors the Inventory grid: filter sidebar, persistent column visibility and sort, full-text search, plus a detail drawer per finding. Rows carry status, article, category, requirement, gap description, remediation and evidence. A small **AI-detected** chip highlights cards flagged as AI-bearing by the semantic detector even though they are not tagged as AI subtypes.
-
-### Findings persist across re-scans
-
-User decisions and reviewer metadata are **durable across re-scans**:
-
-- Compliance findings upsert by `(scope, card, regulation, normalised_article)`. Article identifiers like *Art. 6 / Article 6 / § 6* collapse to the same row so LLM re-phrasing no longer mints duplicates.
-- A finding that the next pass no longer reports is **not deleted** — it is flagged `auto_resolved=true` and hidden by default, so its history (and the promoted Risk linked to it) stays intact.
-- The user's **AI verdict** on a card (`hasAiFeatures = true / false`) also sticks. If you confirm or reject the LLM's AI-bearing classification, that decision overrides the detector on subsequent scans — LLM drift cannot silently change scope.
-
-### Promote a finding to the Risk Register
-
-Every compliance finding card includes a **Create risk** primary action. Clicking it opens the shared create-risk dialog with the title, description, category, probability, impact, mitigation and affected card **prefilled from the finding**. You can edit any field before submitting, assign an **owner**, and pick a **target resolution date**. On submit, the finding's row flips to **Open risk R-000123** so the link stays visible — promotions are idempotent server-side. See [Risk Register](risks.md) for the full TOGAF-aligned lifecycle and how owner assignment creates a follow-up Todo + bell notification.
-
-When the linked Risk later reaches `mitigated`, `monitoring`, `closed` or `accepted` (or is deleted), the back-propagation engine automatically moves every linked compliance finding to the matching state (`mitigated`, `verified`, `accepted`, or back to `in_review`). The acceptance rationale captured on the Risk is mirrored into the finding's review note so the audit trail stays consistent.
-
-### Bulk actions on the Compliance grid
-
-When `security_compliance.manage` is granted, the Compliance grid exposes filter-aware multi-select. Tick the header checkbox to select every row matching the active filters, then use the sticky toolbar:
-
-- **Edit decision** — batch-transition every selected finding to a chosen state (e.g., mark a swathe of findings as `not_applicable` after a scope review). Illegal transitions are surfaced per-row in a partial-success summary instead of failing the entire batch.
-- **Delete** — permanently remove findings (used to clean up findings from a regulation you've since disabled).
-
-Promotion to Risk remains a single-row action — bulk-promote is intentionally not offered to preserve per-finding context capture.
-
-### EU AI Act semantic detection
-
-AI features are frequently embedded inside general-purpose applications. The EU AI Act pass therefore **does not rely on subtype filtering alone**: it asks the LLM to flag every card whose name, description, vendor or related interfaces suggest AI / ML capabilities — LLMs, recommendation engines, computer vision, fraud or credit scoring, chatbots, predictive analytics, anomaly detection. Findings produced from this semantic pass are marked **AI-detected** so you can distinguish them from cards that were already classified as `AI Agent` / `AI Model`.
-
-### Progress and resume
-
-The scan writes phase-aware progress (loading cards → semantic AI detection → per-regulation check) into its analysis-run record. The UI renders a live progress bar. **Refreshing the page does not interrupt a scan** — the background task keeps running server-side, and on mount the Compliance tab queries `/turbolens/security/active-runs` and reattaches the poll loop.
-
-### Status workflow
-
-Compliance findings have a 4-state main path with 3 side branches, rendered as a horizontal phase timeline in the finding drawer. Transitions are restricted to users with `security_compliance.manage`; the engine enforces transitions server-side and rejects illegal moves with a clear error.
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (side branch, requires rationale)
-                      ↘ not_applicable    (side branch, scope review)
-                      ↘ risk_tracked      (set automatically on promote-to-Risk)
-```
-
-`risk_tracked` is never set by hand — it is written automatically when you click **Create risk** on a finding and is cleared by the Risk back-propagation engine when the linked Risk closes (see *Promote a finding to the Risk Register* above).
-
-For full governance workflows (ownership, residual assessment, acceptance rationale, Todos and notifications) promote the finding to a Risk — the full lifecycle lives in the [Risk Register](risks.md).
+Compliance findings can also be **authored manually** without an AI provider configured, so the Compliance tab works in deployments that don't have an LLM set up.
 
 ## Analysis History
 

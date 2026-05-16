@@ -100,26 +100,9 @@ Incorpora il **Registro dei rischi** TOGAF Fase G. Ciclo di vita completo, workf
 
 ![GRC — scanner di conformità](../assets/img/it/54_grc_conformita.png)
 
-Lo scanner di sicurezza on-demand, con due metà indipendenti:
+La scheda Conformità è un registro a doppia fonte — le rilevazioni possono essere **scritte manualmente** da un revisore **oppure** prodotte da una **scansione IA** on-demand contro le regolamentazioni abilitate (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001 sono abilitate per default). Entrambi i tipi di rilevazione condividono lo stesso ciclo di vita, possono essere promossi a un Rischio e bulk-azionabili dalla griglia. Vedi la [guida Conformità](compliance.md) per il ciclo di vita completo, il dialogo di creazione manuale, il workflow di scansione, il rilevatore semantico EU AI Act e il loop di promozione a Rischio.
 
-I riscontri sono **durevoli tra re-scansioni** — decisioni utente, note di revisione, il verdetto AI dell'utente su una card e il rimando a un Rischio promosso sopravvivono alle scansioni successive. Un riscontro che la passata seguente non riporta più viene marcato `auto_resolved` e nascosto per default; il Rischio promosso in precedenza resta intatto per non rompere il percorso di audit.
-
-La griglia Conformità riflette quella dell'Inventario: barra laterale dei filtri con visibilità delle colonne, ordinamento persistito, ricerca a testo libero e un cassetto di dettaglio che mostra il ciclo di vita di conformità come una timeline orizzontale di fasi:
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (motivazione richiesta)
-                      ↘ not_applicable    (revisione dell'ambito)
-                      ↘ risk_tracked      (impostato automaticamente alla promozione a Rischio)
-```
-
-Con `security_compliance.manage`, spunta la casella nell'header per una **selezione filtrata di tutte le righe**, poi usa la barra degli strumenti agganciata per **Modifica decisione** (transizione in batch) o **Elimina** i riscontri selezionati. Le transizioni illegali sono segnalate riga per riga in un riepilogo di successo parziale, così una singola riga errata non fa fallire l'intero batch. Vedi [TurboLens → Sicurezza & Conformità](turbolens.md#bulk-actions-on-the-compliance-grid) per il riferimento completo delle azioni.
-
-Quando un Rischio promosso da un riscontro viene chiuso o accettato, l'operazione **si propaga automaticamente al riscontro** — la riga di conformità collegata passa a `mitigated` / `verified` / `accepted` / `in_review` per restare sincronizzata, senza manutenzione manuale.
-
-### Conformità su una singola card
-
-Le card nell'ambito di una scansione di conformità espongono anche una scheda **Conformità** nella loro pagina di dettaglio (governata da `security_compliance.view`). Elenca ogni riscontro attualmente collegato alla card con le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della vista GRC — così che un Application Owner possa triagiare i propri riscontri senza lasciare la card. La stessa regola di auto-nascondimento vale per la scheda **Rischi** nel dettaglio della card: entrambe le schede compaiono solo quando la card ha effettivamente elementi collegati, così le card senza attività GRC non si portano dietro schede vuote.
+La stessa scheda Conformità appare anche nel Dettaglio della card (auto-nascosta quando la card non ha rilevazioni collegate), in modo che un Application Owner possa triagiare le proprie rilevazioni senza lasciare la card.
 
 ## Permessi
 

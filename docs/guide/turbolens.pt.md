@@ -217,63 +217,11 @@ Um rascunho de ADR é criado automaticamente juntamente com a iniciativa com:
 
 Clique em **Escolher Diferente** para regressar às opções de solução e selecionar uma abordagem diferente. Todas as suas respostas da Fase 1 e Fase 2 são preservadas — apenas os dados subsequentes (análise de lacunas, dependências, arquitetura-alvo) são repostos. Após selecionar uma nova opção, o assistente prossegue novamente pela análise de lacunas e análise de dependências. Pode guardar a avaliação atualizada ou confirmar quando estiver pronto.
 
-## Segurança e Conformidade
+## Varreduras de conformidade
 
-O separador **Segurança e Conformidade** executa uma análise a pedido sobre o panorama atual e produz um relatório de risco conforme a padrões além de uma análise de lacunas regulatórias.
+O scanner de conformidade é uma análise TurboLens que produz descobertas de conformidade contra as regulamentações habilitadas. As descobertas, o ciclo de vida, o caminho de criação manual, o fluxo de promoção a Risco e as ações em lote estão todos documentados no [**guia de Conformidade**](compliance.md) dedicado — apenas o próprio botão de disparo de varredura vive atrás do flag TurboLens.
 
-### O que é analisado
-
-### Executar uma análise
-
-Só utilizadores com `security_compliance.manage` podem disparar análises (admin por omissão). O separador Visão Geral mostra **dois cartões de análise independentes**:
-
-Atualizar a página **não interrompe uma análise em curso** — a tarefa em segundo plano continua no servidor, e a interface volta a ligar-se automaticamente à sondagem de progresso ao recarregar.
-
-### Estrutura do relatório de risco
-
-### Os achados sobrevivem a re-varreduras
-
-As decisões do utilizador e os metadados de revisão são **duráveis entre re-varreduras**:
-
-### Promover um achado para o Registo de Riscos
-
-Quando o Risco vinculado atinge mais tarde `mitigated`, `monitoring`, `closed` ou `accepted` (ou é eliminado), o motor de retro-propagação transiciona automaticamente cada achado de conformidade vinculado para o estado correspondente (`mitigated`, `verified`, `accepted` ou de volta a `in_review`). A justificação de aceitação capturada no Risco é espelhada na nota de revisão do achado para que a trilha de auditoria permaneça consistente.
-
-### Ações em lote na grelha de Conformidade
-
-Quando é concedido `security_compliance.manage`, a grelha de Conformidade expõe seleção múltipla consciente dos filtros. Marque a caixa do cabeçalho para selecionar todas as linhas que correspondam aos filtros ativos, e depois use a barra de ferramentas fixa:
-
-- **Editar decisão** — transiciona em lote cada achado selecionado para um estado escolhido (por exemplo, marcar um conjunto de achados como `not_applicable` após uma revisão de âmbito). As transições ilegais são reportadas linha a linha num resumo de sucesso parcial em vez de fazer o lote inteiro falhar.
-- **Eliminar** — remove permanentemente os achados (útil para limpar achados de uma regulação que entretanto desativou).
-
-A promoção a Risco mantém-se uma ação por linha — a promoção em massa não é oferecida intencionalmente para preservar a captura de contexto por achado.
-
-### Deteção semântica da Lei da IA da UE
-
-As funcionalidades de IA estão frequentemente embutidas em aplicações de uso geral. A passagem da Lei da IA da UE **não se apoia apenas na filtragem por subtipo**: pede ao LLM para assinalar cada card cujo nome, descrição, fornecedor ou interfaces relacionadas sugiram capacidades de IA / ML — LLMs, motores de recomendação, visão computacional, scoring de fraude ou crédito, chatbots, analítica preditiva, deteção de anomalias. Os achados produzidos por esta passagem semântica são marcados **Detetado por IA** para os distinguir de cards já classificados como `AI Agent` / `AI Model`.
-
-### Progresso e retoma
-
-### Fluxo de estado
-
-```
-open → acknowledged → in progress → mitigated
-                                  ↘ accepted (aceitação formal do risco)
-                                  ↘ reopen → open
-```
-
-**Achados de conformidade** (redesenhados em v1.11.0)
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (ramo lateral, requer justificação)
-                      ↘ not_applicable    (ramo lateral, revisão de âmbito)
-                      ↘ risk_tracked      (definido automaticamente ao promover para Risco)
-```
-
-`risk_tracked` nunca é definido manualmente — é escrito automaticamente quando clica em **Criar risco** num achado, e é limpo pelo motor de retro-propagação quando o Risco vinculado é fechado (veja *Promover um achado para o Registo de Riscos* acima).
-
-Para fluxos de governança completos (titularidade, avaliação residual, justificação de aceitação, Todos e notificações) promova o achado a um Risco — o ciclo completo vive no [Registo de Riscos](risks.md).
+As descobertas de conformidade também podem ser **redigidas manualmente** sem um provedor IA configurado, de modo que a aba Conformidade funcione em implantações que não têm um LLM configurado.
 
 ## Histórico de Análises
 

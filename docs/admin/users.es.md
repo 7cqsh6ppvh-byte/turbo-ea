@@ -6,7 +6,7 @@ La página **Usuarios y Roles** tiene dos pestañas: **Usuarios** (gestionar cue
 
 #### Tabla de Usuarios
 
-La lista de usuarios muestra todas las cuentas registradas con las siguientes columnas:
+La lista de usuarios es un **AG Grid** (el mismo diseño Quartz utilizado en la página de [Inventario](../guide/inventory.md)) con una barra lateral de filtros redimensionable a la izquierda. Las columnas mostradas son:
 
 | Columna | Descripción |
 |---------|-------------|
@@ -17,6 +17,19 @@ La lista de usuarios muestra todas las cuentas registradas con las siguientes co
 | **Último acceso** | Fecha y hora del último inicio de sesión del usuario. Muestra «—» si el usuario nunca ha iniciado sesión |
 | **Estado** | Activo o Desactivado |
 | **Acciones** | Editar, activar/desactivar o eliminar el usuario |
+
+#### Barra Lateral de Filtros
+
+Una barra lateral de dos pestañas (**Filtros** y **Columnas**) se sitúa a la izquierda de la cuadrícula:
+
+- **Búsqueda** — coincidencia de subcadena por nombre y correo.
+- **Rol** — chips de selección múltiple con el color del rol, para que puedas acotar a, por ejemplo, «todos los miembros + visualizadores».
+- **Estado** — Activo / Desactivado.
+- **Método de autenticación** — Local / SSO / SSO + Contraseña / Configuración pendiente.
+- **Solo configuración de contraseña pendiente** — interruptor rápido para encontrar usuarios invitados que aún no han completado el onboarding.
+- Pestaña **Columnas** — mostrar/ocultar columnas individuales.
+
+El estado del filtro, las columnas visibles, el ancho de la barra lateral y su estado plegado se persisten **por usuario** en `localStorage` bajo la clave `turboea_usersAdmin` — sobreviven a cierres de sesión y recargas de página.
 
 #### Invitar a un Nuevo Usuario
 

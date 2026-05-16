@@ -1,6 +1,18 @@
-# General Settings
+# Settings
 
-The **Settings** page (**Admin > Settings**) provides centralized configuration for the platform's appearance, email, and module toggles.
+The **Settings** page at **Admin → Settings** (`/admin/settings`) is the central configuration hub. It is organised as a set of tabs — pick the right tab from the table below for the dedicated deep-dive:
+
+| Tab | URL | What it controls | Full guide |
+|-----|-----|------------------|------------|
+| **General** | `/admin/settings?tab=general` | Appearance (logo, favicon, currency, date format, enabled languages, fiscal year), SMTP email, **module toggles** (BPM, PPM, GRC, TurboLens) | This page |
+| **Authentication** | `/admin/settings?tab=authentication` | SSO providers, registration, password policy | [Authentication & SSO](sso.md) |
+| **AI** | `/admin/settings?tab=ai` | LLM provider, model, web search backend, per-card-type AI suggestion toggles | [AI Capabilities](ai.md) |
+| **EOL** | `/admin/settings?tab=eol` | Mass-linking products to endoflife.date entries | [End-of-Life (EOL)](eol.md) |
+| **Web Portals** | `/admin/settings?tab=web-portals` | Public read-only portal slugs, visibility filters | [Web Portals](web-portals.md) |
+| **ServiceNow** | `/admin/settings?tab=servicenow` | ServiceNow connection, sync configuration, identity mapping | [ServiceNow Integration](servicenow.md) |
+| **TurboLens** | `/admin/settings?tab=turbolens` | TurboLens-specific toggles, enabled regulations, analysis polling | See section [TurboLens settings](#turbolens-settings) below |
+
+The rest of this page covers the **General** tab.
 
 ![General Settings](../assets/img/en/28_admin_settings_general.png)
 
@@ -91,3 +103,13 @@ Toggle the **Governance, Risk and Compliance** module on or off. When disabled:
 - Risks and compliance findings remain in the database — the underlying `risks.*` and `security_compliance.*` permissions are unchanged, so the data is preserved and re-appears unchanged if the module is re-enabled
 
 See the [GRC guide](../guide/grc.md) for the full feature reference.
+
+## TurboLens settings
+
+The **TurboLens** tab gathers the toggles that govern the AI analysis surface. Unlike the per-module switches above, TurboLens is **not** a binary on/off — it is "ready" when both an AI provider is configured (under the **AI** tab) and the analysis data has synced at least once. The page also exposes:
+
+- **Enabled regulations** — tick which of the six built-in frameworks (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001) participate in [Compliance scans](../guide/compliance.md). Custom regulations defined under **Metamodel → Regulations** can also be enabled here.
+- **Analysis polling cadence** — how often the UI re-polls long-running TurboLens analyses for progress. Higher cadence = lower perceived latency, more API load.
+- **Result cache TTL** — how long completed analysis results are cached before the **Run analysis** button re-enables.
+
+See [TurboLens AI Intelligence](../guide/turbolens.md) for the full feature surface and [Compliance](../guide/compliance.md) for the scan workflow.

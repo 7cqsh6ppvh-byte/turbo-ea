@@ -134,11 +134,27 @@ Stakeholders are people with a specific **role** on this card. The available rol
 
 Stakeholder assignments affect **permissions**: a user's effective permissions on a card are the combination of their app-level role and any stakeholder roles they hold on that card.
 
+### Searching and inviting
+
+Pick a stakeholder via the **searchable autocomplete** — start typing and the dropdown filters on both name and email (email appears as the secondary line so two users with the same name can be told apart at a glance).
+
+If the email you type doesn't match an existing user, an **"Invite «email» as a new user"** option appears at the end of the dropdown. Selecting it expands an inline mini-form right inside the picker — pick a role (Member or Viewer by default), optionally edit the display name, and submit. The new user is invited via the standard invitation email **and** assigned the chosen stakeholder role on the card in a single action, so you never have to leave the card to onboard a contributor.
+
+The invite path requires the **`users.invite`** permission, a delegated form of `admin.users` that admins can grant to trusted members. A privilege-escalation guard prevents non-admins from inviting users into admin roles — the role dropdown silently filters to roles the inviter is allowed to delegate.
+
 ## History Tab
 
 ![Card Change History](../assets/img/en/08_card_history.png)
 
 Shows the **complete audit trail** of changes made to the card: **who** made the change, **when** it was made, and **what** was modified (previous value vs. new value). This enables full traceability of all modifications over time.
+
+## Risks Tab (GRC enabled, when present)
+
+When the [GRC module](grc.md) is enabled **and** the card has at least one linked risk, a **Risks** tab appears listing every risk linked to the card with a one-click path back to the [Risk Register](risks.md). The tab is auto-hidden when no risk is linked, so cards with no GRC activity don't carry an empty tab.
+
+## Compliance Tab (GRC enabled, when present)
+
+When the [GRC module](grc.md) is enabled **and** the card has at least one linked compliance finding, a **Compliance** tab appears listing every finding currently linked to the card. The same Acknowledge / Accept / **Create risk** / **Open risk** actions as the [GRC Compliance grid](compliance.md) are available so the card owner can triage their own findings without leaving the card. Auto-hidden when no finding is linked.
 
 ## Process Flow Tab (Business Process cards only)
 

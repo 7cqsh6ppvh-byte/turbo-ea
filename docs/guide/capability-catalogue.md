@@ -11,7 +11,7 @@ Click the user icon in the top-right corner of the app, then **Capability Catalo
 ## What you see
 
 - **Header** — the active catalogue version, the number of capabilities it contains, and (for admins) controls to check for and fetch updates.
-- **Filter bar** — full-text search across id, name, description and aliases, plus level chips (L1 → L4), an industry multi-select, and a "Show deprecated" toggle. Stays pinned just below the top navigation as you scroll.
+- **Filter bar** — full-text search across id, name, description and aliases, plus level chips (Macro → L1 → L4), an industry multi-select, and a "Show deprecated" toggle. Stays pinned just below the top navigation as you scroll.
 - **Action bar** — match counters, the global level stepper (expand/collapse all L1s one level at a time), expand/collapse all, select-visible, clear selection. Sticky alongside the filter bar so the controls stay reachable even from deep inside an L1 subtree.
 - **L1 grid** — one card per top-level capability, **grouped under industry headings**. **Cross-Industry** capabilities pin to the top; other industries follow alphabetically; capabilities with no industry tag fall into a **General** bucket at the end. The L1 name sits in a pale-blue header band; child capabilities are listed underneath, indented with a faint vertical rail to convey depth — the same hierarchy idiom used elsewhere in the app, so the page doesn't carry its own visual identity. Names wrap to multiple lines instead of being truncated. Each L1 header also exposes its own `−` / `+` stepper pill: `+` opens the next level of descendants for that L1 only, `−` closes the deepest open level. The two buttons are always visible (the inactive direction goes disabled), the action is scoped to that one L1 — other branches stay put — and the global level stepper at the top of the page is unaffected.
 - **Back-to-top button** — once you've scrolled past the header, a circular floating arrow appears in the bottom-right corner. Click it to glide back to the top of the page. It auto-slides up to clear the **Create N capabilities** sticky bar whenever you have capabilities selected, so the two never overlap.
@@ -46,6 +46,19 @@ Re-running the same import is safe — it's idempotent.
 
 - Selecting only a child whose catalogue **parent already exists** as a card grafts the new child onto that existing parent automatically.
 - Selecting only a parent whose catalogue **children already exist** as cards re-parents those children under the new card — regardless of where they currently sit (top-level or hand-nested under another card). The catalogue is the source of truth for hierarchy on import; if you'd prefer a different parent for a specific card, edit it after the import. The result dialog reports how many cards were re-linked alongside the created and skipped counts.
+
+## Macro Capabilities (Level 0)
+
+Above the L1 / L2 / L3 / L4 tiers, the catalogue ships an additional **Macro** tier — a small set of business-level groupings that frame entire L1 families. Examples include *Customer Engagement* (frames Sales, Marketing, Service L1s) or *Talent & Workforce* (frames HR L1s).
+
+Macros are first-class catalogue entries:
+
+- They land in your inventory as `BusinessCapability` cards with `attributes.capabilityLevel = "Macro"` and a `catalogueId` prefixed `MC-` (e.g. `MC-10`).
+- They sit **above** their L1 children — the hierarchy depth limit relaxes from 5 to 6 to accommodate the extra layer (`Macro → L1 → L2 → L3 → L4 → L5`).
+- When you import a Macro, any existing L1 children flagged as belonging to that Macro are automatically re-parented under the new card — the same bidirectional linking that applies between L1 and lower tiers.
+- **Macros never match existing cards by name** — only by `catalogueId`. This avoids accidental collisions with customer-named capability groups that happen to share a label with a catalogue Macro.
+
+Macros are selectable from the catalogue page just like L1s — tick the checkbox and the subtree selects accordingly.
 
 ## Detail view
 

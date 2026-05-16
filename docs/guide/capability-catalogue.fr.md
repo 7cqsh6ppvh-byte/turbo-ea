@@ -11,7 +11,7 @@ Cliquez sur l'icône utilisateur en haut à droite de l'application, puis sur **
 ## Ce que vous voyez
 
 - **En-tête** — la version active du catalogue, le nombre de capacités qu'il contient et (pour les administrateurs) les contrôles permettant de vérifier et de récupérer les mises à jour.
-- **Barre de filtres** — recherche en texte intégral sur l'identifiant, le nom, la description et les alias, ainsi que des chips de niveau (L1 → L4), un sélecteur multiple de secteurs et un commutateur « Afficher les obsolètes ». Reste épinglée juste sous la barre de navigation supérieure pendant le défilement.
+- **Barre de filtres** — recherche en texte intégral sur l'identifiant, le nom, la description et les alias, ainsi que des chips de niveau (Macro → L1 → L4), un sélecteur multiple de secteurs et un commutateur « Afficher les obsolètes ». Reste épinglée juste sous la barre de navigation supérieure pendant le défilement.
 - **Barre d'actions** — compteurs de correspondances, sélecteur global de niveau (déplie/replie tous les L1 d'un cran à la fois), tout déplier/replier, sélectionner les visibles, effacer la sélection. Reste épinglée à côté de la barre de filtres pour que les contrôles demeurent à portée de main, même au plus profond d'un sous-arbre L1.
 - **Grille de L1** — une carte par capacité de premier niveau, **regroupée sous des en-têtes de secteur**. Les capacités **Cross-Industry** sont épinglées en haut ; les autres secteurs suivent par ordre alphabétique ; les capacités sans étiquette de secteur tombent à la fin dans un bloc **Général**. Le nom de L1 occupe une bande d'en-tête bleu pâle ; les capacités enfants sont listées en dessous, indentées avec un fin filet vertical pour signaler la profondeur — la même convention de hiérarchie que le reste de l'application, afin que la page n'ait pas une identité visuelle propre. Les noms longs sont retournés sur plusieurs lignes plutôt que tronqués. Chaque en-tête de L1 expose aussi son propre stepper `−` / `+` : `+` ouvre le niveau de descendants suivant pour ce L1 uniquement, `−` referme le niveau ouvert le plus profond. Les deux boutons sont toujours visibles (la direction inactive est désactivée), l'action ne porte que sur ce L1 — les autres branches restent en place — et le sélecteur global en haut de la page n'est pas affecté.
 - **Bouton retour en haut** — dès que vous avez défilé au-delà de l'en-tête, une flèche flottante circulaire apparaît dans le coin inférieur droit. Un clic vous ramène en douceur en haut de la page. Le bouton se décale automatiquement vers le haut lorsque la barre épinglée **Créer N capacités** est active, afin que les deux ne se chevauchent jamais.
@@ -46,6 +46,19 @@ Relancer le même import est sûr — il est idempotent.
 
 - Sélectionner uniquement un enfant dont le **parent du catalogue existe déjà** comme carte rattache automatiquement le nouvel enfant à ce parent existant.
 - Sélectionner uniquement un parent dont les **enfants du catalogue existent déjà** comme cartes ré-attache ces enfants sous la nouvelle carte — quelle que soit leur position actuelle (au sommet ou imbriqués à la main sous une autre carte). À l'import, le catalogue fait foi pour la hiérarchie ; si vous préférez un autre parent pour une carte donnée, modifiez-la après l'import. La boîte de dialogue de résultat indique le nombre de cartes ré-associées en plus des compteurs de cartes créées et ignorées.
+
+## Macro-capacités (niveau 0)
+
+Au-dessus des niveaux L1 / L2 / L3 / L4, le catalogue livre un niveau **Macro** supplémentaire — un petit ensemble de regroupements orientés business qui chapeautent des familles L1 entières. Des exemples incluent *Customer Engagement* (chapeaute les L1 Sales, Marketing, Service) ou *Talent & Workforce* (chapeaute les L1 RH).
+
+Les Macros sont des entrées catalogue de première classe :
+
+- Elles atterrissent dans votre inventaire comme des cartes `BusinessCapability` avec `attributes.capabilityLevel = "Macro"` et un `catalogueId` préfixé `MC-` (par ex. `MC-10`).
+- Elles se placent **au-dessus** de leurs enfants L1 — la limite de profondeur de hiérarchie passe de 5 à 6 pour accueillir la couche supplémentaire (`Macro → L1 → L2 → L3 → L4 → L5`).
+- Quand vous importez une Macro, tout enfant L1 existant marqué comme appartenant à cette Macro est automatiquement re-parenté sous la nouvelle carte — la même liaison bidirectionnelle qui s'applique entre L1 et les niveaux inférieurs.
+- **Les Macros ne correspondent jamais aux cartes existantes par nom** — uniquement par `catalogueId`. Cela évite les collisions accidentelles avec des groupes de capacités nommés par le client qui partageraient un libellé avec une Macro du catalogue.
+
+Les Macros sont sélectionnables depuis la page du catalogue exactement comme les L1 — cochez la case et le sous-arbre se sélectionne en conséquence.
 
 ## Vue de détail
 

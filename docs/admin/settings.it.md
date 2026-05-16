@@ -1,6 +1,18 @@
-# Impostazioni generali
+# Impostazioni
 
-La pagina **Impostazioni** (**Admin > Impostazioni**) fornisce una configurazione centralizzata per l'aspetto, l'email e le attivazioni dei moduli della piattaforma.
+La pagina **Impostazioni** sotto **Admin → Impostazioni** (`/admin/settings`) è l'hub centrale di configurazione. È organizzata in schede — scegli la scheda giusta dalla tabella sottostante per l'approfondimento dedicato:
+
+| Scheda | URL | Cosa controlla | Guida completa |
+|--------|-----|----------------|----------------|
+| **Generale** | `/admin/settings?tab=general` | Aspetto (logo, favicon, valuta, formato data, lingue abilitate, anno fiscale), email SMTP, **interruttori dei moduli** (BPM, PPM, GRC, TurboLens) | Questa pagina |
+| **Autenticazione** | `/admin/settings?tab=authentication` | Provider SSO, registrazione, politica delle password | [Autenticazione & SSO](sso.md) |
+| **IA** | `/admin/settings?tab=ai` | Provider LLM, modello, backend di ricerca web, interruttori di suggerimento IA per tipo di card | [Funzionalità IA](ai.md) |
+| **EOL** | `/admin/settings?tab=eol` | Collegamento in massa dei prodotti a voci di endoflife.date | [Fine vita (EOL)](eol.md) |
+| **Portali web** | `/admin/settings?tab=web-portals` | Slug di portali pubblici in sola lettura, filtri di visibilità | [Portali web](web-portals.md) |
+| **ServiceNow** | `/admin/settings?tab=servicenow` | Connessione ServiceNow, configurazione di sincronizzazione, mappatura identità | [Integrazione ServiceNow](servicenow.md) |
+| **TurboLens** | `/admin/settings?tab=turbolens` | Interruttori specifici di TurboLens, normative abilitate, polling delle analisi | Vedi sezione [Impostazioni TurboLens](#impostazioni-turbolens) sotto |
+
+Il resto di questa pagina copre la scheda **Generale**.
 
 ![Impostazioni generali](../assets/img/it/28_admin_impostazioni_generali.png)
 
@@ -91,3 +103,13 @@ Attivate/disattivate il modulo **Governance, Rischio e Conformità** (GRC). Quan
 - I rischi e i finding di conformità rimangono nel database — i permessi sottostanti `risks.*` e `security_compliance.*` restano invariati, quindi i dati si conservano e ricompaiono invariati se il modulo viene riabilitato
 
 Consultate la [guida GRC](../guide/grc.md) per il riferimento completo delle funzionalità.
+
+## Impostazioni TurboLens
+
+La scheda **TurboLens** raccoglie gli interruttori che governano la superficie di analisi IA. A differenza degli interruttori per-modulo sopra, TurboLens **non** è un on/off binario — è «pronto» quando sia un provider IA è configurato (sotto la scheda **IA**) sia i dati di analisi si sono sincronizzati almeno una volta. La pagina espone anche:
+
+- **Normative abilitate** — spunta quali dei sei framework integrati (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001) partecipano alle [scansioni di Conformità](../guide/compliance.md). Le normative personalizzate definite sotto **Metamodello → Normative** possono essere abilitate anche qui.
+- **Cadenza di polling delle analisi** — con quale frequenza l'UI ri-interroga le analisi TurboLens di lunga durata per il progresso. Cadenza più alta = minore latenza percepita, maggiore carico API.
+- **TTL della cache dei risultati** — quanto a lungo i risultati delle analisi completate sono nella cache prima che il pulsante **Esegui analisi** si riabiliti.
+
+Vedi [Intelligenza IA TurboLens](../guide/turbolens.md) per la superficie funzionale completa e [Conformità](../guide/compliance.md) per il workflow di scansione.

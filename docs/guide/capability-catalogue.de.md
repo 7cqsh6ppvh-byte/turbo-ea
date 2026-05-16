@@ -11,7 +11,7 @@ Klicken Sie oben rechts auf das Benutzersymbol und dann auf **Capability-Katalog
 ## Was Sie sehen
 
 - **Kopfzeile** — die aktive Katalogversion, die Anzahl der enthaltenen Capabilities und (für Administratoren) Steuerelemente zum Prüfen und Laden von Updates.
-- **Filterleiste** — Volltextsuche über ID, Name, Beschreibung und Aliase, plus Level-Chips (L1 → L4), Branchen-Mehrfachauswahl und ein „Veraltete anzeigen“-Schalter. Bleibt beim Scrollen direkt unter der oberen Navigation angeheftet.
+- **Filterleiste** — Volltextsuche über ID, Name, Beschreibung und Aliase, plus Level-Chips (Macro → L1 → L4), Branchen-Mehrfachauswahl und ein „Veraltete anzeigen“-Schalter. Bleibt beim Scrollen direkt unter der oberen Navigation angeheftet.
 - **Aktionsleiste** — Treffer-Zähler, der globale Level-Stepper (alle L1s gemeinsam Ebene für Ebene auf-/zuklappen), Alle ein-/ausklappen, Sichtbare auswählen, Auswahl löschen. Bleibt zusammen mit der Filterleiste angeheftet, sodass die Steuerelemente auch tief im L1-Teilbaum erreichbar bleiben.
 - **L1-Raster** — eine Karte je Top-Level-Capability, **gruppiert unter Branchenüberschriften**. **Cross-Industry**-Capabilities stehen ganz oben; weitere Branchen folgen alphabetisch; Capabilities ohne Branchenangabe landen am Ende in einem **Allgemein**-Block. Der L1-Name liegt in einem hellblauen Header-Streifen; untergeordnete Capabilities erscheinen darunter, eingerückt mit einer feinen senkrechten Linie zur Tiefenanzeige — dasselbe Hierarchie-Muster wie an anderen Stellen der App, damit die Seite kein eigenes visuelles Profil entwickelt. Lange Namen werden auf mehrere Zeilen umbrochen, statt abgeschnitten zu werden. Jeder L1-Header hat zudem seinen eigenen `−` / `+`-Stepper: `+` öffnet die nächste Ebene innerhalb dieses einen L1, `−` schließt die jeweils tiefste offene Ebene. Beide Schaltflächen sind immer sichtbar (die nicht verfügbare Richtung ist deaktiviert), die Aktion gilt nur für diesen einen L1 — andere Zweige bleiben unverändert — und der globale Level-Stepper am Seitenkopf wird nicht beeinflusst.
 - **Nach-oben-Schaltfläche** — sobald Sie über die Kopfzeile hinaus scrollen, erscheint unten rechts ein runder schwebender Pfeil. Ein Klick gleitet sanft an den Seitenanfang zurück. Die Schaltfläche rückt automatisch nach oben, wenn die **N Capabilities erstellen**-Sticky-Leiste aktiv ist, damit sich die beiden nie überlappen.
@@ -46,6 +46,19 @@ Den gleichen Import erneut auszuführen ist sicher — er ist idempotent.
 
 - Wird nur ein Kind ausgewählt, dessen Katalog-**Elternknoten bereits als Karte existiert**, wird das neue Kind automatisch unter diesem Elternknoten eingehängt.
 - Wird nur ein Elternknoten ausgewählt, dessen Katalog-**Kinder bereits als Karten existieren**, werden diese Kinder unter die neue Karte umgehängt — unabhängig davon, wo sie zuvor lagen (auf oberster Ebene oder von Hand unter eine andere Karte gehängt). Beim Import gilt der Katalog als Quelle der Wahrheit für die Hierarchie; wenn Sie für eine bestimmte Karte einen anderen Elternknoten wünschen, bearbeiten Sie sie nach dem Import. Der Ergebnisdialog meldet die Anzahl der neu verknüpften Karten zusätzlich zu den erstellten und übersprungenen Zählungen.
+
+## Macro-Capabilities (Level 0)
+
+Über den Ebenen L1 / L2 / L3 / L4 liefert der Katalog eine zusätzliche **Macro**-Ebene aus — eine kleine Gruppe geschäftsorientierter Bündel, die ganze L1-Familien klammern. Beispiele sind *Customer Engagement* (klammert Sales-, Marketing-, Service-L1s) oder *Talent & Workforce* (klammert HR-L1s).
+
+Macros sind erstklassige Katalog-Einträge:
+
+- Sie landen im Inventar als `BusinessCapability`-Karten mit `attributes.capabilityLevel = "Macro"` und einer `catalogueId` mit dem Präfix `MC-` (z.B. `MC-10`).
+- Sie sitzen **über** ihren L1-Kindern — das Hierarchie-Tiefenlimit lockert sich von 5 auf 6, um die zusätzliche Ebene aufzunehmen (`Macro → L1 → L2 → L3 → L4 → L5`).
+- Beim Import eines Macros werden alle existierenden L1-Kinder, die als zu diesem Macro gehörig markiert sind, automatisch unter die neue Karte gehängt — dieselbe bidirektionale Verlinkung wie zwischen L1 und niedrigeren Ebenen.
+- **Macros matchen nie auf bestehende Karten nach Namen** — nur nach `catalogueId`. Dies vermeidet versehentliche Kollisionen mit kundenseitig benannten Capability-Gruppen, die zufällig denselben Namen wie ein Katalog-Macro tragen.
+
+Macros sind aus der Katalogseite genauso auswählbar wie L1s — die Checkbox setzen und der Teilbaum wird entsprechend ausgewählt.
 
 ## Detailansicht
 

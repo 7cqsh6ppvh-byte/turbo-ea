@@ -217,63 +217,11 @@ Un borrador de ADR se crea automáticamente junto con la iniciativa con:
 
 Haga clic en **Choose Different** para volver a las opciones de solución y seleccionar un enfoque diferente. Todas sus respuestas de la Fase 1 y la Fase 2 se conservan — solo se restablecen los datos posteriores (análisis de brechas, dependencias, arquitectura objetivo). Tras seleccionar una nueva opción, el asistente vuelve a recorrer el análisis de brechas y el análisis de dependencias. Puede guardar la evaluación actualizada o confirmar cuando esté listo.
 
-## Seguridad y Cumplimiento
+## Escaneos de cumplimiento
 
-La pestaña **Seguridad y Cumplimiento** ejecuta un análisis bajo demanda contra el paisaje vigente y produce un informe de riesgos conforme a estándares más un análisis de brechas regulatorias.
+El escáner de cumplimiento es un análisis TurboLens que produce hallazgos de cumplimiento contra las regulaciones habilitadas. Los hallazgos, el ciclo de vida, la vía de creación manual, el flujo de promoción a Riesgo y las acciones en lote están todos documentados en la [**guía de Cumplimiento**](compliance.md) dedicada — solo el propio botón disparador del escaneo vive detrás del flag de TurboLens.
 
-### Qué se analiza
-
-### Ejecutar un análisis
-
-Sólo los usuarios con `security_compliance.manage` pueden lanzar análisis (admin por defecto). La pestaña Resumen muestra **dos tarjetas de análisis independientes**:
-
-Refrescar la página **no interrumpe un análisis en curso** — la tarea en segundo plano sigue corriendo en el servidor y la interfaz vuelve a engancharse automáticamente al sondeo de progreso al recargar.
-
-### Estructura del informe de riesgos
-
-### Los hallazgos sobreviven a los re-escaneos
-
-Las decisiones del usuario y los metadatos de revisión son **duraderos entre re-escaneos**:
-
-### Promover un hallazgo al Registro de Riesgos
-
-Cuando el Riesgo vinculado alcanza más tarde `mitigated`, `monitoring`, `closed` o `accepted` (o se elimina), el motor de retro-propagación transiciona automáticamente cada hallazgo de cumplimiento vinculado al estado correspondiente (`mitigated`, `verified`, `accepted` o de vuelta a `in_review`). La justificación de aceptación capturada en el Riesgo se refleja en la nota de revisión del hallazgo para que la pista de auditoría se mantenga consistente.
-
-### Acciones masivas en la cuadrícula de Cumplimiento
-
-Cuando se concede `security_compliance.manage`, la cuadrícula de Cumplimiento expone selección múltiple consciente de los filtros. Marca la casilla del encabezado para seleccionar todas las filas que coincidan con los filtros activos, y luego usa la barra de herramientas fija:
-
-- **Editar decisión** — transición por lotes de cada hallazgo seleccionado a un estado elegido (por ejemplo, marcar un grupo de hallazgos como `not_applicable` tras una revisión de alcance). Las transiciones ilegales se notifican fila por fila en un resumen de éxito parcial en lugar de hacer fracasar todo el lote.
-- **Eliminar** — eliminar permanentemente los hallazgos (útil para limpiar hallazgos de una regulación que has desactivado desde entonces).
-
-La promoción a Riesgo sigue siendo una acción individual — la promoción masiva no se ofrece intencionadamente para preservar la captura de contexto por hallazgo.
-
-### Detección semántica de la Ley de IA de la UE
-
-Las funciones de IA suelen estar embebidas dentro de aplicaciones de propósito general. La pasada de Ley de IA de la UE **no se basa sólo en el filtrado por subtipo**: pide al LLM que marque cada ficha cuyo nombre, descripción, proveedor o interfaces relacionadas sugieran capacidades de IA / ML — LLM, motores de recomendación, visión por computador, puntuación de fraude o crediticia, chatbots, analítica predictiva, detección de anomalías. Los hallazgos producidos por esta pasada semántica se marcan como **Detectado por IA** para distinguirlos de fichas ya clasificadas como `AI Agent` / `AI Model`.
-
-### Progreso y reanudación
-
-### Flujo de estado
-
-```
-open → acknowledged → in progress → mitigated
-                                  ↘ accepted (aceptación formal del riesgo)
-                                  ↘ reopen → open
-```
-
-**Hallazgos de cumplimiento** (rediseñado en v1.11.0)
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (rama lateral, requiere justificación)
-                      ↘ not_applicable    (rama lateral, revisión de alcance)
-                      ↘ risk_tracked      (establecido automáticamente al promover a Riesgo)
-```
-
-`risk_tracked` nunca se establece manualmente — se escribe automáticamente cuando pulsas **Crear riesgo** en un hallazgo, y lo limpia el motor de retro-propagación cuando se cierra el Riesgo vinculado (véase *Promover un hallazgo al Registro de Riesgos* arriba).
-
-Para flujos de gobernanza completos (titularidad, evaluación residual, justificación de aceptación, tareas y notificaciones) promueva el hallazgo a un Riesgo — el ciclo completo vive en el [Registro de Riesgos](risks.md).
+Los hallazgos de cumplimiento también pueden ser **redactados manualmente** sin un proveedor IA configurado, de modo que la pestaña Cumplimiento funcione en despliegues que no tienen un LLM configurado.
 
 ## Historial de Análisis
 

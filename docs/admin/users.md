@@ -6,7 +6,7 @@ The **Users & Roles** page has two tabs: **Users** (manage accounts) and **Roles
 
 #### User Table
 
-The user list displays all registered accounts with the following columns:
+The user list is an **AG Grid** (the same Quartz layout used on the [Inventory](../guide/inventory.md) page) with a resizable filter sidebar on the left. The displayed columns are:
 
 | Column | Description |
 |--------|-------------|
@@ -17,6 +17,19 @@ The user list displays all registered accounts with the following columns:
 | **Last Login** | Date and time of the user's most recent login. Shows "—" if the user has never logged in |
 | **Status** | Active or Disabled |
 | **Actions** | Edit, activate/deactivate, or delete the user |
+
+#### Filter Sidebar
+
+A two-tab sidebar (**Filters** and **Columns**) sits on the left of the grid:
+
+- **Search** — substring match across name and email.
+- **Role** — multi-select chips with the role's colour, so you can scope to e.g. "all members + viewers".
+- **Status** — Active / Disabled.
+- **Auth method** — Local / SSO / SSO + Password / Pending Setup.
+- **Pending password setup only** — quick toggle for finding invited users who haven't completed onboarding yet.
+- **Columns** tab — show/hide individual columns.
+
+Filter state, visible columns, the sidebar width and its collapsed state are persisted **per user** in `localStorage` under the `turboea_usersAdmin` key — they survive logouts and page reloads.
 
 #### Inviting a New User
 

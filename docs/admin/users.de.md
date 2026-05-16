@@ -6,7 +6,7 @@ Die Seite **Benutzer & Rollen** hat zwei Tabs: **Benutzer** (Konten verwalten) u
 
 #### Benutzertabelle
 
-Die Benutzerliste zeigt alle registrierten Konten mit folgenden Spalten:
+Die Benutzerliste ist ein **AG Grid** (dasselbe Quartz-Layout wie auf der [Inventar](../guide/inventory.md)-Seite) mit einer in der Breite verstellbaren Filter-Seitenleiste auf der linken Seite. Die angezeigten Spalten sind:
 
 | Spalte | Beschreibung |
 |--------|-------------|
@@ -17,6 +17,19 @@ Die Benutzerliste zeigt alle registrierten Konten mit folgenden Spalten:
 | **Letzte Anmeldung** | Datum und Uhrzeit der letzten Anmeldung des Benutzers. Zeigt «—» an, wenn sich der Benutzer noch nie angemeldet hat |
 | **Status** | Aktiv oder Deaktiviert |
 | **Aktionen** | Bearbeiten, Aktivieren/Deaktivieren oder Benutzer löschen |
+
+#### Filter-Seitenleiste
+
+Eine Seitenleiste mit zwei Reitern (**Filter** und **Spalten**) sitzt links neben dem Grid:
+
+- **Suche** — Teilstring-Match über Name und E-Mail.
+- **Rolle** — Multi-Select-Chips mit der Farbe der Rolle, sodass du z.B. auf «alle Mitglieder + Viewer» eingrenzen kannst.
+- **Status** — Aktiv / Deaktiviert.
+- **Authentifizierungsmethode** — Lokal / SSO / SSO + Passwort / Einrichtung ausstehend.
+- **Nur ausstehende Passwort-Einrichtung** — schneller Schalter, um eingeladene Nutzer zu finden, die das Onboarding noch nicht abgeschlossen haben.
+- Reiter **Spalten** — einzelne Spalten ein-/ausblenden.
+
+Filterzustand, sichtbare Spalten, die Sidebar-Breite und ihr Eingeklappt-Zustand werden **pro Benutzer** im `localStorage` unter dem Schlüssel `turboea_usersAdmin` persistiert — sie überleben Abmeldungen und Seiten-Reloads.
 
 #### Einen neuen Benutzer einladen
 

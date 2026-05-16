@@ -6,7 +6,7 @@ A página de **Usuários e Papéis** possui duas abas: **Usuários** (gerenciar 
 
 #### Tabela de Usuários
 
-A lista de usuários exibe todas as contas registradas com as seguintes colunas:
+A lista de usuários é um **AG Grid** (o mesmo layout Quartz usado na página de [Inventário](../guide/inventory.md)) com uma barra lateral de filtros redimensionável à esquerda. As colunas exibidas são:
 
 | Coluna | Descrição |
 |--------|-----------|
@@ -17,6 +17,19 @@ A lista de usuários exibe todas as contas registradas com as seguintes colunas:
 | **Último login** | Data e hora do último login do usuário. Mostra "—" se o usuário nunca fez login |
 | **Status** | Ativo ou Desabilitado |
 | **Ações** | Editar, ativar/desativar ou excluir o usuário |
+
+#### Barra Lateral de Filtros
+
+Uma barra lateral de duas abas (**Filtros** e **Colunas**) fica à esquerda da grade:
+
+- **Busca** — correspondência de substring sobre nome e e-mail.
+- **Papel** — chips multi-seleção com a cor do papel, para que você possa restringir, por exemplo, a «todos os membros + visualizadores».
+- **Status** — Ativo / Desabilitado.
+- **Método de autenticação** — Local / SSO / SSO + Senha / Configuração Pendente.
+- **Apenas configuração de senha pendente** — interruptor rápido para encontrar usuários convidados que ainda não concluíram o onboarding.
+- Aba **Colunas** — mostrar/ocultar colunas individuais.
+
+O estado do filtro, colunas visíveis, largura da barra lateral e seu estado recolhido são persistidos **por usuário** em `localStorage` sob a chave `turboea_usersAdmin` — sobrevivem a logouts e recargas de página.
 
 #### Convidando um Novo Usuário
 

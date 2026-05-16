@@ -1,6 +1,18 @@
-# 通用设置
+# 设置
 
-**设置**页面（**管理 > 设置**）提供平台外观、电子邮件和模块开关的集中配置。
+**设置**页面位于 **管理 → 设置**（`/admin/settings`），是中心配置枢纽。它按标签页组织 —— 请从下表中选择合适的标签查看专项详解：
+
+| 标签页 | URL | 控制内容 | 完整指南 |
+|--------|-----|----------|----------|
+| **常规** | `/admin/settings?tab=general` | 外观（Logo、favicon、货币、日期格式、已启用语言、财年）、SMTP 邮件、**模块开关**（BPM、PPM、GRC、TurboLens） | 本页 |
+| **认证** | `/admin/settings?tab=authentication` | SSO 提供商、注册、密码策略 | [认证与 SSO](sso.md) |
+| **AI** | `/admin/settings?tab=ai` | LLM 提供商、模型、网络搜索后端、按卡片类型的 AI 建议开关 | [AI 功能](ai.md) |
+| **EOL** | `/admin/settings?tab=eol` | 将产品批量链接到 endoflife.date 条目 | [生命周期结束 (EOL)](eol.md) |
+| **Web 门户** | `/admin/settings?tab=web-portals` | 公共只读门户的 slug、可见性过滤器 | [Web 门户](web-portals.md) |
+| **ServiceNow** | `/admin/settings?tab=servicenow` | ServiceNow 连接、同步配置、身份映射 | [ServiceNow 集成](servicenow.md) |
+| **TurboLens** | `/admin/settings?tab=turbolens` | TurboLens 特定开关、已启用的法规、分析轮询 | 见下方[TurboLens 设置](#turbolens-1) |
+
+本页的其余部分介绍 **常规** 标签页。
 
 ![通用设置](../assets/img/zh/28_admin_settings_general.png)
 
@@ -91,3 +103,13 @@
 - 风险与合规发现仍保留在数据库中——底层的 `risks.*` 和 `security_compliance.*` 权限保持不变，因此数据得以保留；模块重新启用后，数据将原样再次出现
 
 请参阅 [GRC 指南](../guide/grc.md) 获取完整功能参考。
+
+## TurboLens 设置
+
+**TurboLens** 标签页汇集了管理 AI 分析界面的开关。与上面的按模块开关不同，TurboLens **不是**二元开/关 —— 当 AI 提供商已配置（在 **AI** 标签页下）并且分析数据至少同步过一次时，它才"就绪"。该页还提供：
+
+- **已启用的法规** —— 勾选六大内建框架（EU AI Act、GDPR、NIS2、DORA、SOC 2、ISO 27001）中哪些参与[合规扫描](../guide/compliance.md)。在 **元模型 → 法规** 下定义的自定义法规也可在此启用。
+- **分析轮询节奏** —— UI 重新轮询长时间运行的 TurboLens 分析以获取进度的频率。节奏越高 = 感知延迟越低，API 负载越大。
+- **结果缓存 TTL** —— 完成的分析结果被缓存多久才让 **运行分析** 按钮重新启用。
+
+请参阅 [TurboLens AI 智能](../guide/turbolens.md) 了解完整功能面，并参阅 [合规](../guide/compliance.md) 了解扫描工作流。

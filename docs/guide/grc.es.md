@@ -100,26 +100,9 @@ Incrusta el **Registro de riesgos** TOGAF Fase G. El ciclo de vida completo, el 
 
 ![GRC — escáner de cumplimiento](../assets/img/es/54_grc_cumplimiento.png)
 
-El escáner de seguridad bajo demanda, con dos mitades independientes:
+La pestaña Cumplimiento es un registro de doble fuente — los hallazgos pueden ser **redactados manualmente** por un revisor **o** producidos por un **escaneo IA** bajo demanda contra las regulaciones habilitadas (EU AI Act, RGPD, NIS2, DORA, SOC 2, ISO 27001 vienen habilitadas por defecto). Ambos tipos de hallazgo comparten el mismo ciclo de vida, pueden promoverse a un Riesgo y son bulk-actionables desde la cuadrícula. Consulta la [guía de Cumplimiento](compliance.md) para el ciclo de vida completo, el diálogo de creación manual, el flujo de escaneo, el detector semántico de EU AI Act y el bucle de promoción a Riesgo.
 
-Los hallazgos son **duraderos entre re-escaneos** — las decisiones de la usuaria, las notas de revisión, el veredicto IA del usuario sobre una ficha y el enlace de vuelta a un Riesgo promovido sobreviven a los escaneos posteriores. Un hallazgo que la siguiente pasada ya no reporta se marca `auto_resolved` y se oculta por defecto; el Riesgo previamente promovido se conserva para no romper la pista de auditoría.
-
-La cuadrícula de Cumplimiento refleja la del Inventario: barra lateral de filtros con visibilidad de columnas, orden persistido, búsqueda de texto completo y un panel de detalle que muestra el ciclo de vida de cumplimiento como una línea de tiempo horizontal de fases:
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (requiere justificación)
-                      ↘ not_applicable    (revisión de alcance)
-                      ↘ risk_tracked      (establecido automáticamente al promover a Riesgo)
-```
-
-Con `security_compliance.manage`, marca la casilla del encabezado para una **selección-todo filtrada**, y luego usa la barra de herramientas fija para **Editar decisión** (transición por lotes) o **Eliminar** los hallazgos seleccionados. Las transiciones ilegales se reportan por fila en un resumen de éxito parcial, de modo que una sola fila errónea no haga fracasar todo el lote. Consulta [TurboLens → Seguridad y Cumplimiento](turbolens.md#bulk-actions-on-the-compliance-grid) para la referencia completa de acciones.
-
-Cuando un Riesgo promovido desde un hallazgo se cierra o se acepta, el cambio **se propaga de vuelta al hallazgo automáticamente** — la fila de cumplimiento vinculada pasa a `mitigated` / `verified` / `accepted` / `in_review` para sincronizarse, sin mantenimiento manual.
-
-### Cumplimiento en una sola ficha
-
-Las fichas dentro del alcance de un escaneo de cumplimiento también muestran una pestaña **Cumplimiento** en su página de detalle (gobernada por `security_compliance.view`). Lista cada hallazgo actualmente vinculado a la ficha con las mismas acciones Reconocer / Aceptar / **Crear riesgo** / **Abrir riesgo** que la vista GRC — de modo que un Application Owner pueda clasificar sus hallazgos sin salir de la ficha. La misma regla de ocultamiento automático se aplica a la pestaña **Riesgos** en el detalle de la ficha: ambas pestañas solo aparecen cuando la ficha realmente tiene elementos vinculados, de modo que las fichas sin actividad GRC no arrastran pestañas vacías.
+La misma pestaña Cumplimiento también aparece en el Detalle de la ficha (auto-ocultada cuando la ficha no tiene hallazgos vinculados), de modo que un Application Owner pueda triagiar sus hallazgos sin salir de la ficha.
 
 ## Permisos
 

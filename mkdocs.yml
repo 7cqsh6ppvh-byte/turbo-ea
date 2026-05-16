@@ -66,6 +66,12 @@ plugins:
             Installation & Setup: Instalación y configuración
             Accessing the Platform: Acceso a la plataforma
             User Guide: Guía del usuario
+            Core: Esencial
+            Reports & Analysis: Informes y análisis
+            Modules: Módulos
+            Reference Catalogues: Catálogos de referencia
+            Overview: Resumen
+            Compliance: Cumplimiento
             Dashboard: Panel de control
             Inventory: Inventario
             Card Details: Detalles de ficha
@@ -77,6 +83,7 @@ plugins:
             Diagrams: Diagramas
             EA Delivery: Entrega EA
             GRC: GRC
+            Risk Register: Registro de riesgos
             Tasks & Surveys: Tareas y encuestas
             Notifications: Notificaciones
             Capability Catalogue: Catálogo de capacidades
@@ -111,6 +118,12 @@ plugins:
             Installation & Setup: Installation und Einrichtung
             Accessing the Platform: Zugang zur Plattform
             User Guide: Benutzerhandbuch
+            Core: Grundlagen
+            Reports & Analysis: Berichte und Analyse
+            Modules: Module
+            Reference Catalogues: Referenzkataloge
+            Overview: Übersicht
+            Compliance: Compliance
             Dashboard: Dashboard
             Inventory: Inventar
             Card Details: Kartendetails
@@ -122,6 +135,7 @@ plugins:
             Diagrams: Diagramme
             EA Delivery: EA-Bereitstellung
             GRC: GRC
+            Risk Register: Risikoregister
             Tasks & Surveys: Aufgaben und Umfragen
             Notifications: Benachrichtigungen
             Capability Catalogue: Capability-Katalog
@@ -156,6 +170,12 @@ plugins:
             Installation & Setup: Installation et configuration
             Accessing the Platform: Accès à la plateforme
             User Guide: Guide utilisateur
+            Core: Essentiel
+            Reports & Analysis: Rapports et analyses
+            Modules: Modules
+            Reference Catalogues: Catalogues de référence
+            Overview: Vue d'ensemble
+            Compliance: Conformité
             Dashboard: Tableau de bord
             Inventory: Inventaire
             Card Details: Détails de la fiche
@@ -167,6 +187,7 @@ plugins:
             Diagrams: Diagrammes
             EA Delivery: Livraison EA
             GRC: GRC
+            Risk Register: Registre des risques
             Tasks & Surveys: Tâches et enquêtes
             Notifications: Notifications
             Capability Catalogue: Catalogue de capacités
@@ -201,6 +222,12 @@ plugins:
             Installation & Setup: Installazione e configurazione
             Accessing the Platform: Accesso alla piattaforma
             User Guide: Guida utente
+            Core: Essenziale
+            Reports & Analysis: Report e analisi
+            Modules: Moduli
+            Reference Catalogues: Cataloghi di riferimento
+            Overview: Panoramica
+            Compliance: Conformità
             Dashboard: Dashboard
             Inventory: Inventario
             Card Details: Dettagli della card
@@ -212,6 +239,7 @@ plugins:
             Diagrams: Diagrammi
             EA Delivery: Consegna EA
             GRC: GRC
+            Risk Register: Registro dei rischi
             Tasks & Surveys: Attività e sondaggi
             Notifications: Notifiche
             Capability Catalogue: Catalogo delle capacità
@@ -246,6 +274,12 @@ plugins:
             Installation & Setup: Instalação e configuração
             Accessing the Platform: Acesso à plataforma
             User Guide: Guia do usuário
+            Core: Essencial
+            Reports & Analysis: Relatórios e análises
+            Modules: Módulos
+            Reference Catalogues: Catálogos de referência
+            Overview: Visão geral
+            Compliance: Conformidade
             Dashboard: Painel de controle
             Inventory: Inventário
             Card Details: Detalhes do card
@@ -257,6 +291,7 @@ plugins:
             Diagrams: Diagramas
             EA Delivery: Entrega EA
             GRC: GRC
+            Risk Register: Registro de riscos
             Tasks & Surveys: Tarefas e pesquisas
             Notifications: Notificações
             Capability Catalogue: Catálogo de capacidades
@@ -291,6 +326,12 @@ plugins:
             Installation & Setup: 安装与配置
             Accessing the Platform: 访问平台
             User Guide: 用户指南
+            Core: 核心功能
+            Reports & Analysis: 报告与分析
+            Modules: 模块
+            Reference Catalogues: 参考目录
+            Overview: 概览
+            Compliance: 合规
             Dashboard: 仪表盘
             Inventory: 资产清单
             Card Details: 卡片详情
@@ -302,6 +343,7 @@ plugins:
             Diagrams: 图表
             EA Delivery: EA 交付
             GRC: GRC
+            Risk Register: 风险登记册
             Tasks & Surveys: 任务与调查
             Notifications: 通知
             Capability Catalogue: 能力目录
@@ -336,6 +378,12 @@ plugins:
             Installation & Setup: Установка и настройка
             Accessing the Platform: Доступ к платформе
             User Guide: Руководство пользователя
+            Core: Основное
+            Reports & Analysis: Отчёты и анализ
+            Modules: Модули
+            Reference Catalogues: Справочные каталоги
+            Overview: Обзор
+            Compliance: Соответствие
             Dashboard: Панель управления
             Inventory: Инвентаризация
             Card Details: Детали карточки
@@ -347,6 +395,7 @@ plugins:
             Diagrams: Диаграммы
             EA Delivery: Поставка EA
             GRC: GRC
+            Risk Register: Реестр рисков
             Tasks & Surveys: Задачи и опросы
             Notifications: Уведомления
             Capability Catalogue: Каталог возможностей
@@ -407,24 +456,30 @@ nav:
       - Installation & Setup: getting-started/setup.md
       - Accessing the Platform: getting-started/login.md
   - User Guide:
-      - Dashboard: guide/dashboard.md
-      - Inventory: guide/inventory.md
-      - Card Details: guide/card-details.md
-      - Reports: guide/reports.md
-      - Saved Reports: guide/saved-reports.md
-      - PPM: guide/ppm.md
-      - BPM: guide/bpm.md
-      - TurboLens AI: guide/turbolens.md
-      - Diagrams: guide/diagrams.md
-      - EA Delivery: guide/delivery.md
-      - GRC: guide/grc.md
-      - Risk Register: guide/risks.md
+      - Core:
+          - Dashboard: guide/dashboard.md
+          - Inventory: guide/inventory.md
+          - Card Details: guide/card-details.md
+          - Notifications: guide/notifications.md
+      - Reports & Analysis:
+          - Reports: guide/reports.md
+          - Saved Reports: guide/saved-reports.md
+          - Diagrams: guide/diagrams.md
+          - TurboLens AI: guide/turbolens.md
+      - Modules:
+          - PPM: guide/ppm.md
+          - BPM: guide/bpm.md
+          - EA Delivery: guide/delivery.md
+          - GRC:
+              - Overview: guide/grc.md
+              - Risk Register: guide/risks.md
+              - Compliance: guide/compliance.md
+      - Reference Catalogues:
+          - Capability Catalogue: guide/capability-catalogue.md
+          - Process Catalogue: guide/process-catalogue.md
+          - Value Stream Catalogue: guide/value-stream-catalogue.md
+          - Principles Catalogue: guide/principles-catalogue.md
       - Tasks & Surveys: guide/tasks.md
-      - Notifications: guide/notifications.md
-      - Capability Catalogue: guide/capability-catalogue.md
-      - Process Catalogue: guide/process-catalogue.md
-      - Value Stream Catalogue: guide/value-stream-catalogue.md
-      - Principles Catalogue: guide/principles-catalogue.md
   - Administration:
       - admin/index.md
       - General Settings: admin/settings.md

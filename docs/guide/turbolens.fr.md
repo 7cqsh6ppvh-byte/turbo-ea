@@ -217,63 +217,11 @@ Un brouillon d'ADR est automatiquement créé avec l'initiative, comprenant :
 
 Cliquez sur **Choisir une autre option** pour revenir aux options de solution et sélectionner une approche différente. Toutes vos réponses de la Phase 1 et de la Phase 2 sont conservées — seules les données en aval (analyse des écarts, dépendances, architecture cible) sont réinitialisées. Après avoir sélectionné une nouvelle option, l'assistant reprend l'analyse des écarts et l'analyse des dépendances. Vous pouvez sauvegarder l'évaluation mise à jour ou valider lorsque vous êtes prêt.
 
-## Sécurité et conformité
+## Scans de conformité
 
-L'onglet **Sécurité et conformité** exécute une analyse à la demande sur le paysage en cours et produit un rapport de risques conforme aux standards ainsi qu'une analyse d'écart réglementaire.
+Le scanner de conformité est une analyse TurboLens qui produit des constats de conformité contre les réglementations activées. Les constats, le cycle de vie, le chemin de saisie manuelle, le workflow de promotion vers un Risque et les actions en lot sont tous documentés dans le [**guide Conformité**](compliance.md) dédié — seul le bouton de déclenchement du scan vit derrière le flag TurboLens.
 
-### Ce qui est analysé
-
-### Exécuter une analyse
-
-Seuls les utilisateurs disposant de `security_compliance.manage` peuvent lancer des analyses (admin par défaut). L'onglet Vue d'ensemble propose **deux cartes d'analyse indépendantes** :
-
-Rafraîchir la page **n'interrompt pas une analyse en cours** — la tâche d'arrière-plan continue côté serveur et l'interface se raccroche automatiquement au sondage de progression au rechargement.
-
-### Structure du rapport de risques
-
-### Les constats survivent aux re-scans
-
-Les décisions utilisateur et les métadonnées de revue sont **durables au fil des re-scans** :
-
-### Promouvoir un constat vers le Registre des risques
-
-Lorsque le risque lié atteint plus tard `mitigated`, `monitoring`, `closed` ou `accepted` (ou est supprimé), le moteur de rétro-propagation transitionne automatiquement chaque constat de conformité lié à l'état correspondant (`mitigated`, `verified`, `accepted` ou retour à `in_review`). La justification d'acceptation capturée sur le risque est répercutée dans la note de revue du constat afin que la piste d'audit reste cohérente.
-
-### Actions par lots sur la grille Conformité
-
-Avec `security_compliance.manage`, la grille Conformité expose une sélection multiple consciente des filtres. Cochez la case de l'en-tête pour sélectionner toutes les lignes correspondant aux filtres actifs, puis utilisez la barre d'outils épinglée :
-
-- **Modifier la décision** — bascule par lots tous les constats sélectionnés vers un état choisi (par exemple marquer un lot de constats en `not_applicable` après revue de périmètre). Les transitions illégales sont remontées ligne par ligne dans un résumé de succès partiel au lieu de faire échouer tout le lot.
-- **Supprimer** — supprime définitivement les constats (utile pour nettoyer les constats d'une réglementation que vous avez désactivée depuis).
-
-La promotion en Risque reste une action ligne par ligne — un promote en masse n'est volontairement pas proposé afin de préserver la capture de contexte par constat.
-
-### Détection sémantique de la Loi européenne sur l'IA
-
-Les fonctionnalités d'IA sont souvent embarquées dans des applications à usage général. La passe sur la Loi européenne sur l'IA **ne repose donc pas uniquement sur le filtrage par sous-type** : elle demande au LLM de signaler toute fiche dont le nom, la description, l'éditeur ou les interfaces liées évoquent des capacités d'IA / ML — LLM, moteurs de recommandation, vision par ordinateur, notation de fraude ou de crédit, chatbots, analytique prédictive, détection d'anomalies. Les constats produits par cette passe sémantique sont marqués **Détecté par IA** pour les distinguer des fiches déjà classées comme `AI Agent` / `AI Model`.
-
-### Progression et reprise
-
-### Flux de statut
-
-```
-open → acknowledged → in progress → mitigated
-                                  ↘ accepted (acceptation formelle du risque)
-                                  ↘ reopen → open
-```
-
-**Constats de conformité** (refondus en v1.11.0)
-
-```
-new → in_review → mitigated → verified
-                      ↘ accepted          (branche latérale, justification requise)
-                      ↘ not_applicable    (branche latérale, revue de périmètre)
-                      ↘ risk_tracked      (positionné automatiquement à la promotion en risque)
-```
-
-`risk_tracked` n'est jamais positionné à la main — il est écrit automatiquement lorsque vous cliquez sur **Créer un risque** sur un constat et est effacé par le moteur de rétro-propagation lorsque le risque associé se ferme (voir *Promouvoir un constat vers le Registre des risques* ci-dessus).
-
-Pour les workflows de gouvernance complets (propriété, évaluation résiduelle, justification d'acceptation, Todos et notifications), promouvez le constat en Risque — le cycle complet vit dans le [Registre des risques](risks.md).
+Les constats de conformité peuvent aussi être **saisis manuellement** sans qu'un fournisseur IA soit configuré, de sorte que l'onglet Conformité fonctionne dans les déploiements qui n'ont pas de LLM configuré.
 
 ## Historique des analyses
 

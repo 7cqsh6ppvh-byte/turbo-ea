@@ -134,11 +134,27 @@ Gli stakeholder sono persone con un **ruolo** specifico su questa card. I ruoli 
 
 Le assegnazioni degli stakeholder influenzano i **permessi**: i permessi effettivi di un utente su una card sono la combinazione del suo ruolo a livello di applicazione e di qualsiasi ruolo di stakeholder che detiene su quella card.
 
+### Ricerca e invito
+
+Scegli uno stakeholder tramite l'**autocomplete ricercabile** — inizia a digitare e il menu a tendina filtra sia per nome che per e-mail (l'e-mail appare come riga secondaria, così due utenti con lo stesso nome possono essere distinti a colpo d'occhio).
+
+Se l'e-mail che digiti non corrisponde a un utente esistente, alla fine del menu a tendina appare un'opzione **«Invita «email» come nuovo utente»**. Selezionandola si espande un mini-modulo inline proprio dentro il selettore — scegli un ruolo (Member o Viewer per default), modifica facoltativamente il nome visualizzato e invia. Il nuovo utente viene invitato tramite l'e-mail di invito standard **e** assegnato al ruolo di stakeholder scelto sulla card in un'unica azione, così non devi mai lasciare la card per onboardare un collaboratore.
+
+Il percorso di invito richiede il permesso **`users.invite`**, una forma delegata di `admin.users` che gli admin possono concedere a membri di fiducia. Una salvaguardia anti-escalation di privilegi impedisce ai non-admin di invitare utenti in ruoli admin — il menu a tendina dei ruoli filtra silenziosamente sui ruoli che l'invitante è autorizzato a delegare.
+
 ## Scheda Cronologia
 
 ![Cronologia modifiche della card](../assets/img/it/08_scheda_cronologia.png)
 
 Mostra il **registro di audit completo** delle modifiche apportate alla card: **chi** ha effettuato la modifica, **quando** è stata fatta e **cosa** è stato modificato (valore precedente vs. nuovo valore). Questo consente la completa tracciabilità di tutte le modifiche nel tempo.
+
+## Scheda Rischi (GRC abilitato, quando presente)
+
+Quando il [modulo GRC](grc.md) è abilitato **e** la card ha almeno un rischio collegato, appare una scheda **Rischi** che elenca ogni rischio collegato alla card con un percorso a un clic verso il [Registro dei rischi](risks.md). La scheda viene nascosta automaticamente quando non ci sono rischi collegati, così le card senza attività GRC non si portano dietro una scheda vuota.
+
+## Scheda Conformità (GRC abilitato, quando presente)
+
+Quando il [modulo GRC](grc.md) è abilitato **e** la card ha almeno una rilevazione di conformità collegata, appare una scheda **Conformità** che elenca ogni rilevazione attualmente collegata alla card. Le stesse azioni Riconosci / Accetta / **Crea rischio** / **Apri rischio** della [griglia Conformità GRC](compliance.md) sono disponibili, così il proprietario della card può triagiare le proprie rilevazioni senza lasciare la card. Auto-nascosta quando non ci sono rilevazioni collegate.
 
 ## Scheda Flusso di processo (solo card Business Process)
 

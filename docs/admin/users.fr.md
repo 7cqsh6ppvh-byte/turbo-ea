@@ -6,7 +6,7 @@ La page **Utilisateurs et rôles** comporte deux onglets : **Utilisateurs** (ges
 
 #### Tableau des utilisateurs
 
-La liste des utilisateurs affiche tous les comptes enregistrés avec les colonnes suivantes :
+La liste des utilisateurs est un **AG Grid** (la même mise en page Quartz que sur la page [Inventaire](../guide/inventory.md)) avec une barre latérale de filtres redimensionnable sur la gauche. Les colonnes affichées sont :
 
 | Colonne | Description |
 |---------|-------------|
@@ -17,6 +17,19 @@ La liste des utilisateurs affiche tous les comptes enregistrés avec les colonne
 | **Dernière connexion** | Date et heure de la dernière connexion de l'utilisateur. Affiche « — » si l'utilisateur ne s'est jamais connecté |
 | **Statut** | Actif ou Désactivé |
 | **Actions** | Modifier, activer/désactiver ou supprimer l'utilisateur |
+
+#### Barre latérale de filtres
+
+Une barre latérale à deux onglets (**Filtres** et **Colonnes**) se trouve à gauche de la grille :
+
+- **Recherche** — correspondance partielle sur le nom et l'e-mail.
+- **Rôle** — puces à sélection multiple avec la couleur du rôle, pour pouvoir cibler par exemple « tous les membres + visualiseurs ».
+- **Statut** — Actif / Désactivé.
+- **Méthode d'authentification** — Local / SSO / SSO + Mot de passe / Configuration en attente.
+- **Configuration de mot de passe en attente uniquement** — bascule rapide pour trouver les utilisateurs invités qui n'ont pas encore terminé leur onboarding.
+- Onglet **Colonnes** — afficher/masquer les colonnes individuelles.
+
+L'état des filtres, les colonnes visibles, la largeur de la barre latérale et son état réduit sont persistés **par utilisateur** dans `localStorage` sous la clé `turboea_usersAdmin` — ils survivent aux déconnexions et aux rechargements de page.
 
 #### Inviter un nouvel utilisateur
 

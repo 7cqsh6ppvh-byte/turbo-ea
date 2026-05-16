@@ -6,7 +6,7 @@ La pagina **Utenti e ruoli** ha due schede: **Utenti** (gestione account) e **Ru
 
 #### Tabella utenti
 
-L'elenco utenti mostra tutti gli account registrati con le seguenti colonne:
+L'elenco utenti è un **AG Grid** (lo stesso layout Quartz utilizzato nella pagina [Inventario](../guide/inventory.md)) con una barra laterale dei filtri ridimensionabile a sinistra. Le colonne mostrate sono:
 
 | Colonna | Descrizione |
 |---------|-------------|
@@ -17,6 +17,19 @@ L'elenco utenti mostra tutti gli account registrati con le seguenti colonne:
 | **Ultimo accesso** | Data e ora dell'ultimo accesso dell'utente. Mostra "—" se l'utente non ha mai effettuato il login |
 | **Stato** | Attivo o Disabilitato |
 | **Azioni** | Modifica, attiva/disattiva o elimina l'utente |
+
+#### Barra laterale dei filtri
+
+Una barra laterale a due schede (**Filtri** e **Colonne**) si trova a sinistra della griglia:
+
+- **Ricerca** — match di sottostringa su nome ed email.
+- **Ruolo** — chip multi-select con il colore del ruolo, così puoi restringere ad es. a «tutti i membri + viewer».
+- **Stato** — Attivo / Disabilitato.
+- **Metodo di autenticazione** — Locale / SSO / SSO + Password / In attesa di configurazione.
+- **Solo configurazione password in attesa** — switch rapido per trovare utenti invitati che non hanno ancora completato l'onboarding.
+- Scheda **Colonne** — mostra/nascondi singole colonne.
+
+Lo stato dei filtri, le colonne visibili, la larghezza della barra laterale e il suo stato compresso sono persistiti **per utente** in `localStorage` sotto la chiave `turboea_usersAdmin` — sopravvivono ai logout e ai ricaricamenti di pagina.
 
 #### Invito di un nuovo utente
 

@@ -134,11 +134,27 @@ Partes interessadas são pessoas com um **papel** específico neste card. Os pap
 
 Atribuições de partes interessadas afetam **permissões**: as permissões efetivas de um usuário em um card são a combinação do seu papel em nível de aplicação e quaisquer papéis de parte interessada que ele possua naquele card.
 
+### Pesquisar e convidar
+
+Escolha uma parte interessada via o **autocompletar pesquisável** — comece a digitar e o menu suspenso filtra tanto por nome quanto por e-mail (o e-mail aparece como linha secundária, para que dois usuários com o mesmo nome possam ser distinguidos num relance).
+
+Se o e-mail que você digita não corresponder a um usuário existente, uma opção **«Convidar «email» como novo usuário»** aparece no final do menu suspenso. Selecioná-la expande um mini-formulário inline dentro do próprio seletor — escolha um papel (Membro ou Visualizador por padrão), edite opcionalmente o nome exibido e envie. O novo usuário é convidado via o e-mail de convite padrão **e** atribuído ao papel de parte interessada escolhido no card numa única ação, assim você nunca precisa deixar o card para integrar um colaborador.
+
+O caminho de convite requer a permissão **`users.invite`**, uma forma delegada de `admin.users` que administradores podem conceder a membros confiáveis. Uma proteção contra escalada de privilégios impede que não-admins convidem usuários para papéis de admin — o menu suspenso de papéis filtra silenciosamente para os papéis que o convidante tem permissão para delegar.
+
 ## Aba de Histórico
 
 ![Histórico de Alterações do Card](../assets/img/pt/08_ficha_historico.png)
 
 Mostra a **trilha de auditoria completa** das alterações feitas no card: **quem** fez a alteração, **quando** foi feita e **o que** foi modificado (valor anterior vs. novo valor). Isso permite total rastreabilidade de todas as modificações ao longo do tempo.
+
+## Aba de Riscos (GRC habilitado, quando presente)
+
+Quando o [módulo GRC](grc.md) está habilitado **e** o card tem pelo menos um risco vinculado, aparece uma aba **Riscos** que lista cada risco vinculado ao card com um caminho de um clique de volta ao [Registro de Riscos](risks.md). A aba é auto-ocultada quando não há risco vinculado, de modo que cards sem atividade GRC não carregam uma aba vazia.
+
+## Aba de Conformidade (GRC habilitado, quando presente)
+
+Quando o [módulo GRC](grc.md) está habilitado **e** o card tem pelo menos uma descoberta de conformidade vinculada, aparece uma aba **Conformidade** que lista cada descoberta atualmente vinculada ao card. As mesmas ações Reconhecer / Aceitar / **Criar risco** / **Abrir risco** que na [grade de Conformidade GRC](compliance.md) estão disponíveis, de modo que o proprietário do card possa triar suas próprias descobertas sem deixar o card. Auto-ocultada quando não há descoberta vinculada.
 
 ## Aba de Fluxo de Processo (apenas cards de Processo de Negócio)
 

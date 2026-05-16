@@ -134,11 +134,27 @@ Les parties prenantes sont des personnes ayant un **rôle** spécifique sur cett
 
 Les affectations de parties prenantes affectent les **permissions** : les permissions effectives d'un utilisateur sur une fiche sont la combinaison de son rôle au niveau de l'application et de tous les rôles de parties prenantes qu'il détient sur cette fiche.
 
+### Recherche et invitation
+
+Choisissez une partie prenante via l'**autocomplétion recherchable** — commencez à taper et la liste déroulante filtre à la fois sur le nom et sur l'e-mail (l'e-mail apparaît sur une ligne secondaire, pour que deux utilisateurs portant le même nom soient distinguables d'un coup d'œil).
+
+Si l'e-mail que vous tapez ne correspond à aucun utilisateur existant, une option **« Inviter «email» comme nouvel utilisateur »** apparaît à la fin du menu déroulant. La sélectionner développe un mini-formulaire en ligne directement dans le sélecteur — choisissez un rôle (Membre ou Visualiseur par défaut), modifiez éventuellement le nom affiché et soumettez. Le nouvel utilisateur est invité via l'e-mail d'invitation standard **et** assigné au rôle de partie prenante choisi sur la fiche en une seule action, vous n'avez donc jamais besoin de quitter la fiche pour intégrer un contributeur.
+
+Le chemin d'invitation nécessite la permission **`users.invite`**, une forme déléguée de `admin.users` que les administrateurs peuvent accorder aux membres de confiance. Un garde-fou anti-élévation de privilèges empêche les non-administrateurs d'inviter des utilisateurs dans des rôles d'administrateur — le menu déroulant des rôles filtre silencieusement sur les rôles que l'inviteur est autorisé à déléguer.
+
 ## Onglet Historique
 
 ![Historique des modifications de la fiche](../assets/img/fr/08_fiche_historique.png)
 
 Affiche la **piste d'audit complète** des modifications apportées à la fiche : **qui** a effectué la modification, **quand** elle a été effectuée, et **ce qui** a été modifié (valeur précédente vs nouvelle valeur). Cela permet une traçabilité complète de toutes les modifications au fil du temps.
+
+## Onglet Risques (GRC activé, le cas échéant)
+
+Quand le [module GRC](grc.md) est activé **et** que la fiche a au moins un risque lié, un onglet **Risques** apparaît, listant chaque risque lié à la fiche avec un chemin en un clic vers le [Registre des risques](risks.md). L'onglet est masqué automatiquement quand aucun risque n'est lié, de sorte que les fiches sans activité GRC ne traînent pas d'onglet vide.
+
+## Onglet Conformité (GRC activé, le cas échéant)
+
+Quand le [module GRC](grc.md) est activé **et** que la fiche a au moins un constat de conformité lié, un onglet **Conformité** apparaît, listant chaque constat actuellement lié à la fiche. Les mêmes actions Acquitter / Accepter / **Créer un risque** / **Ouvrir le risque** que dans la [grille de Conformité GRC](compliance.md) sont disponibles, de sorte que le propriétaire de la fiche peut trier ses propres constats sans quitter la fiche. Auto-masqué quand aucun constat n'est lié.
 
 ## Onglet Flux de processus (fiches Processus Métier uniquement)
 

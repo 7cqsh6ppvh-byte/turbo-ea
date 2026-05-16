@@ -134,11 +134,27 @@ Las partes interesadas son personas con un **rol** específico en esta ficha. Lo
 
 Las asignaciones de partes interesadas afectan los **permisos**: los permisos efectivos de un usuario en una ficha son la combinación de su rol a nivel de aplicación y cualquier rol de parte interesada que tenga en esa ficha.
 
+### Búsqueda e invitación
+
+Elige a una parte interesada mediante el **autocompletar buscable** — empieza a escribir y el desplegable filtra tanto por nombre como por correo (el correo aparece como línea secundaria, de modo que dos usuarios con el mismo nombre puedan distinguirse de un vistazo).
+
+Si el correo que escribes no coincide con un usuario existente, aparece una opción **«Invitar a «email» como nuevo usuario»** al final del desplegable. Al seleccionarla se expande un mini-formulario en línea dentro del propio selector — elige un rol (Miembro o Visualizador por defecto), edita opcionalmente el nombre mostrado y envía. El nuevo usuario es invitado mediante el correo de invitación estándar **y** asignado al rol de parte interesada elegido en la ficha en una sola acción, así nunca tienes que abandonar la ficha para incorporar a un colaborador.
+
+La ruta de invitación requiere el permiso **`users.invite`**, una forma delegada de `admin.users` que los administradores pueden conceder a miembros de confianza. Un guardián anti-escalada de privilegios impide que los no administradores inviten usuarios a roles de administrador — el desplegable de roles filtra silenciosamente a los roles que el invitador tiene permitido delegar.
+
 ## Pestaña de Historial
 
 ![Historial de Cambios de una Ficha](../assets/img/es/08_ficha_historial.png)
 
 Muestra el **registro completo de auditoría** de los cambios realizados en la ficha: **quién** hizo el cambio, **cuándo** se realizó y **qué** se modificó (valor anterior vs. valor nuevo). Esto permite la trazabilidad completa de todas las modificaciones a lo largo del tiempo.
+
+## Pestaña de Riesgos (GRC activado, cuando aplique)
+
+Cuando el [módulo GRC](grc.md) está habilitado **y** la ficha tiene al menos un riesgo vinculado, aparece una pestaña **Riesgos** que lista todos los riesgos vinculados a la ficha con una ruta de un clic de vuelta al [Registro de riesgos](risks.md). La pestaña se oculta automáticamente cuando no hay riesgos vinculados, de modo que las fichas sin actividad GRC no arrastran una pestaña vacía.
+
+## Pestaña de Cumplimiento (GRC activado, cuando aplique)
+
+Cuando el [módulo GRC](grc.md) está habilitado **y** la ficha tiene al menos un hallazgo de cumplimiento vinculado, aparece una pestaña **Cumplimiento** que lista cada hallazgo actualmente vinculado a la ficha. Las mismas acciones Reconocer / Aceptar / **Crear riesgo** / **Abrir riesgo** que en la [cuadrícula de Cumplimiento GRC](compliance.md) están disponibles, de modo que el propietario de la ficha pueda triagiar sus propios hallazgos sin salir de la ficha. Auto-ocultada cuando no hay hallazgos vinculados.
 
 ## Pestaña de Flujo de Proceso (solo para fichas de Proceso de Negocio)
 

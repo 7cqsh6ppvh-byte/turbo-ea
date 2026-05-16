@@ -1,6 +1,18 @@
-# Allgemeine Einstellungen
+# Einstellungen
 
-Die **Einstellungen**-Seite (**Admin > Einstellungen**) bietet eine zentrale Konfiguration für das Erscheinungsbild der Plattform, E-Mail und Modulumschaltungen.
+Die **Einstellungen**-Seite unter **Admin → Einstellungen** (`/admin/settings`) ist die zentrale Konfigurationsstelle. Sie ist in Reiter organisiert — wähle den passenden Reiter aus der Tabelle unten für den entsprechenden Deep Dive:
+
+| Reiter | URL | Was er steuert | Vollständige Anleitung |
+|--------|-----|----------------|------------------------|
+| **Allgemein** | `/admin/settings?tab=general` | Erscheinungsbild (Logo, Favicon, Währung, Datumsformat, aktivierte Sprachen, Geschäftsjahr), SMTP-E-Mail, **Modul-Schalter** (BPM, PPM, GRC, TurboLens) | Diese Seite |
+| **Authentifizierung** | `/admin/settings?tab=authentication` | SSO-Provider, Registrierung, Passwortrichtlinie | [Authentifizierung & SSO](sso.md) |
+| **KI** | `/admin/settings?tab=ai` | LLM-Provider, Modell, Websuch-Backend, Pro-Kartentyp-KI-Suggestionsschalter | [KI-Funktionen](ai.md) |
+| **EOL** | `/admin/settings?tab=eol` | Massen-Verknüpfung von Produkten zu endoflife.date-Einträgen | [End-of-Life (EOL)](eol.md) |
+| **Webportale** | `/admin/settings?tab=web-portals` | Öffentliche schreibgeschützte Portal-Slugs, Sichtbarkeits-Filter | [Webportale](web-portals.md) |
+| **ServiceNow** | `/admin/settings?tab=servicenow` | ServiceNow-Verbindung, Sync-Konfiguration, Identitäts-Mapping | [ServiceNow-Integration](servicenow.md) |
+| **TurboLens** | `/admin/settings?tab=turbolens` | TurboLens-spezifische Schalter, aktivierte Regulierungen, Analyse-Polling | Siehe Abschnitt [TurboLens-Einstellungen](#turbolens-einstellungen) unten |
+
+Der Rest dieser Seite behandelt den **Allgemein**-Reiter.
 
 ![Allgemeine Einstellungen](../assets/img/de/28_admin_einstellungen_allgemein.png)
 
@@ -91,3 +103,13 @@ Schalten Sie das **Governance, Risk and Compliance**-Modul (GRC) ein oder aus. W
 - Risiken und Compliance-Findings verbleiben in der Datenbank — die zugrunde liegenden Berechtigungen `risks.*` und `security_compliance.*` bleiben unverändert, sodass die Daten erhalten bleiben und unverändert wieder erscheinen, wenn das Modul erneut aktiviert wird
 
 Siehe den [GRC-Leitfaden](../guide/grc.md) für die vollständige Funktionsübersicht.
+
+## TurboLens-Einstellungen
+
+Der **TurboLens**-Reiter bündelt die Schalter, die die KI-Analyse-Oberfläche regeln. Anders als die per-Modul-Schalter oben ist TurboLens **kein** binäres An/Aus — es ist «bereit», wenn sowohl ein KI-Provider konfiguriert ist (unter dem **KI**-Reiter) als auch die Analyse-Daten mindestens einmal synchronisiert wurden. Die Seite exponiert ausserdem:
+
+- **Aktivierte Regulierungen** — markiere, welche der sechs eingebauten Frameworks (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001) an [Compliance-Scans](../guide/compliance.md) teilnehmen. Eigene unter **Metamodell → Regulierungen** definierte Regulierungen können hier ebenfalls aktiviert werden.
+- **Analyse-Polling-Kadenz** — wie oft die UI lang laufende TurboLens-Analysen auf Fortschritt erneut abfragt. Höhere Kadenz = geringere wahrgenommene Latenz, mehr API-Last.
+- **Ergebnis-Cache-TTL** — wie lange abgeschlossene Analyseergebnisse zwischengespeichert werden, bevor der **Analyse ausführen**-Button wieder aktiviert wird.
+
+Siehe [TurboLens KI-Intelligenz](../guide/turbolens.md) für die vollständige Funktionsoberfläche und [Compliance](../guide/compliance.md) für den Scan-Workflow.

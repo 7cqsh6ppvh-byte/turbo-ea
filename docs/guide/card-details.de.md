@@ -134,11 +134,27 @@ Stakeholder sind Personen mit einer bestimmten **Rolle** auf dieser Karte. Die v
 
 Stakeholder-Zuweisungen beeinflussen **Berechtigungen**: Die effektiven Berechtigungen eines Benutzers auf einer Karte sind die Kombination aus seiner anwendungsweiten Rolle und allen Stakeholder-Rollen, die er auf dieser Karte innehat.
 
+### Suchen und einladen
+
+Wähle einen Stakeholder über das **durchsuchbare Autocomplete** — beginne zu tippen und das Dropdown filtert sowohl nach Name als auch nach E-Mail (die E-Mail erscheint als sekundäre Zeile, sodass zwei Nutzer mit demselben Namen auf einen Blick unterschieden werden können).
+
+Wenn die eingegebene E-Mail keinem bestehenden Nutzer entspricht, erscheint am Ende des Dropdowns eine Option **«Einladen «email» als neuen Nutzer»**. Bei Auswahl klappt direkt im Picker ein Inline-Mini-Formular auf — wähle eine Rolle (standardmäßig Member oder Viewer), bearbeite optional den Anzeigenamen und sende ab. Der neue Nutzer wird über die Standard-Einladungs-E-Mail eingeladen **und** in einem einzigen Schritt mit der gewählten Stakeholder-Rolle auf der Karte zugewiesen, sodass du die Karte nie verlassen musst, um einen Mitwirkenden zu onboarden.
+
+Der Einladungspfad erfordert die **`users.invite`**-Berechtigung, eine delegierte Form von `admin.users`, die Admins an vertrauenswürdige Mitglieder vergeben können. Eine Schutzmechanik gegen Privilege-Escalation verhindert, dass Nicht-Admins Nutzer in Admin-Rollen einladen — das Rollen-Dropdown filtert stillschweigend auf Rollen, die der Einladende delegieren darf.
+
 ## Verlauf-Tab
 
 ![Kartenänderungsverlauf](../assets/img/de/08_karten_historie.png)
 
 Zeigt die **vollständige Historie** der an der Karte vorgenommenen Änderungen: **Wer** hat die Änderung vorgenommen, **wann** wurde sie durchgeführt und **was** wurde geändert (vorheriger Wert vs. neuer Wert). Dies ermöglicht die vollständige Nachverfolgbarkeit aller Änderungen über die Zeit.
+
+## Risiken-Tab (GRC aktiviert, falls vorhanden)
+
+Wenn das [GRC-Modul](grc.md) aktiviert ist **und** die Karte mindestens ein verknüpftes Risiko hat, erscheint ein **Risiken**-Tab, der jedes mit der Karte verknüpfte Risiko mit einem Ein-Klick-Pfad zurück zum [Risikoregister](risks.md) auflistet. Der Tab wird automatisch ausgeblendet, wenn kein Risiko verknüpft ist, sodass Karten ohne GRC-Aktivität keinen leeren Tab mitschleppen.
+
+## Compliance-Tab (GRC aktiviert, falls vorhanden)
+
+Wenn das [GRC-Modul](grc.md) aktiviert ist **und** die Karte mindestens einen verknüpften Compliance-Befund hat, erscheint ein **Compliance**-Tab, der jeden derzeit mit der Karte verknüpften Befund auflistet. Dieselben Aktionen Acknowledge / Accept / **Risiko erstellen** / **Risiko öffnen** wie im [GRC-Compliance-Grid](compliance.md) sind verfügbar, sodass der Karteneigentümer seine eigenen Befunde triagieren kann, ohne die Karte zu verlassen. Automatisch ausgeblendet, wenn kein Befund verknüpft ist.
 
 ## Prozessfluss-Tab (nur für Geschäftsprozess-Karten)
 
