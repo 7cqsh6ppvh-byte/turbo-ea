@@ -540,14 +540,25 @@ turbo-ea/
 │   │   │   ├── process-catalogue/           # Industry business process reference
 │   │   │   ├── value-stream-catalogue/      # Value stream reference set
 │   │   │   ├── reference-catalogue/         # Shared catalogue shell + utilities
-│   │   │   ├── grc/                         # GRC module — embeds Risk Register, Compliance, etc.
-│   │   │   │   ├── GrcPage.tsx              # Tabbed shell (risk / compliance / …)
-│   │   │   │   └── risk/                    # Risk Register + mitigation tasks (TOGAF Phase G)
-│   │   │   │       ├── RiskRegisterPage.tsx
-│   │   │   │       ├── RiskDetailPage.tsx
-│   │   │   │       ├── RiskMatrix.tsx
-│   │   │   │       ├── CreateRiskDialog.tsx
-│   │   │   │       └── mitigation/          # MitigationTasksPanel + dialogs + occurrence history
+│   │   │   ├── grc/                         # GRC module — embeds Risk Register, Compliance, Governance
+│   │   │   │   ├── GrcPage.tsx              # Tabbed shell (risk / compliance / governance)
+│   │   │   │   ├── risk/                    # Risk Register + mitigation tasks (TOGAF Phase G)
+│   │   │   │   │   ├── RiskRegisterPage.tsx
+│   │   │   │   │   ├── RiskDetailPage.tsx
+│   │   │   │   │   ├── RiskMatrix.tsx
+│   │   │   │   │   ├── CreateRiskDialog.tsx
+│   │   │   │   │   └── mitigation/          # MitigationTasksPanel + dialogs + occurrence history
+│   │   │   │   ├── compliance/              # Regulation-driven compliance scanner (no CVE half)
+│   │   │   │   │   ├── ComplianceScanner.tsx
+│   │   │   │   │   ├── ComplianceGrid.tsx
+│   │   │   │   │   ├── ComplianceHeatmap.tsx
+│   │   │   │   │   ├── ComplianceLifecycleTimeline.tsx
+│   │   │   │   │   ├── FindingDetailDrawer.tsx
+│   │   │   │   │   └── CreateComplianceFindingDialog.tsx
+│   │   │   │   └── governance/              # Principles + Decisions panels
+│   │   │   │       ├── GovernanceTab.tsx
+│   │   │   │       ├── PrinciplesPanel.tsx
+│   │   │   │       └── DecisionsPanel.tsx
 │   │   │   ├── turbolens/                   # AI-powered EA intelligence (see TurboLens section)
 │   │   │   └── admin/
 │   │   │       ├── MetamodelAdmin.tsx       # Type list + relation graph orchestrator
@@ -1139,7 +1150,7 @@ Each type has an optional `section_config` (JSONB) controlling layout:
 
 Single source of truth for all valid permission keys. Two categories:
 
-**App-level permissions** (22 groups, 50+ keys): `inventory.*`, `relations.*`, `stakeholders.*`, `comments.*`, `documents.*`, `diagrams.*`, `bpm.*`, `ppm.*`, `reports.*`, `surveys.*`, `soaw.*`, `adr.*`, `tags.*`, `bookmarks.*`, `saved_reports.*`, `eol.*`, `web_portals.*`, `notifications.*`, `servicenow.*`, `turbolens.*`, `compliance.*` (view + manage for TurboLens Security & Compliance), `risks.*` (view + manage for the EA Risk Register), `ai.*`, `admin.*`
+**App-level permissions** (22 groups, 50+ keys): `inventory.*`, `relations.*`, `stakeholders.*`, `comments.*`, `documents.*`, `diagrams.*`, `bpm.*`, `ppm.*`, `reports.*`, `surveys.*`, `soaw.*`, `adr.*`, `tags.*`, `bookmarks.*`, `saved_reports.*`, `eol.*`, `web_portals.*`, `notifications.*`, `servicenow.*`, `turbolens.*`, `compliance.*` (view + manage for the GRC Compliance scanner — the CVE half of the old "Security & Compliance" tab was removed), `risks.*` (view + manage for the EA Risk Register), `ai.*`, `admin.*`
 
 **Card-level permissions** (13 keys): `card.view`, `card.edit`, `card.archive`, `card.delete`, `card.approval_status`, `card.manage_stakeholders`, `card.manage_relations`, `card.manage_documents`, `card.manage_comments`, `card.create_comments`, `card.bpm_edit`, `card.bpm_manage_drafts`, `card.bpm_approve`
 
@@ -1266,7 +1277,8 @@ Native AI analysis module — originally ported from [ArchLens](https://github.c
 | `services/turbolens_vendors.py` | Vendor categorization (45+ categories, batch=15) + resolution (batch=60, hierarchy building) |
 | `services/turbolens_duplicates.py` | Duplicate detection (union-find merge, batch=40) + modernization assessment (batch=25) |
 | `services/turbolens_architect.py` | 5-step architecture AI: objective-driven capability mapping, solution options, gap analysis, dependency analysis, and target architecture rendered with the Layered Dependency View |
-| `services/turbolens_security.py` | Compliance scanner orchestrator. Entry point (`run_compliance_scan`) that emits phase-aware progress to `run.results["progress"]`. Includes the EU AI Act **semantic detector** that flags cards embedding AI regardless of subtype. |
+| `services/compliance_scanner.py` | Compliance scanner orchestrator. Entry point (`run_compliance_scan`) that emits phase-aware progress to `run.results["progress"]`. Includes the EU AI Act **semantic detector** that flags cards embedding AI regardless of subtype. The legacy `run_security_scan` / `run_cve_scan` entry points have been removed — see `tests/services/test_compliance_scanner.py::test_service_exposes_compliance_scan_entry_point`. |
+| `services/compliance_risk_sync.py` | Two-way bridge between compliance findings and the EA Risk Register (promote-to-risk + back-links). |
 
 ### Architecture AI Flow
 
@@ -1312,10 +1324,16 @@ The Architecture AI follows a 5-step guided wizard:
 | GET | `/assessments/{id}` | `turbolens.view` | Get assessment details |
 | GET | `/analysis-runs` | `turbolens.view` | Analysis run history |
 | GET | `/analysis-runs/{run_id}` | `turbolens.view` | Get specific run with results (or progress while still running) |
-| POST | `/security/compliance-scan` | `compliance.manage` | Trigger compliance scan with optional `regulations[]` filter (background task) |
-| GET | `/security/active-runs` | `compliance.view` | Return the currently-running compliance scan so the UI can reattach polling after a refresh |
-| GET | `/security/overview` | `compliance.view` | KPIs: compliance scores + per-regulation status matrix, last-run metadata |
-| GET | `/security/compliance` | `compliance.view` | Compliance findings grouped by regulation with per-regulation scores |
+| POST | `/compliance/compliance-scan` | `compliance.manage` | Trigger compliance scan with optional `regulations[]` filter (background task) |
+| GET | `/compliance/active-runs` | `compliance.view` | Return the currently-running compliance scan so the UI can reattach polling after a refresh |
+| GET | `/compliance/overview` | `compliance.view` | KPIs: compliance scores + per-regulation status matrix, last-run metadata |
+| GET | `/compliance/compliance` | `compliance.view` | Compliance findings grouped by regulation with per-regulation scores |
+| POST | `/compliance/compliance-findings` | `compliance.manage` | Create / upsert a compliance finding |
+| PATCH | `/compliance/compliance-findings/{id}` | `compliance.manage` | Update a finding (status, severity, evidence, remediation, …) |
+| PATCH | `/compliance/compliance-findings/bulk` | `compliance.manage` | Bulk-update findings |
+| DELETE | `/compliance/compliance-findings/{id}` | `compliance.manage` | Delete a single finding |
+| DELETE | `/compliance/compliance-findings/bulk` | `compliance.manage` | Bulk-delete findings |
+| POST | `/compliance/compliance-findings/{id}/ai-verdict` | `compliance.manage` | Request an AI verdict on a single finding (helper for the human reviewer) |
 
 ### Risk Register API (`/risks` + `/cards/{id}/risks`)
 
@@ -1349,15 +1367,17 @@ Owner assignment on create / patch / promote auto-creates a single `is_system` T
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/turbolens` | `TurboLensPage` | Tab container: Dashboard, Vendors, Resolution, Duplicates, Architect, Security, History |
+| `/turbolens` | `TurboLensPage` | Tab container: Dashboard, Vendors, Resolution, Duplicates, Architect, Assessments, History. **No Security / Compliance tab** — compliance moved to `/grc?tab=compliance` when the CVE half of the old "Security & Compliance" feature was removed. |
 | `/turbolens` (Dashboard tab) | `TurboLensDashboard` | KPI tiles, cards by type, quality tiers (Bronze/Silver/Gold), top issues |
 | `/turbolens` (Vendors tab) | `TurboLensVendors` | Vendor analysis with category breakdown, grid/table toggle |
 | `/turbolens` (Resolution tab) | `TurboLensResolution` | Canonical vendor hierarchy with confidence scores |
 | `/turbolens` (Duplicates tab) | `TurboLensDuplicates` | Duplicate clusters + modernization assessment (sub-tabs) |
 | `/turbolens` (Architect tab) | `TurboLensArchitect` | 5-step architecture AI wizard with Layered Dependency View visualization |
-| `/turbolens` (Compliance tab) | `TurboLensSecurity` | On-demand compliance scan with phase-aware progress bar, compliance heatmap, and **Create risk** / **Open risk** actions on every finding |
+| `/turbolens` (Assessments tab) | `TurboLensAssessments` | Saved architecture-AI assessments |
 | `/turbolens` (History tab) | `TurboLensHistory` | Analysis run history table |
 | `/grc?tab=risk` | `RiskRegisterPage` (embedded in `GrcPage`) | Risk Register — KPIs, Initial/Residual 4×4 matrix toggle, filters, risk table. (`/ea-delivery/risks` 301-redirects here for backwards compatibility.) |
+| `/grc?tab=compliance` | `ComplianceScanner` + `ComplianceGrid` / `ComplianceHeatmap` (embedded in `GrcPage`) | On-demand compliance scan with phase-aware progress bar, compliance heatmap, finding grid, and **Create risk** / **Open risk** actions on every finding. **The CVE scan that used to live here has been removed** — compliance is now regulation-driven only (EU AI Act, GDPR, NIS2, DORA, SOC 2, ISO 27001). |
+| `/grc?tab=governance` | `GovernanceTab` (embedded in `GrcPage`) | Principles + Decisions panels |
 | `/grc/risks/:id` | `RiskDetailPage` | Full TOGAF-shaped detail: Identification, Initial assessment, Mitigation & residual (with Owner picker), Affected cards (M:N), Status stepper + primary **Next step** + secondary side actions (Accept / Reopen / Close-early), Audit. (`/ea-delivery/risks/:id` redirects here.) |
 
 ### Key Frontend Components
