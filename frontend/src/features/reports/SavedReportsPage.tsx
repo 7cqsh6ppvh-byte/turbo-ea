@@ -25,46 +25,19 @@ import MaterialSymbol from "@/components/MaterialSymbol";
 import EditReportDialog from "./EditReportDialog";
 import { api } from "@/api/client";
 import type { SavedReport } from "@/types";
-
-const REPORT_TYPE_STYLE: Record<string, { icon: string; color: string; path: string }> = {
-  portfolio: { icon: "dashboard", color: "#1976d2", path: "/reports/portfolio" },
-  "flexible-portfolio": { icon: "dashboard_customize", color: "#1976d2", path: "/reports/flexible-portfolio" },
-  "capability-map": { icon: "grid_view", color: "#003399", path: "/reports/capability-map" },
-  lifecycle: { icon: "timeline", color: "#2e7d32", path: "/reports/lifecycle" },
-  dependencies: { icon: "hub", color: "#e65100", path: "/reports/dependencies" },
-  cost: { icon: "payments", color: "#6a1b9a", path: "/reports/cost" },
-  matrix: { icon: "table_chart", color: "#6a1b9a", path: "/reports/matrix" },
-  "data-quality": { icon: "verified", color: "#00695c", path: "/reports/data-quality" },
-  eol: { icon: "update", color: "#bf360c", path: "/reports/eol" },
-};
-
-const VISIBILITY_STYLE: Record<string, { icon: string; color: string }> = {
-  private: { icon: "lock", color: "#757575" },
-  public: { icon: "public", color: "#2e7d32" },
-  shared: { icon: "group", color: "#1565c0" },
-};
+import {
+  REPORT_TYPE_STYLE,
+  VISIBILITY_STYLE,
+  getReportTypeLabels,
+  getVisibilityLabels,
+} from "./savedReportStyles";
 
 export default function SavedReportsPage() {
   const { t } = useTranslation(["reports", "common"]);
   const navigate = useNavigate();
 
-  const REPORT_TYPE_LABELS: Record<string, string> = useMemo(() => ({
-    portfolio: t("saved.typePortfolio"),
-    "flexible-portfolio": t("saved.typeFlexiblePortfolio"),
-    "capability-map": t("saved.typeCapabilityMap"),
-    lifecycle: t("saved.typeLifecycle"),
-    dependencies: t("saved.typeDependencies"),
-    cost: t("saved.typeCost"),
-    matrix: t("saved.typeMatrix"),
-    "data-quality": t("saved.typeDataQuality"),
-    eol: t("saved.typeEol"),
-  }), [t]);
-
-  const VISIBILITY_LABELS: Record<string, string> = useMemo(() => ({
-    private: t("saved.visibilityPrivate"),
-    public: t("saved.visibilityPublic"),
-    shared: t("saved.visibilityShared"),
-  }), [t]);
+  const REPORT_TYPE_LABELS: Record<string, string> = useMemo(() => getReportTypeLabels(t), [t]);
+  const VISIBILITY_LABELS: Record<string, string> = useMemo(() => getVisibilityLabels(t), [t]);
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(0); // 0 = My Reports, 1 = Shared with Me, 2 = Public

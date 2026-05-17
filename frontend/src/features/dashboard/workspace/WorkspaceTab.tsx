@@ -11,6 +11,7 @@ import MyPendingSurveysSection from "./MyPendingSurveysSection";
 import NeedsAttentionSection from "./NeedsAttentionSection";
 import RecentActivityOnMyCardsSection from "./RecentActivityOnMyCardsSection";
 import MyCreatedSection from "./MyCreatedSection";
+import MySavedReportsSection from "./MySavedReportsSection";
 
 export interface MyWorkspaceCounters {
   favorite_count: number;
@@ -98,6 +99,9 @@ export default function WorkspaceTab() {
         </Grid>
         <Grid item xs={12} md={6}>
           <MyCreatedSection createdCount={counters.created_count} />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <MySavedReportsSection />
         </Grid>
       </Grid>
     </Box>
