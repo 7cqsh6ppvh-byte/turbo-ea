@@ -27421,6 +27421,26 @@
               "title": "Mine",
               "type": "boolean"
             }
+          },
+          {
+            "in": "query",
+            "name": "assigned_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Assigned Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Created Only",
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
