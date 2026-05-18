@@ -386,7 +386,7 @@
   "settings.logo.title": "Logo",
   "settings.logo.custom": "Custom",
   "settings.logo.default": "Default",
-  "settings.logo.description": "Upload a custom logo to replace the default Turbo EA branding in the navigation bar. Recommended: PNG or SVG with visible colors (not white-on-transparent). Max 2 MB.",
+  "settings.logo.description": "Upload a custom logo to replace the default Turbo EA branding in the navigation bar and login page. Recommended: PNG or SVG with a horizontal aspect ratio around 3:1 (e.g. 600 × 200 px). The logo is rendered at 45 px tall in the navbar and 64 px on the login page, with a hard max-width of 200 px / 280 px respectively, so wider images are scaled down. Use visible colors (not white-on-transparent). Max 2 MB.",
   "settings.logo.upload": "Upload Logo",
   "settings.logo.reset": "Reset to Default",
   "settings.logo.updated": "Logo updated",

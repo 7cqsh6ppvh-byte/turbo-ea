@@ -386,7 +386,7 @@
   "settings.logo.title": "Logo",
   "settings.logo.custom": "Benutzerdefiniert",
   "settings.logo.default": "Standard",
-  "settings.logo.description": "Laden Sie ein benutzerdefiniertes Logo hoch, um das Standard-Turbo-EA-Branding in der Navigationsleiste zu ersetzen. Empfohlen: PNG oder SVG mit sichtbaren Farben (nicht weiß auf transparent). Max. 2 MB.",
+  "settings.logo.description": "Laden Sie ein benutzerdefiniertes Logo hoch, um das Standard-Turbo-EA-Branding in der Navigationsleiste und auf der Anmeldeseite zu ersetzen. Empfohlen: PNG oder SVG mit einem horizontalen Seitenverhältnis von etwa 3:1 (z. B. 600 × 200 px). Das Logo wird in der Navigationsleiste mit 45 px Höhe und auf der Anmeldeseite mit 64 px Höhe dargestellt, mit einer maximalen Breite von 200 px bzw. 280 px – breitere Bilder werden verkleinert. Verwenden Sie sichtbare Farben (nicht weiß auf transparent). Max. 2 MB.",
   "settings.logo.upload": "Logo hochladen",
   "settings.logo.reset": "Auf Standard zurücksetzen",
   "settings.logo.updated": "Logo aktualisiert",

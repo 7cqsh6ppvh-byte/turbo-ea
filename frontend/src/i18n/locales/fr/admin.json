@@ -385,7 +385,7 @@
   "settings.logo.title": "Logo",
   "settings.logo.custom": "Personnalisé",
   "settings.logo.default": "Par défaut",
-  "settings.logo.description": "Chargez un logo personnalisé pour remplacer le logo Turbo EA par défaut dans la barre de navigation. Recommandé : PNG ou SVG avec des couleurs visibles (pas blanc sur transparent). Max 2 Mo.",
+  "settings.logo.description": "Chargez un logo personnalisé pour remplacer le logo Turbo EA par défaut dans la barre de navigation et sur la page de connexion. Recommandé : PNG ou SVG au format horizontal d'environ 3:1 (par ex. 600 × 200 px). Le logo est affiché à 45 px de hauteur dans la barre de navigation et à 64 px sur la page de connexion, avec une largeur maximale de 200 px / 280 px – les images plus larges sont réduites. Utilisez des couleurs visibles (pas blanc sur transparent). Max 2 Mo.",
   "settings.logo.upload": "Charger le logo",
   "settings.logo.reset": "Réinitialiser par défaut",
   "settings.logo.updated": "Logo mis à jour",

@@ -385,7 +385,7 @@
   "settings.logo.title": "Logo",
   "settings.logo.custom": "自定义",
   "settings.logo.default": "默认",
-  "settings.logo.description": "上传自定义 Logo 以替换导航栏中的默认 Turbo EA 品牌标识。建议：使用颜色可见的 PNG 或 SVG（非白色透明底）。最大 2 MB。",
+  "settings.logo.description": "上传自定义 Logo 以替换导航栏和登录页面中的默认 Turbo EA 品牌标识。建议：横向比例约为 3:1 的 PNG 或 SVG（例如 600 × 200 px）。Logo 在导航栏中以 45 px 高度显示，在登录页面以 64 px 高度显示,最大宽度分别为 200 px 和 280 px——超出宽度的图像会被等比缩小。请使用颜色可见的图像（非白色透明底）。最大 2 MB。",
   "settings.logo.upload": "上传 Logo",
   "settings.logo.reset": "重置为默认",
   "settings.logo.updated": "Logo 已更新",

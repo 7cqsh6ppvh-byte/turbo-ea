@@ -5,6 +5,14 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.22.1] - 2026-05-18
+
+### Fixed
+- **Custom logo no longer shifts the layout.** A `max-width` is now applied wherever the admin-uploaded logo is rendered — 200 px in the navigation bar (45 px tall) and 280 px on the login page (64 px tall). Very wide images are scaled down instead of pushing surrounding elements off-screen.
+
+### Changed
+- **Logo settings — recommended dimensions.** The description under **Admin → Settings → General → Logo** now states the rendered heights and max-width caps, and recommends a ~3:1 horizontal aspect ratio (e.g. 600 × 200 px), translated in all 8 supported languages.
+
 ## [1.22.0] - 2026-05-18
 
 Login page customizations: the screen now picks up the uploaded brand logo, admins can override or hide the tagline, add a contact-support help block, and offer a password-reset flow for local accounts.

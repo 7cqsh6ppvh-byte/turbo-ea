@@ -101,7 +101,7 @@ export default function LoginPage({ onLogin, onRegister }: Props) {
         <img
           src="/api/v1/settings/logo"
           alt={appTitle}
-          style={{ height: 64, objectFit: "contain" }}
+          style={{ height: 64, maxWidth: 280, objectFit: "contain" }}
         />
         {!branding.taglineHidden && (
           <Typography variant="body2" sx={{ mt: 1, color: "rgba(255,255,255,0.6)" }}>
