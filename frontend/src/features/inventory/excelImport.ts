@@ -1099,27 +1099,6 @@ export async function validateMultiSheet(
   const byCardId = new Map<string, Card>();
   for (const c of existingCards) byCardId.set(c.id, c);
 
-  function existingCardPathSegs(card: Card): string[] {
-    const segs: string[] = [];
-    let cur: Card | undefined = card;
-    const seen = new Set<string>();
-    while (cur && !seen.has(cur.id) && segs.length < MAX_PATH_DEPTH) {
-      seen.add(cur.id);
-      segs.unshift(cur.name);
-      cur = cur.parent_id ? byCardId.get(cur.parent_id) : undefined;
-    }
-    return segs;
-  }
-
-  // Build (type, name lowercase) → list of existing cards for name-only refs.
-  const existingByTypeName = new Map<string, Card[]>();
-  for (const c of existingCards) {
-    const k = `${c.type}|${c.name.trim().toLowerCase()}`;
-    const arr = existingByTypeName.get(k) || [];
-    arr.push(c);
-    existingByTypeName.set(k, arr);
-  }
-
   // Track all freshly-parsed creates' own path keys so a relation cell
   // can point at a row created in the same workbook.
   const fileByOwnPathKey = new Map<string, ParsedRow>();
@@ -1127,10 +1106,144 @@ export async function validateMultiSheet(
     if (r.ownPathKey) fileByOwnPathKey.set(r.ownPathKey, r);
   }
 
+  // ----- Two-pass ref resolution ----------------------------------------
+  // The previous implementation matched relation targets against
+  // `existingCards`, which is whatever slice of the Inventory grid the user
+  // had filtered to. That left cross-type targets (e.g. an ITComponent
+  // referenced from an Application sheet while the grid is filtered to
+  // Applications) reporting as "missing" even when the card actually
+  // exists in the DB. The fix is to defer to the backend's
+  // `POST /cards/resolve-refs`, which sees the full corpus. Same-batch
+  // refs (pointing at rows the workbook itself creates) stay client-side.
+  //
+  // Pass 1: walk every sheet + the Relations sheet and collect each ref
+  // that *isn't* a same-batch row. Stage them by a canonical key so
+  // identical refs in different cells share one server lookup.
+
+  /** Normalised lookup key matching what we'll send to the backend. */
+  function refLookupKey(type: string, ref: string): string {
+    const segs = decodePath(ref);
+    return `${type}|${segs.map((s) => s.trim().toLowerCase()).join("/")}`;
+  }
+
+  type StagedRef = { type: string; ref: string };
+  const refsToResolve = new Map<string, StagedRef>();
+
+  function stageRef(type: string, ref: string): void {
+    const segs = decodePath(ref);
+    if (segs.length === 0) return;
+    const fullKey = pathKey(type, segs);
+    if (fileByOwnPathKey.has(fullKey)) return; // same-batch hit, no server call
+    const key = refLookupKey(type, ref);
+    if (!refsToResolve.has(key)) {
+      refsToResolve.set(key, { type, ref });
+    }
+  }
+
+  for (const sheet of parsed.sheets) {
+    if (sheet.rows.length === 0) continue;
+    const sheetType = sheet.typeHint ?? preSelectedType;
+    if (!sheetType) continue;
+    const headers = Object.keys(sheet.rows[0]);
+    const relCols = headers.filter((h) => h.startsWith("rel:"));
+    for (const raw of sheet.rows) {
+      const name = str(raw["name"] ?? raw["Name"]);
+      if (!name) continue;
+      const idCell = str(raw["id"] ?? raw["Id"] ?? raw["ID"]);
+      const parentPathRaw = str(raw["parent_path"]);
+      // The row's source ref (used when neither id nor same-batch match exists).
+      if (!idCell || !UUID_RE.test(idCell)) {
+        const ownPath = parentPathRaw
+          ? [...decodePath(parentPathRaw), name]
+          : [name];
+        const ownKey = pathKey(sheetType, ownPath);
+        if (!fileByOwnPathKey.has(ownKey)) {
+          stageRef(sheetType, ownPath.map(encodePathSegment).join(" / "));
+        }
+      }
+      for (const col of relCols) {
+        const relTypeKey = col.slice(4);
+        const rt = relationTypes.find((r) => r.key === relTypeKey);
+        if (!rt) continue;
+        const cellRaw = str(raw[col]);
+        if (!cellRaw) continue;
+        for (const part of cellRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
+          stageRef(rt.target_type_key, part);
+        }
+      }
+    }
+  }
+  for (const raw of parsed.relationRows) {
+    const relType = str(raw["relation_type"]);
+    if (!relType) continue;
+    const rt = relationTypes.find((r) => r.key === relType);
+    if (!rt) continue;
+    const sourceTypeKey = str(raw["source_type"]) || rt.source_type_key;
+    const targetTypeKey = str(raw["target_type"]) || rt.target_type_key;
+    const sourceRefStr = str(raw["source_ref"]);
+    const targetRefStr = str(raw["target_ref"]);
+    if (sourceRefStr) stageRef(sourceTypeKey, sourceRefStr);
+    if (targetRefStr) stageRef(targetTypeKey, targetRefStr);
+  }
+
+  // Pass 2: ask the backend to resolve them all in one round-trip. Even a
+  // single ref goes through the endpoint — keeps the code path uniform and
+  // gives us consistent ambiguity reporting.
+  const refResults = new Map<string, {
+    status: "resolved" | "ambiguous" | "missing";
+    id?: string;
+    candidates?: { id: string; path: string }[];
+  }>();
+  if (refsToResolve.size > 0) {
+    type ResolveResp = {
+      results: {
+        row: number;
+        column: string;
+        status: "resolved" | "ambiguous" | "missing";
+        id?: string;
+        candidates?: { id: string; path: string }[];
+      }[];
+    };
+    const refsArr = Array.from(refsToResolve.entries());
+    const CHUNK = 1000; // backend caps refs at 5000 per request
+    for (let i = 0; i < refsArr.length; i += CHUNK) {
+      const chunk = refsArr.slice(i, i + CHUNK);
+      const payload = {
+        refs: chunk.map(([key, sr], idx) => ({
+          // `row` / `column` are only used to pin the response back to the
+          // staged entry — the importer doesn't display them anywhere.
+          row: i + idx,
+          column: key,
+          type: sr.type,
+          ref: sr.ref,
+        })),
+      };
+      try {
+        const resp = await api.post<ResolveResp>("/cards/resolve-refs", payload);
+        for (const r of resp.results) {
+          const stagedEntry = refsArr[r.row];
+          if (!stagedEntry) continue;
+          refResults.set(stagedEntry[0], {
+            status: r.status,
+            id: r.id,
+            candidates: r.candidates,
+          });
+        }
+      } catch {
+        // If the resolve endpoint fails wholesale, fall back to per-ref
+        // missing so the user sees a clear error rather than a silent
+        // empty diff.
+        for (const [key] of chunk) {
+          refResults.set(key, { status: "missing" });
+        }
+      }
+    }
+  }
+
   /**
    * Resolve a single ref string into a CardRefHandle. Order of precedence:
    *   1. row in the same workbook (matched by name + parent path)
-   *   2. exactly one existing card of the right type
+   *   2. backend `POST /cards/resolve-refs` result (resolved or ambiguous)
    *   3. otherwise: error.
    */
   function resolveRef(
@@ -1142,54 +1255,38 @@ export async function validateMultiSheet(
   ): CardRefHandle | undefined {
     const segs = decodePath(ref);
     if (segs.length === 0) return undefined;
-    const name = segs[segs.length - 1];
-    const parentSegs = segs.slice(0, -1);
     const fullKey = pathKey(targetTypeKey, segs);
     // Same-batch row?
     const fileMatch = fileByOwnPathKey.get(fullKey);
     if (fileMatch) {
       return { kind: "pathKey", pathKey: fullKey, type: targetTypeKey };
     }
-    // Existing card match.
-    const candidates = existingByTypeName.get(
-      `${targetTypeKey}|${name.trim().toLowerCase()}`,
-    ) || [];
-    let matches = candidates;
-    if (parentSegs.length > 0) {
-      matches = candidates.filter((c) => {
-        const ancestors = existingCardPathSegs(c).slice(0, -1);
-        if (ancestors.length !== parentSegs.length) return false;
-        return ancestors.every(
-          (seg, i) => seg.trim().toLowerCase() === parentSegs[i].trim().toLowerCase(),
-        );
-      });
+    const lookupKey = refLookupKey(targetTypeKey, ref);
+    const r = refResults.get(lookupKey);
+    if (r?.status === "resolved" && r.id) {
+      return { kind: "id", id: r.id };
     }
-    if (matches.length === 1) {
-      return { kind: "id", id: matches[0].id };
-    }
-    if (matches.length === 0) {
+    if (r?.status === "ambiguous") {
+      const hints = (r.candidates ?? []).slice(0, 3).map((c) => c.path).join("; ");
       errors.push({
         row: rowIndex,
         column,
-        message: t("import.errors.relationTargetMissing", {
+        message: t("import.errors.relationTargetAmbiguous", {
           type: targetTypeKey,
           ref,
+          hints,
         }),
       });
       return undefined;
     }
-    // Ambiguous — provide a hint with the first few candidate paths.
-    const hints = matches
-      .slice(0, 3)
-      .map((c) => [...existingCardPathSegs(c)].join(" / "))
-      .join("; ");
+    // Missing (or no result fetched — e.g. unstaged because both names
+    // were blank-trimmed empty). Emit the missing error.
     errors.push({
       row: rowIndex,
       column,
-      message: t("import.errors.relationTargetAmbiguous", {
+      message: t("import.errors.relationTargetMissing", {
         type: targetTypeKey,
         ref,
-        hints,
       }),
     });
     return undefined;

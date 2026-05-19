@@ -450,11 +450,13 @@ async def bulk_relations(
 
     for op in operations:
         try:
-            rt = rt_by_key.get(op.type)
-            if rt is None:
+            # Distinct name from the outer `for rt in rt_by_key.values()`
+            # loop above so mypy can keep the non-Optional narrowing intact.
+            rt_def = rt_by_key.get(op.type)
+            if rt_def is None:
                 raise HTTPException(422, f"Unknown relation type: {op.type}")
-            source_id = _resolve_ref_input(op.source, rt, endpoint="source", resolver=resolver)
-            target_id = _resolve_ref_input(op.target, rt, endpoint="target", resolver=resolver)
+            source_id = _resolve_ref_input(op.source, rt_def, endpoint="source", resolver=resolver)
+            target_id = _resolve_ref_input(op.target, rt_def, endpoint="target", resolver=resolver)
 
             # Look up an existing relation of this (type, source, target).
             existing = await db.execute(
@@ -487,7 +489,7 @@ async def bulk_relations(
                 # Cardinality guards: 1:1 forbids a second relation of the
                 # same type from this source or to this target; 1:n forbids
                 # a second relation from the same source.
-                if rt.cardinality in ("1:1", "1:n"):
+                if rt_def.cardinality in ("1:1", "1:n"):
                     existing_src = await db.scalar(
                         select(func.count(Relation.id)).where(
                             Relation.type == op.type, Relation.source_id == source_id
@@ -496,10 +498,10 @@ async def bulk_relations(
                     if existing_src and existing_src > 0:
                         raise HTTPException(
                             422,
-                            f"Cardinality {rt.cardinality} forbids a second '{op.type}' "
+                            f"Cardinality {rt_def.cardinality} forbids a second '{op.type}' "
                             "relation from this source",
                         )
-                if rt.cardinality == "1:1":
+                if rt_def.cardinality == "1:1":
                     existing_tgt = await db.scalar(
                         select(func.count(Relation.id)).where(
                             Relation.type == op.type, Relation.target_id == target_id

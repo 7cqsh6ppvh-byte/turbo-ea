@@ -121,31 +121,85 @@ function sheetNameForType(type: CardType, taken: Set<string>): string {
 }
 
 /**
- * Fetch relations for the given source cards in one network call. Falls back
- * to an empty list on failure so a transient API hiccup never blocks export
- * entirely — the user still gets a card-only workbook.
+ * Fetch every active relation in one round-trip and filter client-side to
+ * outgoing edges from the export's source set. Replaces an earlier per-card
+ * loop that was both O(N) HTTP calls and silently swallowed any single
+ * failure into an empty list — making the workbook ship with empty `rel:`
+ * columns when the network blipped on any one request.
  */
-async function fetchRelationsForSources(sourceIds: string[]): Promise<Relation[]> {
-  if (sourceIds.length === 0) return [];
-  try {
-    // The `card_id=` endpoint returns relations where the card is *either*
-    // source or target. We filter to outgoing-only locally so the
-    // exporter only emits each relation once (from the source side).
-    const all: Relation[] = [];
-    const seen = new Set<string>();
-    for (const sid of sourceIds) {
-      const rels = await api.get<Relation[]>(`/relations?card_id=${sid}`);
-      for (const r of rels) {
-        if (r.source_id === sid && !seen.has(r.id)) {
-          seen.add(r.id);
-          all.push(r);
+async function fetchOutgoingRelations(sourceIds: Set<string>): Promise<Relation[]> {
+  if (sourceIds.size === 0) return [];
+  const rels = await api.get<Relation[]>("/relations");
+  return rels.filter((r) => sourceIds.has(r.source_id));
+}
+
+/**
+ * Top up `byId` with cards we know we'll need to render relation refs but
+ * that aren't part of the export's filtered slice. Uses `GET /cards?ids=`
+ * (existing endpoint, batched up to ~200 ids per request to keep URLs
+ * reasonable) so single-type exports still resolve cross-type targets to
+ * proper `parent_path/name` refs.
+ *
+ * Walks ancestors too: the immediate target's parent chain is needed to
+ * reconstruct the path. Bounded by MAX_PATH_DEPTH levels so a corrupt
+ * cycle can't spin forever.
+ */
+async function enrichMissingTargets(
+  byId: Map<string, Card>,
+  targetIds: Iterable<string>,
+): Promise<void> {
+  const queue: string[] = [];
+  for (const tid of targetIds) {
+    if (!byId.has(tid)) queue.push(tid);
+  }
+  const CHUNK = 200;
+  for (let depth = 0; depth < MAX_PATH_DEPTH && queue.length > 0; depth++) {
+    const nextLevel: string[] = [];
+    for (let i = 0; i < queue.length; i += CHUNK) {
+      const chunk = queue.slice(i, i + CHUNK);
+      let resp: { items: Card[] };
+      try {
+        resp = await api.get<{ items: Card[] }>(
+          `/cards?ids=${chunk.join(",")}&page_size=${CHUNK}`,
+        );
+      } catch {
+        // Permission-denied or transient error: skip this chunk. The
+        // exporter will fall back to bare names for any target whose
+        // full card we couldn't fetch.
+        continue;
+      }
+      for (const card of resp.items) {
+        if (!byId.has(card.id)) byId.set(card.id, card);
+        if (card.parent_id && !byId.has(card.parent_id)) {
+          nextLevel.push(card.parent_id);
         }
       }
     }
-    return all;
-  } catch {
-    return [];
+    queue.length = 0;
+    queue.push(...nextLevel);
   }
+}
+
+/** Lightweight handle for a relation target — either the full card (best,
+ * gives us parent_path for disambiguation) or just the embedded ref from
+ * the relation payload (fallback when we couldn't fetch the card). */
+type TargetHandle =
+  | { kind: "card"; card: Card }
+  | { kind: "ref"; type: string; name: string };
+
+/** Build the human-readable reference for a target, in either form. */
+function buildTargetRef(
+  handle: TargetHandle,
+  byId: Map<string, Card>,
+  nameAmbiguity: Set<string>,
+): string {
+  if (handle.kind === "ref") {
+    // We only have a bare name. Importer can still resolve unambiguous
+    // matches; if it's ambiguous in the DB the import will surface the
+    // candidates so the user can disambiguate manually.
+    return encodePathSegment(handle.name);
+  }
+  return buildCardRef(handle.card, byId, nameAmbiguity);
 }
 
 /**
@@ -157,7 +211,7 @@ function buildCardRowForType(
   card: Card,
   type: CardType,
   byId: Map<string, Card>,
-  outgoingByRelType: Map<string, Card[]>,
+  outgoingByRelType: Map<string, TargetHandle[]>,
   inlineRelTypes: RelationType[],
   nameAmbiguity: Set<string>,
   attrFieldKeys: string[],
@@ -192,7 +246,7 @@ function buildCardRowForType(
   for (const rt of inlineRelTypes) {
     const targets = outgoingByRelType.get(rt.key) || [];
     row[`rel:${rt.key}`] = targets
-      .map((t) => buildCardRef(t, byId, nameAmbiguity))
+      .map((t) => buildTargetRef(t, byId, nameAmbiguity))
       .join(", ");
   }
 
@@ -203,19 +257,20 @@ function buildCardRowForType(
 }
 
 /**
- * Public entry point used by the Inventory page export buttons.
+ * Build the multi-sheet workbook in memory without writing it to disk.
  *
- * Multi-sheet workbook with one sheet per card type present in `cards`,
- * plus a `Relations` sheet for relation types that carry attributes, plus
- * an `_Meta` sheet with format version + tenant URL.
+ * Split out from `exportToExcel()` so unit tests can exercise the workbook
+ * contents directly (we can't call `XLSX.writeFile` under jsdom). Production
+ * callers should keep using `exportToExcel()` — this helper is exported
+ * primarily for tests.
  */
-export async function exportToExcel(
+export async function buildExportWorkbook(
   cards: Card[],
   typeConfig: CardType | undefined,
   allTypes: CardType[],
   relationTypes: RelationType[],
   options: ExportOptions = {},
-): Promise<void> {
+): Promise<XLSX.WorkBook> {
   const { canViewCosts = true, tenantUrl } = options;
 
   // Index all cards (across types) by id so relation targets are resolvable
@@ -223,37 +278,64 @@ export async function exportToExcel(
   const byId = new Map<string, Card>();
   for (const card of cards) byId.set(card.id, card);
 
-  // Detect (type, name) ambiguity across the *exported* set so the relation
-  // cells can default to bare names when unique. Same logic the importer
-  // uses on the way back in: unique → bare; ambiguous → full path.
+  // Single round-trip: every active outgoing relation from the export set.
+  // (See fetchOutgoingRelations for why this replaced the previous per-card loop.)
+  const sourceIdSet = new Set(cards.map((c) => c.id));
+  const allRelations = await fetchOutgoingRelations(sourceIdSet);
+
+  // Top up `byId` with relation targets that aren't in the filtered export
+  // (e.g. when the grid is filtered to Applications, the ITComponent on
+  // the other end of each `depends_on` won't be in `cards`). Without this
+  // we lose the parent_path needed for disambiguated refs — and previously
+  // we dropped the relations entirely.
+  await enrichMissingTargets(byId, allRelations.map((r) => r.target_id));
+
+  // Detect (type, name) ambiguity across *every card we may reference* —
+  // exported set plus the targets we just fetched. Bare names are safe
+  // when unique; ambiguous names trigger the full parent_path encoding.
   const nameCounts = new Map<string, number>();
-  for (const card of cards) {
+  for (const card of byId.values()) {
     const key = `${card.type}|${card.name.trim().toLowerCase()}`;
     nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+  }
+  // Also account for targets whose card we couldn't fetch — use the
+  // embedded ref's `type` + `name` from the relation payload. If the same
+  // (type, name) appears more than once across these, treat it as ambiguous.
+  for (const rel of allRelations) {
+    if (!byId.has(rel.target_id) && rel.target) {
+      const key = `${rel.target.type}|${rel.target.name.trim().toLowerCase()}`;
+      nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+    }
   }
   const nameAmbiguity = new Set<string>();
   for (const [key, count] of nameCounts) {
     if (count > 1) nameAmbiguity.add(key);
   }
 
-  // Fetch every outgoing relation for the cards in the export, in one
-  // network round per card. The cards endpoint doesn't bulk-fetch by id,
-  // so this is the fastest we can go without a new endpoint.
-  const allRelations = await fetchRelationsForSources(cards.map((c) => c.id));
-
   // Group relations by source_id then by relation_type_key for fast lookup
-  // during row building.
-  const outgoingBySource = new Map<string, Map<string, Card[]>>();
+  // during row building. Use TargetHandle so a missing-from-byId target
+  // still gets emitted via the embedded `rel.target` ref.
+  const outgoingBySource = new Map<string, Map<string, TargetHandle[]>>();
   for (const rel of allRelations) {
-    const target = byId.get(rel.target_id);
-    if (!target) continue;
+    const targetCard = byId.get(rel.target_id);
+    let handle: TargetHandle;
+    if (targetCard) {
+      handle = { kind: "card", card: targetCard };
+    } else if (rel.target) {
+      handle = { kind: "ref", type: rel.target.type, name: rel.target.name };
+    } else {
+      // No card, no embedded ref — nothing we can render. Skip silently;
+      // this should be impossible given backend's _rel_to_response always
+      // populates `target`.
+      continue;
+    }
     let perType = outgoingBySource.get(rel.source_id);
     if (!perType) {
       perType = new Map();
       outgoingBySource.set(rel.source_id, perType);
     }
     const list = perType.get(rel.type) || [];
-    list.push(target);
+    list.push(handle);
     perType.set(rel.type, list);
   }
 
@@ -309,7 +391,8 @@ export async function exportToExcel(
 
     const rows: Record<string, unknown>[] = [];
     for (const card of cardsOfType) {
-      const outgoing = outgoingBySource.get(card.id) ?? new Map();
+      const outgoing =
+        outgoingBySource.get(card.id) ?? new Map<string, TargetHandle[]>();
       rows.push(
         buildCardRowForType(
           card,
@@ -346,7 +429,7 @@ export async function exportToExcel(
             } as Card,
             type,
             byId,
-            new Map(),
+            new Map<string, TargetHandle[]>(),
             inlineForType,
             nameAmbiguity,
             attrFieldKeys,
@@ -379,16 +462,30 @@ export async function exportToExcel(
     for (const rel of allRelations) {
       const rt = attributeRelTypes.find((r) => r.key === rel.type);
       if (!rt) continue;
+      // Build endpoint handles in the same TargetHandle shape used for inline
+      // relations — full card when available, otherwise the embedded ref.
       const sourceCard = byId.get(rel.source_id);
       const targetCard = byId.get(rel.target_id);
-      if (!sourceCard || !targetCard) continue;
+      let sourceHandle: TargetHandle | null = null;
+      if (sourceCard) {
+        sourceHandle = { kind: "card", card: sourceCard };
+      } else if (rel.source) {
+        sourceHandle = { kind: "ref", type: rel.source.type, name: rel.source.name };
+      }
+      let targetHandle: TargetHandle | null = null;
+      if (targetCard) {
+        targetHandle = { kind: "card", card: targetCard };
+      } else if (rel.target) {
+        targetHandle = { kind: "ref", type: rel.target.type, name: rel.target.name };
+      }
+      if (!sourceHandle || !targetHandle) continue;
       const row: Record<string, unknown> = {
         action: "upsert",
         relation_type: rel.type,
-        source_type: sourceCard.type,
-        source_ref: buildCardRef(sourceCard, byId, nameAmbiguity),
-        target_type: targetCard.type,
-        target_ref: buildCardRef(targetCard, byId, nameAmbiguity),
+        source_type: sourceHandle.kind === "card" ? sourceHandle.card.type : sourceHandle.type,
+        source_ref: buildTargetRef(sourceHandle, byId, nameAmbiguity),
+        target_type: targetHandle.kind === "card" ? targetHandle.card.type : targetHandle.type,
+        target_ref: buildTargetRef(targetHandle, byId, nameAmbiguity),
         description: rel.description ?? "",
       };
       const costSet = new Set(
@@ -424,6 +521,25 @@ export async function exportToExcel(
   metaWs["!cols"] = autoSizeColumns(metaRows);
   XLSX.utils.book_append_sheet(wb, metaWs, META_SHEET_NAME);
 
+  const typeLabel = typeConfig
+    ? resolveMetaLabel(typeConfig.key, typeConfig.translations, "label", i18n.language)
+    : "landscape";
+  void typeLabel;
+  return wb;
+}
+
+/**
+ * Public entry point used by the Inventory page export buttons. Builds the
+ * workbook via `buildExportWorkbook()` and triggers a browser download.
+ */
+export async function exportToExcel(
+  cards: Card[],
+  typeConfig: CardType | undefined,
+  allTypes: CardType[],
+  relationTypes: RelationType[],
+  options: ExportOptions = {},
+): Promise<void> {
+  const wb = await buildExportWorkbook(cards, typeConfig, allTypes, relationTypes, options);
   const typeLabel = typeConfig
     ? resolveMetaLabel(typeConfig.key, typeConfig.translations, "label", i18n.language)
     : "landscape";

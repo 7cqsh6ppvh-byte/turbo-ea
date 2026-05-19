@@ -20,6 +20,13 @@ LeanIX-style multi-sheet spreadsheet import / export with relations: a single wo
 ### Changed
 - **`POST /relations/bulk` enforces cardinality.** `1:1` relation types reject a second relation from the same source or to the same target; `1:n` rejects a second relation from the same source. Each row succeeds or fails independently — the rest of the batch is unaffected.
 - **Importer matches updates by `(type, parent_path, name)`** when no UUID is supplied, so exports edited in Excel without an `id` column still round-trip cleanly.
+- **Exporter sees the full relation graph, not the filtered grid view.** Outgoing relations are now fetched in a single `GET /relations` call and any cross-type target whose card isn't in the export's filtered set is enriched via `GET /cards?ids=` so the `rel:<key>` cells render proper `name` (or `parent_path/name`) references. Workbooks exported under a single-type filter previously came back with every `rel:` cell empty.
+- **Importer resolves relation refs server-side.** `validateMultiSheet` now batches every cross-card reference into one `POST /cards/resolve-refs` call, so cards that exist in the database but aren't in the current Inventory filter resolve correctly. Same-batch refs (rows the workbook itself creates) stay client-side as before.
+
+### Fixed
+- **`rel:<relation_type_key>` columns on exports no longer come back empty.** A `byId.get(...)` guard in `excelExport.ts` was silently dropping every relation whose target wasn't part of the filtered export set, and a `try { … } catch { return [] }` in the per-source fetch loop was swallowing transient errors. Combined with the new single-call relation fetch, exports are now deterministic and complete.
+- **`Relations` sheet rows no longer drop when an endpoint sits outside the export filter.** Same fix applies — endpoints fall back to the embedded `rel.source` / `rel.target` ref when the full card isn't in scope.
+- **mypy** no longer reports `Incompatible types in assignment` on `app/api/v1/relations.py` — the inner loop variable was renamed so it doesn't collide with the outer `for rt in rt_by_key.values()` binding.
 
 ## [1.22.2] - 2026-05-18
 
