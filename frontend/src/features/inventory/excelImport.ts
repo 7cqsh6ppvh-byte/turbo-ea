@@ -191,6 +191,24 @@ function encodePathSegment(name: string): string {
   return name.replace(/\\/g, "\\\\").replace(/\//g, "\\/");
 }
 
+/**
+ * Split a `rel:<key>` cell into individual target references. Semicolons
+ * are the canonical separator (see `excelExport.ts`) because card names
+ * commonly contain commas. As a transitional courtesy we fall back to
+ * commas when the cell contains no semicolon — this keeps workbooks
+ * exported before the convention switch importable. A cell containing
+ * any `;` is treated as semicolon-separated, so a single new-format cell
+ * with comma-bearing names parses correctly even when the cell happens
+ * to also contain commas inside those names.
+ */
+function splitRelationCell(cell: string): string[] {
+  const sep = cell.includes(";") ? ";" : ",";
+  return cell
+    .split(sep)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /** Walk parent_id chain to produce the full ancestor segments (root first, including the card itself). */
 function fullPathFor(card: Card, byId: Map<string, Card>): string[] {
   const segs: string[] = [];
@@ -1167,7 +1185,7 @@ export async function validateMultiSheet(
         if (!rt) continue;
         const cellRaw = str(raw[col]);
         if (!cellRaw) continue;
-        for (const part of cellRaw.split(",").map((s) => s.trim()).filter(Boolean)) {
+        for (const part of splitRelationCell(cellRaw)) {
           stageRef(rt.target_type_key, part);
         }
       }
@@ -1365,9 +1383,7 @@ export async function validateMultiSheet(
           continue;
         }
         const cellRaw = str(raw[col]);
-        const targetRefs = cellRaw
-          ? cellRaw.split(",").map((s) => s.trim()).filter(Boolean)
-          : [];
+        const targetRefs = cellRaw ? splitRelationCell(cellRaw) : [];
         const targetHandles: CardRefHandle[] = [];
         let resolvedAll = true;
         for (const tr of targetRefs) {

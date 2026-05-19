@@ -159,14 +159,18 @@ The same precedence drives card-update matching: rows with a UUID in the `id` co
 
 ### Inline relation cells
 
-On every card sheet, `rel:<relation_type_key>` columns let you express outgoing relations as comma-separated target references:
+On every card sheet, `rel:<relation_type_key>` columns let you express outgoing relations as **semicolon-separated** target references:
 
 ```text
-rel:supports     →  NexaCore ERP, BillingApp, Salesforce
+rel:supports     →  NexaCore ERP; BillingApp; Salesforce
 rel:depends_on   →  Sales / Customer Mgmt / CRM
 ```
 
+Semicolons (not commas) separate targets because card names commonly contain `,` (e.g. `Acme, Inc.`). Inside a name, `/` and `\` must be escaped as `\/` and `\\` — the importer reads the cell with the same rules as `parent_path`, so a name like `SAP S/4HANA` is written as `SAP S\/4HANA`. The exporter does this for you automatically; only hand-typed cells need the escapes.
+
 Cells are **declarative**: the set of targets in the cell becomes the complete set of outgoing relations of that type from that source after import. **Removing a target from the list drops that relation**; emptying the cell drops them all. Omitting the column entirely (no `rel:supports` column at all) leaves existing relations untouched.
+
+For backwards compatibility, the importer also accepts comma-separated cells (workbooks exported before this convention). A cell containing any `;` is always treated as semicolon-separated.
 
 ### Relations sheet
 

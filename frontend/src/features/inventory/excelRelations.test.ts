@@ -143,6 +143,21 @@ describe("parseWorkbookSheets", () => {
  * for every payload.
  */
 function buildResolveRefsMock(cards: Card[]) {
+  // Decode `\\` / `\/` escapes the same way the backend's `decode_ref`
+  // does, so refs that contain literal slashes (e.g. "SAP S\\/4HANA")
+  // match against the card's raw name.
+  function decodeName(ref: string): string {
+    let out = "";
+    for (let i = 0; i < ref.length; i++) {
+      if (ref[i] === "\\" && i + 1 < ref.length) {
+        out += ref[i + 1];
+        i++;
+      } else {
+        out += ref[i];
+      }
+    }
+    return out;
+  }
   return async (
     url: string,
     body: unknown,
@@ -153,9 +168,9 @@ function buildResolveRefsMock(cards: Card[]) {
     }).refs;
     return {
       results: refs.map(({ row, column, type, ref }) => {
+        const decoded = decodeName(ref).trim().toLowerCase();
         const candidates = cards.filter(
-          (c) =>
-            c.type === type && c.name.trim().toLowerCase() === ref.trim().toLowerCase(),
+          (c) => c.type === type && c.name.trim().toLowerCase() === decoded,
         );
         if (candidates.length === 1) {
           return { row, column, status: "resolved", id: candidates[0].id };
@@ -381,9 +396,11 @@ describe("executeMultiSheetImport", () => {
 
 describe("buildExportWorkbook", () => {
   const getMock = api.get as unknown as ReturnType<typeof vi.fn>;
+  const postMock = api.post as unknown as ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     getMock.mockReset();
+    postMock.mockReset();
   });
 
   /**
@@ -480,5 +497,199 @@ describe("buildExportWorkbook", () => {
     );
     const rows = rowsOf(wb, APP_TYPE.label);
     expect(rows[0]["rel:depends_on"]).toBe("DB");
+  });
+
+  it("separates multiple targets with semicolons, so comma-bearing names survive", async () => {
+    // The whole reason for `;` over `,`: card names commonly contain commas
+    // ("Acme, Inc."). Emitting them comma-separated would silently re-parse
+    // as two distinct targets on the way back in.
+    const app: Card = makeCard({
+      id: "11111111-1111-1111-1111-111111111111",
+      type: "Application",
+      name: "ERP",
+    });
+    const itc1: Card = makeCard({
+      id: "22222222-2222-2222-2222-222222222222",
+      type: "ITComponent",
+      name: "Acme, Inc.",
+    });
+    const itc2: Card = makeCard({
+      id: "33333333-3333-3333-3333-333333333333",
+      type: "ITComponent",
+      name: "DB",
+    });
+    getMock.mockImplementation(async (url: string): Promise<unknown> => {
+      if (url === "/relations") {
+        return [
+          {
+            id: "r1",
+            type: "depends_on",
+            source_id: app.id,
+            target_id: itc1.id,
+            source: { id: app.id, type: app.type, name: app.name },
+            target: { id: itc1.id, type: itc1.type, name: itc1.name },
+          },
+          {
+            id: "r2",
+            type: "depends_on",
+            source_id: app.id,
+            target_id: itc2.id,
+            source: { id: app.id, type: app.type, name: app.name },
+            target: { id: itc2.id, type: itc2.type, name: itc2.name },
+          },
+        ];
+      }
+      if (url.startsWith("/cards?ids=")) {
+        return { items: [itc1, itc2] };
+      }
+      return [];
+    });
+
+    const wb = await buildExportWorkbook(
+      [app],
+      APP_TYPE,
+      [APP_TYPE, ITC_TYPE],
+      [DEPENDS_ON_TYPE],
+    );
+    const cell = String(rowsOf(wb, APP_TYPE.label)[0]["rel:depends_on"]);
+    expect(cell).toBe("Acme, Inc.; DB");
+    // Round-trip via the importer: the comma in "Acme, Inc." must survive.
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+    const parsed = parseWorkbookSheets(buf, [APP_TYPE, ITC_TYPE]);
+    postMock.mockImplementation(buildResolveRefsMock([app, itc1, itc2]));
+    const report = await validateMultiSheet(
+      parsed,
+      [app, itc1, itc2],
+      [APP_TYPE, ITC_TYPE],
+      [DEPENDS_ON_TYPE],
+      [
+        { id: "r1", type: "depends_on", source_id: app.id, target_id: itc1.id },
+        { id: "r2", type: "depends_on", source_id: app.id, target_id: itc2.id },
+      ],
+    );
+    // No errors and the two existing relations re-resolve to upserts (no diff).
+    expect(report.errors).toEqual([]);
+    const upserts = report.relationOps.filter((o) => o.action === "upsert");
+    expect(upserts).toHaveLength(2);
+    expect(upserts.map((o) => o.targetRef)).toEqual(
+      expect.arrayContaining([
+        { kind: "id", id: itc1.id },
+        { kind: "id", id: itc2.id },
+      ]),
+    );
+  });
+
+  it("still parses legacy comma-separated cells from older workbooks", async () => {
+    // Backwards compat: an imported cell that contains commas but no
+    // semicolons is treated as comma-separated. We can't tell whether
+    // the user meant one target named "A, B" or two targets "A" and
+    // "B", so we go with the historical interpretation. Card names with
+    // commas in legacy workbooks remain ambiguous — they always were.
+    const app: Card = makeCard({
+      id: "11111111-1111-1111-1111-111111111111",
+      type: "Application",
+      name: "ERP",
+    });
+    const itc1: Card = makeCard({
+      id: "22222222-2222-2222-2222-222222222222",
+      type: "ITComponent",
+      name: "DB",
+    });
+    const itc2: Card = makeCard({
+      id: "33333333-3333-3333-3333-333333333333",
+      type: "ITComponent",
+      name: "Cache",
+    });
+    const wb = buildWorkbook(
+      [
+        {
+          id: "11111111-1111-1111-1111-111111111111",
+          type: "Application",
+          name: "ERP",
+          "rel:depends_on": "DB, Cache",
+        },
+      ],
+      "Application",
+    );
+    const parsed = parseWorkbookSheets(wb, [APP_TYPE, ITC_TYPE]);
+    postMock.mockImplementation(buildResolveRefsMock([app, itc1, itc2]));
+    const report = await validateMultiSheet(
+      parsed,
+      [app, itc1, itc2],
+      [APP_TYPE, ITC_TYPE],
+      [DEPENDS_ON_TYPE],
+      [],
+    );
+    expect(report.errors).toEqual([]);
+    const upserts = report.relationOps.filter((o) => o.action === "upsert");
+    expect(upserts).toHaveLength(2);
+  });
+
+  it("escapes `/` in card names so SAP S/4HANA round-trips", async () => {
+    // Regression: the exporter used to return raw `card.name` for
+    // unambiguous bare-name refs, so a name like "SAP S/4HANA" was
+    // written verbatim. The importer's `decodePath()` then split it on
+    // `/` and tried to resolve a parent path "SAP S" — failing for every
+    // such name.
+    const app: Card = makeCard({
+      id: "11111111-1111-1111-1111-111111111111",
+      type: "Application",
+      name: "ERP",
+    });
+    const sap: Card = makeCard({
+      id: "44444444-4444-4444-4444-444444444444",
+      type: "Application",
+      name: "SAP S/4HANA",
+    });
+    getMock.mockImplementation(async (url: string): Promise<unknown> => {
+      if (url === "/relations") {
+        return [
+          {
+            id: "rdep",
+            type: "depends_on",
+            source_id: app.id,
+            target_id: sap.id,
+            source: { id: app.id, type: app.type, name: app.name },
+            target: { id: sap.id, type: sap.type, name: sap.name },
+          },
+        ];
+      }
+      if (url.startsWith("/cards?ids=")) {
+        return { items: [sap] };
+      }
+      return [];
+    });
+
+    // Re-use APP_TYPE for both apps; relation type forwarded App→App.
+    const APP_TO_APP: RelationType = {
+      ...DEPENDS_ON_TYPE,
+      key: "depends_on",
+      target_type_key: "Application",
+    };
+    const wb = await buildExportWorkbook(
+      [app],
+      APP_TYPE,
+      [APP_TYPE, ITC_TYPE],
+      [APP_TO_APP],
+    );
+    const cell = String(rowsOf(wb, APP_TYPE.label)[0]["rel:depends_on"]);
+    // The exporter must emit the escape, not the raw `/`.
+    expect(cell).toBe("SAP S\\/4HANA");
+
+    // And the importer must resolve it as a single ref, not two.
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+    const parsed = parseWorkbookSheets(buf, [APP_TYPE, ITC_TYPE]);
+    postMock.mockImplementation(buildResolveRefsMock([app, sap]));
+    const report = await validateMultiSheet(
+      parsed,
+      [app, sap],
+      [APP_TYPE, ITC_TYPE],
+      [APP_TO_APP],
+      [{ id: "rdep", type: "depends_on", source_id: app.id, target_id: sap.id }],
+    );
+    expect(report.errors).toEqual([]);
+    const upserts = report.relationOps.filter((o) => o.action === "upsert");
+    expect(upserts).toHaveLength(1);
+    expect(upserts[0].targetRef).toEqual({ kind: "id", id: sap.id });
   });
 });

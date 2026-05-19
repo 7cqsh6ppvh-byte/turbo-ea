@@ -53,8 +53,17 @@ function buildParentPath(card: Card, byId: Map<string, Card>): string {
 }
 
 /** Build the human-readable reference (`name` or `parent_path/name`) for a
- * relation target. Returns `name` alone when no other card of the same type
- * shares that name, the full path otherwise. */
+ * relation target.
+ *
+ * Every name written into a ref **must** go through `encodePathSegment()`
+ * — the importer reads cells with `decodePath()`, which treats `/` as the
+ * segment separator. Card names commonly contain `/` ("SAP S/4HANA",
+ * "MATLAB/Simulink", "CI/CD Pipelines"), and writing them raw would
+ * cause the importer to read those names as two-segment paths and fail
+ * to resolve any of them. Same goes for `\` (escapes its successor).
+ *
+ * Returns `name` alone when no other card of the same type shares that
+ * name, the full path otherwise. The name part is always escaped. */
 function buildCardRef(
   card: Card,
   byId: Map<string, Card>,
@@ -62,11 +71,11 @@ function buildCardRef(
 ): string {
   const key = `${card.type}|${card.name.trim().toLowerCase()}`;
   const ambiguous = nameAmbiguity.has(key);
-  if (!ambiguous && !card.parent_id) return card.name;
-  if (!ambiguous) return card.name;
+  const safeName = encodePathSegment(card.name);
+  if (!ambiguous) return safeName;
   const parentPath = buildParentPath(card, byId);
-  if (!parentPath) return encodePathSegment(card.name);
-  return `${parentPath} / ${encodePathSegment(card.name)}`;
+  if (!parentPath) return safeName;
+  return `${parentPath} / ${safeName}`;
 }
 
 function exportTimestamp(now: Date = new Date()): string {
@@ -245,9 +254,14 @@ function buildCardRowForType(
 
   for (const rt of inlineRelTypes) {
     const targets = outgoingByRelType.get(rt.key) || [];
+    // Semicolons (not commas) separate targets within a cell — card names
+    // are free-form and commonly contain `,` (e.g. "Acme, Inc."). Read by
+    // `splitRelationCell()` in `excelImport.ts`, which also accepts the
+    // old comma format for backwards compatibility with workbooks
+    // exported before this convention.
     row[`rel:${rt.key}`] = targets
       .map((t) => buildTargetRef(t, byId, nameAmbiguity))
-      .join(", ");
+      .join("; ");
   }
 
   // Type is the same across the sheet; keep the column for clarity but
