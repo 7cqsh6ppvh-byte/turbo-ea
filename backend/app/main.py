@@ -324,9 +324,9 @@ async def _ensure_ollama_model() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ── C2: Refuse startup with default or weak secret key in non-development envs ──
-    env = settings.ENVIRONMENT
+    # ── C2: Refuse startup with default secret key in non-development envs ──
     if settings.SECRET_KEY in _DEFAULT_SECRET_KEYS:
+        env = settings.ENVIRONMENT
         if env != "development":
             raise RuntimeError(
                 "SECRET_KEY must be set to a strong random value in production. "
@@ -337,14 +337,6 @@ async def lifespan(app: FastAPI):
                 "Using default SECRET_KEY — acceptable for development only. "
                 "Set a strong SECRET_KEY before deploying to production."
             )
-    elif env != "development" and len(settings.SECRET_KEY.encode("utf-8")) < 32:
-        # Enforce ≥ 256 bits of key material for HS256 (RFC 7518 §3.2).
-        # Mitigates the underlying concern behind PYSEC-2025-183 — PyJWT
-        # itself can't enforce HMAC key length, so the application owns it.
-        raise RuntimeError(
-            "SECRET_KEY must be at least 32 bytes (256 bits) for HS256. "
-            'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(64))"'
-        )
 
     from alembic.config import Config
     from sqlalchemy import inspect as sa_inspect

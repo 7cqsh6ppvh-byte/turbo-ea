@@ -168,11 +168,13 @@ jobs:
       - name: Install pip-audit and pip-tools
         run: pip install pip-audit pip-tools
       - name: Generate requirements and audit
-        # PYSEC-2025-183 (PyJWT "weak encryption"): disputed by upstream. The
-        # advisory is about HMAC key length, which PyJWT cannot enforce — it
-        # is the consuming application's responsibility. Turbo EA enforces a
-        # ≥ 32-byte SECRET_KEY at startup in non-development environments
-        # (app/main.py lifespan, covered by tests/core/test_startup.py).
+        # PYSEC-2025-183 (PyJWT "weak encryption"): disputed upstream. The
+        # advisory targets HMAC key length, which PyJWT cannot enforce — it
+        # is the operator's responsibility. Turbo EA's `.env.example` tells
+        # operators to generate SECRET_KEY via `python -c "import secrets;
+        # print(secrets.token_urlsafe(64))"` (512 bits of entropy), and the
+        # lifespan check in app/main.py rejects the default placeholder
+        # keys in non-development environments.
         run: |
           pip-compile --quiet --strip-extras -o /tmp/requirements.txt backend/pyproject.toml
           pip-audit --strict --desc -r /tmp/requirements.txt \

@@ -10,9 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 - **BPMN templates restored in Docker builds.** Selecting a non-blank starter template (Simple Approval, Order to Cash, Procure to Pay, Hire to Retire, Incident Management) from a Business Process card's **Process Flow → New draft from template** flow now creates the full template content. The `bpmn_templates/` directory was missing from the runtime image, so the backend silently fell back to a blank stub containing only a Start event (#581).
 
-### Security
-- **Minimum SECRET_KEY length enforced at startup.** In any non-development environment, the backend now refuses to boot if `SECRET_KEY` is shorter than 32 bytes (256 bits — the minimum recommended for HS256 per RFC 7518 §3.2), in addition to the existing rejection of the two default placeholder keys. The companion `pip-audit` step in CI now ignores the disputed PyJWT advisory `PYSEC-2025-183` (HMAC key length is the consuming application's responsibility, which this guard enforces).
-
 ## [1.24.0] - 2026-05-19
 
 New **Platform Migration (LeanIX)** importer turns a complete LeanIX workspace into Turbo EA cards, relations, tags, stakeholders, documents, comments, and a full custom metamodel in one staged, reviewable operation. Accepts the LeanIX **Full Snapshot** xlsx workbook (Administration → Export → Full Snapshot in LeanIX) and lands every tenant customisation (custom card types, fields with full enum lists, relation types, hierarchy, lineage) end-to-end without a manual remap step.

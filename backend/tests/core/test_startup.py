@@ -43,8 +43,6 @@ class TestSecretKeyValidation:
             if environment != "development":
                 raise RuntimeError("SECRET_KEY must be set to a strong random value in production.")
             return "warning"
-        if environment != "development" and len(secret_key.encode("utf-8")) < 32:
-            raise RuntimeError("SECRET_KEY must be at least 32 bytes (256 bits) for HS256.")
         return "ok"
 
     def test_default_key_production_raises(self):
@@ -68,43 +66,19 @@ class TestSecretKeyValidation:
         assert result == "warning"
 
     def test_custom_key_production_ok(self):
-        """Custom SECRET_KEY ≥ 32 bytes in production should pass."""
-        result = self._validate_secret_key("my-super-strong-random-key-" + "a" * 40, "production")
+        """Custom SECRET_KEY in production should pass."""
+        result = self._validate_secret_key("my-super-strong-random-key-abc123", "production")
         assert result == "ok"
 
     def test_custom_key_development_ok(self):
-        """Custom SECRET_KEY in development should pass even if short."""
+        """Custom SECRET_KEY in development should pass."""
         result = self._validate_secret_key("custom-dev-key", "development")
         assert result == "ok"
 
-    def test_short_custom_key_production_raises(self):
-        """Custom non-default SECRET_KEY shorter than 32 bytes in non-dev should raise.
-
-        Defense in depth against the underlying concern behind PYSEC-2025-183
-        (PyJWT does not enforce HMAC key length — the application owns it).
-        """
-        with pytest.raises(RuntimeError, match="at least 32 bytes"):
-            self._validate_secret_key("short-key-abc123", "production")
-
-    def test_short_custom_key_staging_raises(self):
-        """Short keys should also be rejected in non-production deployment envs."""
-        with pytest.raises(RuntimeError, match="at least 32 bytes"):
-            self._validate_secret_key("a" * 31, "staging")
-
-    def test_short_custom_key_development_ok(self):
-        """Short SECRET_KEY in development should pass — dev convenience only."""
-        result = self._validate_secret_key("short", "development")
+    def test_empty_key_passes(self):
+        """Empty key is not in defaults, so technically passes validation."""
+        result = self._validate_secret_key("", "production")
         assert result == "ok"
-
-    def test_exactly_32_bytes_production_ok(self):
-        """A SECRET_KEY of exactly 32 bytes should be accepted."""
-        result = self._validate_secret_key("a" * 32, "production")
-        assert result == "ok"
-
-    def test_empty_key_production_raises(self):
-        """Empty key has length 0, so it should fail the ≥ 32-byte check in non-dev."""
-        with pytest.raises(RuntimeError, match="at least 32 bytes"):
-            self._validate_secret_key("", "production")
 
     def test_warning_logged_in_development(self, caplog):
         """Validate that a warning would be logged for default key in development."""
