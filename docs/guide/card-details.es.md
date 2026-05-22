@@ -14,7 +14,7 @@ La parte superior de la ficha muestra:
 - **Insignia de estado de aprobación** — Borrador, Aprobado, Roto o Rechazado
 - **Botón de sugerencia IA** — Haga clic para generar una descripción con IA (visible cuando la IA está habilitada para este tipo de ficha y el usuario tiene permiso de edición)
 - **Anillo de calidad de datos** — Indicador visual de la completitud de la información (0–100%)
-- **Menú de acciones** — Archivar, eliminar y acciones de aprobación
+- **Menú de acciones** — Archivar, eliminar y acciones de aprobación. También incluye una acción de un clic **Observar esta ficha** (cuando el tipo de ficha define un rol Observador), para que cualquier usuario con permiso de lectura pueda seguir la ficha sin pasar por la pestaña de Partes interesadas.
 
 ### Flujo de Aprobación
 

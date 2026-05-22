@@ -5,6 +5,14 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.26.1] - 2026-05-22
+
+### Added
+- **One-click «Observe this card».** A new toggle in the card-detail More Actions (⋮) menu lets any user with view access on a card add themselves as Observer in a single click — no more tab → Add Stakeholder → search-for-yourself. The menu item only appears when the card type defines an active Observer role, and toggling off cleanly removes the stakeholder row. Carved out from the regular create-stakeholder flow so even viewers without `stakeholders.manage` can follow cards (#580).
+
+### Changed
+- **«Invite User» button renamed to «Create user».** The button and dialog on Admin → Users & Roles now reflect the primary action — sending an invitation email remains an optional checkbox on the same dialog. Affects all eight supported languages and the user-manual workflow (#585).
+
 ## [1.26.0] - 2026-05-22
 
 ### Added

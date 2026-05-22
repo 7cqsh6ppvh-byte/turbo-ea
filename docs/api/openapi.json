@@ -16862,6 +16862,120 @@
         ]
       }
     },
+    "/api/v1/cards/{card_id}/me/observe": {
+      "delete": {
+        "description": "One-click removal of self-assigned Observer role.\n\nIdempotent: returns 204 even when no row existed. Does not require the\nObserver role to still be active on the card type \u2014 stale subscriptions\nmust always be removable.",
+        "operationId": "remove_me_as_observer_api_v1_cards__card_id__me_observe_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Me As Observer",
+        "tags": [
+          "stakeholders"
+        ]
+      },
+      "get": {
+        "description": "Return whether the current user is observing this card and whether the\nObserver role is available for the card type. Used by the one-click\n\"Observe this card\" toggle on the card detail page.",
+        "operationId": "get_my_observe_status_api_v1_cards__card_id__me_observe_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Observe Status",
+        "tags": [
+          "stakeholders"
+        ]
+      },
+      "post": {
+        "description": "One-click self-assignment as Observer.\n\nCarve-out from the regular create-stakeholder flow: any user with view\naccess on the card can add themselves as Observer, even without the\n`stakeholders.manage` permission. The route hardcodes `role=\"observer\"`\nand `user_id=self`, so it cannot be used to promote anyone else or to\nassign any other role.\n\nIdempotent: a second call returns the existing row.",
+        "operationId": "add_me_as_observer_api_v1_cards__card_id__me_observe_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Me As Observer",
+        "tags": [
+          "stakeholders"
+        ]
+      }
+    },
     "/api/v1/cards/{card_id}/my-permissions": {
       "get": {
         "description": "Return the current user's effective permissions on a specific card.",

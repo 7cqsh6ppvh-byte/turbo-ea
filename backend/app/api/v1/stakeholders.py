@@ -275,6 +275,194 @@ async def update_stakeholder(
     }
 
 
+@router.get("/cards/{card_id}/me/observe")
+async def get_my_observe_status(
+    card_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Return whether the current user is observing this card and whether the
+    Observer role is available for the card type. Used by the one-click
+    "Observe this card" toggle on the card detail page.
+    """
+    card_uuid = uuid.UUID(card_id)
+    if not await PermissionService.check_permission(
+        db, user, "inventory.view", card_uuid, "card.view"
+    ):
+        raise HTTPException(403, "Not enough permissions")
+    card_result = await db.execute(select(Card.type).where(Card.id == card_uuid))
+    card_type_key = card_result.scalar_one_or_none()
+    if not card_type_key:
+        raise HTTPException(404, "Card not found")
+
+    roles = await _roles_for_type(db, card_type_key)
+    observer_role_available = any(r["key"] == "observer" for r in roles)
+
+    existing = await db.execute(
+        select(Stakeholder.id).where(
+            Stakeholder.card_id == card_uuid,
+            Stakeholder.user_id == user.id,
+            Stakeholder.role == "observer",
+        )
+    )
+    is_observer = existing.scalar_one_or_none() is not None
+    return {
+        "is_observer": is_observer,
+        "observer_role_available": observer_role_available,
+    }
+
+
+@router.post("/cards/{card_id}/me/observe", status_code=201)
+async def add_me_as_observer(
+    card_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """One-click self-assignment as Observer.
+
+    Carve-out from the regular create-stakeholder flow: any user with view
+    access on the card can add themselves as Observer, even without the
+    `stakeholders.manage` permission. The route hardcodes `role="observer"`
+    and `user_id=self`, so it cannot be used to promote anyone else or to
+    assign any other role.
+
+    Idempotent: a second call returns the existing row.
+    """
+    card_uuid = uuid.UUID(card_id)
+    if not await PermissionService.check_permission(
+        db, user, "inventory.view", card_uuid, "card.view"
+    ):
+        raise HTTPException(403, "Not enough permissions")
+    card_result = await db.execute(select(Card.type).where(Card.id == card_uuid))
+    card_type_key = card_result.scalar_one_or_none()
+    if not card_type_key:
+        raise HTTPException(404, "Card not found")
+
+    roles = await _roles_for_type(db, card_type_key)
+    if not any(r["key"] == "observer" for r in roles):
+        raise HTTPException(
+            409,
+            detail={
+                "code": "observer_role_unavailable",
+                "message": "The Observer role is not defined for this card type.",
+            },
+        )
+
+    existing_result = await db.execute(
+        select(Stakeholder)
+        .options(selectinload(Stakeholder.user))
+        .where(
+            Stakeholder.card_id == card_uuid,
+            Stakeholder.user_id == user.id,
+            Stakeholder.role == "observer",
+        )
+    )
+    existing = existing_result.scalar_one_or_none()
+    labels = _role_labels(roles)
+    role_label = labels.get("observer", "Observer")
+    if existing:
+        return {
+            "id": str(existing.id),
+            "user_id": str(existing.user_id),
+            "user_display_name": existing.user.display_name if existing.user else None,
+            "role": existing.role,
+            "role_label": role_label,
+        }
+
+    stakeholder = Stakeholder(card_id=card_uuid, user_id=user.id, role="observer")
+    db.add(stakeholder)
+    await db.flush()
+    result = await db.execute(
+        select(Stakeholder)
+        .options(selectinload(Stakeholder.user))
+        .where(Stakeholder.id == stakeholder.id)
+    )
+    stakeholder = result.scalar_one()
+    user_name = stakeholder.user.display_name if stakeholder.user else None
+    await event_bus.publish(
+        "stakeholder.added",
+        {
+            "stakeholder_id": str(stakeholder.id),
+            "user_id": str(stakeholder.user_id),
+            "user_display_name": user_name,
+            "role": stakeholder.role,
+            "role_label": role_label,
+            "summary": (
+                f"{user_name or stakeholder.user.email if stakeholder.user else 'User'}"
+                f" · {role_label}"
+            ),
+        },
+        db=db,
+        card_id=card_uuid,
+        user_id=user.id,
+    )
+    await db.commit()
+    return {
+        "id": str(stakeholder.id),
+        "user_id": str(stakeholder.user_id),
+        "user_display_name": user_name,
+        "role": stakeholder.role,
+        "role_label": role_label,
+    }
+
+
+@router.delete("/cards/{card_id}/me/observe", status_code=204)
+async def remove_me_as_observer(
+    card_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """One-click removal of self-assigned Observer role.
+
+    Idempotent: returns 204 even when no row existed. Does not require the
+    Observer role to still be active on the card type — stale subscriptions
+    must always be removable.
+    """
+    card_uuid = uuid.UUID(card_id)
+    if not await PermissionService.check_permission(
+        db, user, "inventory.view", card_uuid, "card.view"
+    ):
+        raise HTTPException(403, "Not enough permissions")
+    card_result = await db.execute(select(Card.type).where(Card.id == card_uuid))
+    card_type_key = card_result.scalar_one_or_none()
+    if not card_type_key:
+        raise HTTPException(404, "Card not found")
+
+    result = await db.execute(
+        select(Stakeholder)
+        .options(selectinload(Stakeholder.user))
+        .where(
+            Stakeholder.card_id == card_uuid,
+            Stakeholder.user_id == user.id,
+            Stakeholder.role == "observer",
+        )
+    )
+    stakeholder = result.scalar_one_or_none()
+    if not stakeholder:
+        return
+
+    roles = await _roles_for_type(db, card_type_key)
+    labels = _role_labels(roles)
+    role_label = labels.get(stakeholder.role, stakeholder.role)
+    user_name = stakeholder.user.display_name if stakeholder.user else None
+    await event_bus.publish(
+        "stakeholder.removed",
+        {
+            "stakeholder_id": str(stakeholder.id),
+            "user_id": str(stakeholder.user_id),
+            "user_display_name": user_name,
+            "role": stakeholder.role,
+            "role_label": role_label,
+            "summary": f"{user_name or 'User'} · {role_label}",
+        },
+        db=db,
+        card_id=card_uuid,
+        user_id=user.id,
+    )
+    await db.delete(stakeholder)
+    await db.commit()
+
+
 @router.delete("/stakeholders/{stakeholder_id}", status_code=204)
 async def delete_stakeholder(
     stakeholder_id: str,

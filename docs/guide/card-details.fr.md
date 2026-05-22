@@ -14,7 +14,7 @@ Le haut de la fiche affiche :
 - **Badge de statut d'approbation** -- Brouillon, Approuvé, Cassé ou Rejeté
 - **Bouton de suggestion IA** -- Cliquez pour générer une description avec l'IA (visible lorsque l'IA est activée pour ce type de fiche et que l'utilisateur a la permission de modification)
 - **Anneau de qualité des données** -- Indicateur visuel de complétude des informations (0-100%)
-- **Menu d'actions** -- Archiver, supprimer et actions d'approbation
+- **Menu d'actions** -- Archiver, supprimer et actions d'approbation. Contient aussi une option en un clic **Observer cette fiche** (lorsque le type de fiche définit un rôle Observateur) qui permet à tout utilisateur disposant d'un accès en lecture de suivre la fiche sans passer par l'onglet Parties prenantes.
 
 ### Workflow d'approbation
 

@@ -14,7 +14,7 @@ The top of the card shows:
 - **Approval status badge** — Draft, Approved, Broken, or Rejected
 - **AI suggest button** — Click to generate a description with AI (visible when AI is enabled for this card type and the user has edit permission)
 - **Data quality ring** — Visual indicator of information completeness (0–100%)
-- **Actions menu** — Archive, delete, and approval actions
+- **Actions menu** — Archive, delete, and approval actions. Also includes a one-click **Observe this card** toggle (when the card type defines an Observer role) so any user with view access can follow the card without going through the Stakeholders tab.
 
 ### Approval Workflow
 

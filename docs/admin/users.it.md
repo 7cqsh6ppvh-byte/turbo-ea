@@ -31,16 +31,16 @@ Una barra laterale a due schede (**Filtri** e **Colonne**) si trova a sinistra d
 
 Lo stato dei filtri, le colonne visibili, la larghezza della barra laterale e il suo stato compresso sono persistiti **per utente** in `localStorage` sotto la chiave `turboea_usersAdmin` — sopravvivono ai logout e ai ricaricamenti di pagina.
 
-#### Invito di un nuovo utente
+#### Creazione di un utente
 
-1. Cliccate sul pulsante **Invita utente** (in alto a destra)
+1. Cliccate sul pulsante **Crea utente** (in alto a destra). L'invio dell'email di invito è solo un'opzione del dialogo — l'azione principale è la creazione dell'account.
 2. Compilate il modulo:
    - **Nome visualizzato** (obbligatorio): Il nome completo dell'utente
    - **Email** (obbligatorio): L'indirizzo email che utilizzeranno per il login
    - **Password** (opzionale): Se lasciata vuota e SSO è disabilitato, l'utente riceve un'email con un link per impostare la password. Se SSO è abilitato, l'utente può accedere tramite il proprio provider SSO senza password
    - **Ruolo**: Selezionate il ruolo da assegnare (Admin, Member, Viewer o qualsiasi ruolo personalizzato)
    - **Invia email di invito**: Spuntate per inviare una notifica email all'utente con le istruzioni per il login
-3. Cliccate su **Invita utente** per creare l'account
+3. Cliccate su **Crea utente** per creare l'account.
 
 **Cosa succede dietro le quinte:**
 - Viene creato un account utente nel sistema

@@ -439,3 +439,154 @@ class TestDeleteStakeholder:
             headers=auth_headers(viewer),
         )
         assert resp.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# /cards/{card_id}/me/observe  (one-click self-observe)
+# ---------------------------------------------------------------------------
+
+
+class TestSelfObserve:
+    async def test_viewer_can_self_observe(self, client, db, stakeholders_env):
+        """A viewer without stakeholders.manage can add themselves as Observer."""
+        viewer = stakeholders_env["viewer"]
+        card = stakeholders_env["card"]
+        resp = await client.post(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["user_id"] == str(viewer.id)
+        assert data["role"] == "observer"
+        assert data["role_label"] == "Observer"
+
+    async def test_self_observe_is_idempotent(self, client, db, stakeholders_env):
+        """A second POST returns the same row instead of 409."""
+        viewer = stakeholders_env["viewer"]
+        card = stakeholders_env["card"]
+        first = await client.post(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert first.status_code == 201
+        first_id = first.json()["id"]
+
+        second = await client.post(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert second.status_code == 201
+        assert second.json()["id"] == first_id
+
+    async def test_get_my_observe_status(self, client, db, stakeholders_env):
+        """GET reports current state and role availability."""
+        viewer = stakeholders_env["viewer"]
+        card = stakeholders_env["card"]
+
+        before = await client.get(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert before.status_code == 200
+        assert before.json() == {
+            "is_observer": False,
+            "observer_role_available": True,
+        }
+
+        await client.post(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+
+        after = await client.get(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert after.status_code == 200
+        assert after.json() == {
+            "is_observer": True,
+            "observer_role_available": True,
+        }
+
+    async def test_self_unobserve_removes_row(self, client, db, stakeholders_env):
+        """DELETE removes the observer row and a second call still returns 204."""
+        viewer = stakeholders_env["viewer"]
+        card = stakeholders_env["card"]
+        await client.post(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+
+        first = await client.delete(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert first.status_code == 204
+
+        second = await client.delete(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert second.status_code == 204
+
+        status = await client.get(
+            f"/api/v1/cards/{card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert status.json()["is_observer"] is False
+
+    async def test_self_observe_card_not_found(self, client, db, stakeholders_env):
+        """Observing a non-existent card returns 404."""
+        viewer = stakeholders_env["viewer"]
+        fake_id = uuid.uuid4()
+        resp = await client.post(
+            f"/api/v1/cards/{fake_id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert resp.status_code == 404
+
+    async def test_self_observe_when_role_absent(self, client, db, stakeholders_env):
+        """POST returns 409 observer_role_unavailable when the card type has no
+        active Observer role; GET reports observer_role_available=False; DELETE
+        still succeeds for any stale row."""
+        admin = stakeholders_env["admin"]
+        viewer = stakeholders_env["viewer"]
+        await create_card_type(db, key="Provider", label="Provider")
+        # No observer role is defined for "Provider" — only the fallback path
+        # in `_roles_for_type` would inject one, but defining a non-observer
+        # role suppresses the fallback.
+        await create_stakeholder_role_def(
+            db, card_type_key="Provider", key="responsible", label="Responsible"
+        )
+        provider_card = await create_card(
+            db,
+            card_type="Provider",
+            name="No-Observer Provider",
+            user_id=admin.id,
+        )
+
+        status = await client.get(
+            f"/api/v1/cards/{provider_card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert status.status_code == 200
+        assert status.json() == {
+            "is_observer": False,
+            "observer_role_available": False,
+        }
+
+        resp = await client.post(
+            f"/api/v1/cards/{provider_card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert resp.status_code == 409
+        assert resp.json()["detail"]["code"] == "observer_role_unavailable"
+
+        # Stale-row cleanup path: even if the role were later removed, DELETE
+        # must always succeed (returns 204 whether or not a row exists).
+        delete_resp = await client.delete(
+            f"/api/v1/cards/{provider_card.id}/me/observe",
+            headers=auth_headers(viewer),
+        )
+        assert delete_resp.status_code == 204

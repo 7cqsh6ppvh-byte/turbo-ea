@@ -31,16 +31,16 @@ Eine Seitenleiste mit zwei Reitern (**Filter** und **Spalten**) sitzt links nebe
 
 Filterzustand, sichtbare Spalten, die Sidebar-Breite und ihr Eingeklappt-Zustand werden **pro Benutzer** im `localStorage` unter dem Schlüssel `turboea_usersAdmin` persistiert — sie überleben Abmeldungen und Seiten-Reloads.
 
-#### Einen neuen Benutzer einladen
+#### Einen Benutzer erstellen
 
-1. Klicken Sie auf die Schaltfläche **Benutzer einladen** (oben rechts)
+1. Klicken Sie auf die Schaltfläche **Benutzer erstellen** (oben rechts). Das Versenden einer Einladungs-E-Mail ist nur eine optionale Einstellung im Dialog — die eigentliche Aktion ist das Erstellen des Kontos.
 2. Füllen Sie das Formular aus:
    - **Anzeigename** (erforderlich): Der vollständige Name des Benutzers
    - **E-Mail** (erforderlich): Die E-Mail-Adresse, mit der sich der Benutzer anmelden wird
    - **Passwort** (optional): Wenn leer gelassen und SSO deaktiviert ist, erhält der Benutzer eine E-Mail mit einem Link zur Passworteinrichtung. Wenn SSO aktiviert ist, kann sich der Benutzer über seinen SSO-Anbieter ohne Passwort anmelden
    - **Rolle**: Wählen Sie die zuzuweisende Rolle (Admin, Mitglied, Betrachter oder eine benutzerdefinierte Rolle)
    - **Einladungs-E-Mail senden**: Aktivieren Sie dies, um dem Benutzer eine E-Mail-Benachrichtigung mit Anmeldeinstruktionen zu senden
-3. Klicken Sie auf **Benutzer einladen**, um das Konto zu erstellen
+3. Klicken Sie auf **Benutzer erstellen**, um das Konto zu erstellen.
 
 **Was im Hintergrund passiert:**
 - Ein Benutzerkonto wird im System erstellt

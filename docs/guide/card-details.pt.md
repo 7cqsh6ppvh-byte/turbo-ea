@@ -14,7 +14,7 @@ A parte superior do card mostra:
 - **Badge de status de aprovação** — Rascunho, Aprovado, Quebrado ou Rejeitado
 - **Botão de sugestão IA** — Clique para gerar uma descrição com IA (visível quando a IA está habilitada para este tipo de card e o usuário tem permissão de edição)
 - **Anel de qualidade dos dados** — Indicador visual da completude das informações (0-100%)
-- **Menu de ações** — Arquivar, excluir e ações de aprovação
+- **Menu de ações** — Arquivar, excluir e ações de aprovação. Também inclui uma ação de um clique **Observar este cartão** (quando o tipo de card define um papel de Observador), permitindo que qualquer usuário com permissão de leitura siga o card sem precisar abrir a aba Partes interessadas.
 
 ### Fluxo de Aprovação
 
