@@ -42,7 +42,7 @@
 |------|------|
 | **键** | 唯一的字段标识符 |
 | **标签** | 显示名称 |
-| **类型** | text、number、cost、boolean、date、url、single_select 或 multiple_select |
+| **类型** | text、multiline_text、number、cost、boolean、date、url、single_select 或 multiple_select |
 | **选项** | 对于选择字段：可用的选项及其标签和可选颜色 |
 | **必填** | 字段是否必须填写（用于数据质量评分） |
 | **权重** | 此字段对数据质量评分的贡献程度（0-10） |

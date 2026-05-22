@@ -6,6 +6,7 @@ import type { FieldDef } from "@/types";
 
 export const FIELD_TYPE_OPTIONS: { value: FieldDef["type"]; tKey: string }[] = [
   { value: "text", tKey: "common:fieldTypes.text" },
+  { value: "multiline_text", tKey: "common:fieldTypes.multilineText" },
   { value: "number", tKey: "common:fieldTypes.number" },
   { value: "cost", tKey: "common:fieldTypes.cost" },
   { value: "boolean", tKey: "common:fieldTypes.boolean" },

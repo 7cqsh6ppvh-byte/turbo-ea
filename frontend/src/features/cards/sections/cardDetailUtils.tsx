@@ -224,6 +224,13 @@ export function FieldValue({
       </Typography>
     );
   }
+  if (field.type === "multiline_text") {
+    return (
+      <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+        {safeString(value) || "—"}
+      </Typography>
+    );
+  }
   return (
     <Typography variant="body2">{safeString(value) || "—"}</Typography>
   );
@@ -403,6 +410,20 @@ export function FieldEditor({
           onChange={(e) => onChange(e.target.value || undefined)}
           error={!!error}
           helperText={error}
+          sx={{ minWidth: 300 }}
+        />
+      );
+    case "multiline_text":
+      return (
+        <TextField
+          size="small"
+          label={rl(field.key, field.translations)}
+          value={strVal}
+          onChange={(e) => onChange(e.target.value || undefined)}
+          multiline
+          minRows={3}
+          maxRows={10}
+          fullWidth
           sx={{ minWidth: 300 }}
         />
       );

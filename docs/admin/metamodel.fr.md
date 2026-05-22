@@ -42,7 +42,7 @@ Les champs définissent les attributs personnalisés disponibles sur les fiches 
 |-----------|-------------|
 | **Clé** | Identifiant unique du champ |
 | **Libellé** | Nom d'affichage |
-| **Type** | text, number, cost, boolean, date, url, single_select ou multiple_select |
+| **Type** | text, multiline_text, number, cost, boolean, date, url, single_select ou multiple_select |
 | **Options** | Pour les champs de sélection : les choix disponibles avec libellés et couleurs optionnelles |
 | **Obligatoire** | Si le champ doit être rempli pour le calcul du score de qualité des données |
 | **Poids** | Contribution de ce champ au score de qualité des données (0-10) |

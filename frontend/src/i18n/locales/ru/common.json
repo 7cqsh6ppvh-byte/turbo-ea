@@ -97,6 +97,7 @@
   "time.hoursAgo": "{{count}} ч. назад",
   "time.daysAgo": "{{count}} дн. назад",
   "fieldTypes.text": "Текст",
+  "fieldTypes.multilineText": "Многострочный текст",
   "fieldTypes.number": "Число",
   "fieldTypes.cost": "Стоимость",
   "fieldTypes.boolean": "Логическое значение",

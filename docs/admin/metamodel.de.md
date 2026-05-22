@@ -42,7 +42,7 @@ Felder definieren die benutzerdefinierten Attribute, die auf Karten dieses Typs 
 |-------------|-------------|
 | **Schlüssel** | Eindeutiger Feldbezeichner |
 | **Bezeichnung** | Anzeigename |
-| **Typ** | text, number, cost, boolean, date, url, single_select oder multiple_select |
+| **Typ** | text, multiline_text, number, cost, boolean, date, url, single_select oder multiple_select |
 | **Optionen** | Für Auswahlfelder: die verfügbaren Auswahlmöglichkeiten mit Bezeichnungen und optionalen Farben |
 | **Pflichtfeld** | Ob das Feld für die Datenqualitätsbewertung ausgefüllt sein muss |
 | **Gewichtung** | Wie stark dieses Feld zum Datenqualitätswert beiträgt (0–10) |

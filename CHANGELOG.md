@@ -5,6 +5,11 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.26.0] - 2026-05-22
+
+### Added
+- **Multi-line text custom field type.** Card-type fields configured in **Admin → Metamodel → {type} → Fields** now offer a **Multi-line Text** option alongside the existing single-line **Text**. Rendered as an auto-growing text area (3–10 rows) on card edit, preserves newlines in read-only display, and opens in AG Grid's large-text popup editor when edited from the Inventory grid. Matches the long-form input behaviour of the built-in description field for custom narrative attributes (#591).
+
 ## [1.25.0] - 2026-05-22
 
 ### Added

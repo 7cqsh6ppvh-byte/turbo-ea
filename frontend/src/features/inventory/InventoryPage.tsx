@@ -1526,6 +1526,13 @@ export default function InventoryPage() {
                   },
                 }
               : {}),
+            ...(field.type === "multiline_text"
+              ? {
+                  cellEditor: "agLargeTextCellEditor",
+                  cellEditorPopup: true,
+                  cellEditorParams: { rows: 8, cols: 60, maxLength: 100000 },
+                }
+              : {}),
           });
         }
       }
