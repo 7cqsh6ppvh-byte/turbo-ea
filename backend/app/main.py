@@ -631,7 +631,7 @@ app.add_middleware(
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Turbo-EA-Origin"],
+    allow_headers=["Authorization", "Content-Type", "X-Turbo-EA-Origin", "X-Turbo-EA-Batch"],
 )
 
 
@@ -640,7 +640,14 @@ app.add_middleware(
 # audit trail can distinguish AI-agent-driven writes from web-UI writes.
 # `event_bus.publish` reads this contextvar and stamps it into the event
 # payload. Unknown / absent header => no tag (keeps existing UI events clean).
-from app.services.event_bus import request_origin as _request_origin  # noqa: E402
+import uuid as _uuid_for_batch  # noqa: E402
+
+from app.services.event_bus import (  # noqa: E402
+    request_batch_id as _request_batch_id,
+)
+from app.services.event_bus import (  # noqa: E402
+    request_origin as _request_origin,
+)
 
 _ORIGIN_ALLOWED = {"mcp", "web", "api"}
 
@@ -655,10 +662,26 @@ async def capture_request_origin(request, call_next):
     # arbitrary strings into the audit log.
     origin: str | None = raw if raw in _ORIGIN_ALLOWED else None
     token = _request_origin.set(origin)
+
+    # MCP write tools open a mutation batch and pass the id back on every
+    # subsequent write via ``X-Turbo-EA-Batch``. Mirror it into the
+    # event-bus contextvar so emitted events stamp the batch id. A bogus
+    # / malformed UUID is silently dropped — we never want a header value
+    # an attacker can forge to land on the audit log as a real batch.
+    batch_raw = request.headers.get("X-Turbo-EA-Batch", "").strip()
+    batch_id: _uuid_for_batch.UUID | None = None
+    if batch_raw:
+        try:
+            batch_id = _uuid_for_batch.UUID(batch_raw)
+        except ValueError:
+            batch_id = None
+    batch_token = _request_batch_id.set(batch_id)
+
     try:
         return await call_next(request)
     finally:
         _request_origin.reset(token)
+        _request_batch_id.reset(batch_token)
 
 
 app.middleware("http")(capture_request_origin)

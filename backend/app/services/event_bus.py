@@ -19,6 +19,13 @@ from app.models.event import Event
 # audit log stays clean for pre-existing rows.
 request_origin: ContextVar[str | None] = ContextVar("request_origin", default=None)
 
+# Set by the mutation-batch service when an MCP tool wrapper opens a batch
+# at the start of a request. ``publish()`` stamps the batch id onto every
+# event emitted during the request so ``GET /mutation-batches/{id}/events``
+# can return the whole batch's audit trail in a single query — that is the
+# foundation S6 (change history) and S7 (rollback) ride on.
+request_batch_id: ContextVar[uuid.UUID | None] = ContextVar("request_batch_id", default=None)
+
 
 class EventBus:
     def __init__(self) -> None:
@@ -31,6 +38,7 @@ class EventBus:
         db: AsyncSession | None = None,
         card_id: uuid.UUID | None = None,
         user_id: uuid.UUID | None = None,
+        batch_id: uuid.UUID | None = None,
     ) -> None:
         origin = request_origin.get()
         if origin and "origin" not in data:
@@ -38,12 +46,14 @@ class EventBus:
             # /events endpoint, the per-card history timeline, the SSE
             # stream) all see the origin without a schema change.
             data = {**data, "origin": origin}
+        effective_batch_id = batch_id if batch_id is not None else request_batch_id.get()
         if db:
             event = Event(
                 card_id=card_id,
                 user_id=user_id,
                 event_type=event_type,
                 data=data,
+                batch_id=effective_batch_id,
             )
             db.add(event)
             await db.flush()
@@ -52,6 +62,7 @@ class EventBus:
             "event": event_type,
             "data": data,
             "card_id": str(card_id) if card_id else None,
+            "batch_id": str(effective_batch_id) if effective_batch_id else None,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         dead: list[asyncio.Queue] = []

@@ -1,0 +1,239 @@
+"""Mutation batch CRUD + change-history endpoints.
+
+Used by the MCP server's standardised mutation wrapper to give every
+write operation a stable audit handle (S1, S6) and to enforce the
+dry-run → confirm-token → commit flow (S2, S3).
+
+Routes:
+
+- ``POST /mutation-batches`` — open a new batch. Returns the id and,
+  for dry-run batches above the per-call confirmation threshold, a
+  ``confirm_token`` the matching commit call must echo back.
+- ``POST /mutation-batches/{id}/commit`` — close the batch with a
+  per-row summary. Validates the confirm token when present.
+- ``GET /mutation-batches`` — list batches (filters by actor / tool /
+  origin / since). Permission: ``admin.events``.
+- ``GET /mutation-batches/{id}`` — single batch metadata.
+- ``GET /mutation-batches/{id}/events`` — every event emitted under the
+  batch, in chronological order. Powers the MCP
+  ``get_change_history`` tool (S6).
+
+The batch wrapper does not persist a session contextvar across the
+two HTTP calls (open + commit) — the MCP server explicitly threads the
+``batch_id`` through every intermediate call by setting the
+``X-Turbo-EA-Batch`` header, which the ``capture_request_batch_id``
+middleware in ``app.main`` mirrors into ``request_batch_id`` so
+``event_bus.publish`` stamps it onto every emitted event.
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.deps import get_current_user
+from app.database import get_db
+from app.models.event import Event
+from app.models.mutation_batch import MutationBatch
+from app.models.user import User
+from app.schemas.mutation_batch import (
+    MutationBatchCommit,
+    MutationBatchEvent,
+    MutationBatchHistory,
+    MutationBatchOpen,
+    MutationBatchOut,
+)
+from app.services.event_bus import request_origin
+from app.services.mutation_batch_service import (
+    batch_to_dict,
+    commit_batch,
+    create_batch,
+    get_batch,
+    issue_confirm_token,
+    verify_confirm_token,
+)
+from app.services.permission_service import PermissionService
+
+router = APIRouter(prefix="/mutation-batches", tags=["mutation-batches"])
+
+
+def _origin() -> str:
+    raw = request_origin.get()
+    return raw if raw else "api"
+
+
+def _actor_name_for(batch: MutationBatch, users_by_id: dict) -> str | None:
+    return (
+        users_by_id.get(batch.actor_user_id).display_name
+        if batch.actor_user_id and batch.actor_user_id in users_by_id
+        else None
+    )
+
+
+# Above this row count, the open call issues a confirm token that the
+# commit call must echo. Mirrors the MCP-side BATCH_CONFIRMATION_THRESHOLD
+# (default 20) — the backend value is a floor; the MCP wrapper can be
+# tightened independently via env.
+CONFIRM_TOKEN_THRESHOLD = 20
+
+
+@router.post("", response_model=MutationBatchOut, status_code=201)
+async def open_batch(
+    body: MutationBatchOpen,
+    row_count: int = Query(0, ge=0, description="Number of rows the wrapper intends to write"),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MutationBatchOut:
+    """Open a mutation batch. Returns the batch id and, when the row
+    count exceeds the confirmation threshold on a dry-run, a one-shot
+    ``confirm_token`` the commit call must echo back."""
+    token: str | None = None
+    if body.dry_run and row_count > CONFIRM_TOKEN_THRESHOLD:
+        token = issue_confirm_token()
+    batch = await create_batch(
+        db,
+        tool_name=body.tool_name,
+        actor=user,
+        origin=_origin(),
+        dry_run=body.dry_run,
+        confirm_token=token,
+    )
+    await db.commit()
+    return MutationBatchOut(**batch_to_dict(batch, actor_display_name=user.display_name))
+
+
+@router.post("/{batch_id}/commit", response_model=MutationBatchOut)
+async def close_batch(
+    batch_id: uuid.UUID,
+    body: MutationBatchCommit,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MutationBatchOut:
+    batch = await get_batch(db, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Mutation batch not found")
+    if batch.committed_at is not None:
+        raise HTTPException(status_code=409, detail="Mutation batch already committed")
+    if batch.actor_user_id and batch.actor_user_id != user.id:
+        # Cross-actor commit would let a second user finalise a batch
+        # opened by someone else and confuse the audit trail. Reject.
+        raise HTTPException(status_code=403, detail="Mutation batch belongs to another user")
+    if batch.confirm_token and not verify_confirm_token(batch, body.confirm_token or ""):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Missing or invalid confirm_token. Re-run the dry-run to obtain a "
+                "fresh token (tokens expire 15 minutes after issue)."
+            ),
+        )
+    await commit_batch(db, batch, summary=body.summary)
+    await db.commit()
+    return MutationBatchOut(**batch_to_dict(batch, actor_display_name=user.display_name))
+
+
+@router.get("", response_model=list[MutationBatchOut])
+async def list_batches(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    actor_user_id: uuid.UUID | None = Query(None),
+    tool_name: str | None = Query(None),
+    origin: str | None = Query(None),
+    since: datetime | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+) -> list[MutationBatchOut]:
+    await PermissionService.require_permission(db, user, "admin.events")
+    q = select(MutationBatch).order_by(MutationBatch.created_at.desc())
+    if actor_user_id:
+        q = q.where(MutationBatch.actor_user_id == actor_user_id)
+    if tool_name:
+        q = q.where(MutationBatch.tool_name == tool_name)
+    if origin:
+        q = q.where(MutationBatch.origin == origin)
+    if since:
+        q = q.where(MutationBatch.created_at >= since)
+    q = q.limit(limit)
+    batches = list((await db.execute(q)).scalars().all())
+
+    actor_ids = {b.actor_user_id for b in batches if b.actor_user_id is not None}
+    users_by_id: dict = {}
+    if actor_ids:
+        rows = await db.execute(select(User).where(User.id.in_(actor_ids)))
+        users_by_id = {u.id: u for u in rows.scalars().all()}
+
+    return [
+        MutationBatchOut(**batch_to_dict(b, actor_display_name=_actor_name_for(b, users_by_id)))
+        for b in batches
+    ]
+
+
+@router.get("/{batch_id}", response_model=MutationBatchOut)
+async def get_batch_meta(
+    batch_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MutationBatchOut:
+    batch = await get_batch(db, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Mutation batch not found")
+    # Owner sees their own batch metadata without admin.events; everyone
+    # else needs the audit-log permission.
+    if not (batch.actor_user_id and batch.actor_user_id == user.id):
+        await PermissionService.require_permission(db, user, "admin.events")
+    actor = None
+    if batch.actor_user_id:
+        actor = (
+            await db.execute(select(User).where(User.id == batch.actor_user_id))
+        ).scalar_one_or_none()
+    return MutationBatchOut(
+        **batch_to_dict(batch, actor_display_name=actor.display_name if actor else None)
+    )
+
+
+@router.get("/{batch_id}/events", response_model=MutationBatchHistory)
+async def get_batch_history(
+    batch_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MutationBatchHistory:
+    batch = await get_batch(db, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=404, detail="Mutation batch not found")
+    if not (batch.actor_user_id and batch.actor_user_id == user.id):
+        await PermissionService.require_permission(db, user, "admin.events")
+
+    actor = None
+    if batch.actor_user_id:
+        actor = (
+            await db.execute(select(User).where(User.id == batch.actor_user_id))
+        ).scalar_one_or_none()
+
+    q = (
+        select(Event)
+        .options(selectinload(Event.user))
+        .where(Event.batch_id == batch_id)
+        .order_by(Event.created_at.asc())
+    )
+    events = list((await db.execute(q)).scalars().all())
+
+    return MutationBatchHistory(
+        batch=MutationBatchOut(
+            **batch_to_dict(batch, actor_display_name=actor.display_name if actor else None)
+        ),
+        events=[
+            MutationBatchEvent(
+                id=e.id,
+                event_type=e.event_type,
+                data=e.data,
+                card_id=e.card_id,
+                user_id=e.user_id,
+                user_display_name=e.user.display_name if e.user else None,
+                created_at=e.created_at,
+            )
+            for e in events
+        ],
+    )

@@ -5,6 +5,18 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.29.0] - 2026-05-23
+
+### Added
+- **MCP audit-batch foundation.** Every MCP write tool now opens a *mutation batch* before any writes happen, stamps the batch id onto every audit event emitted under it, and commits the batch on success — so admins can reconstruct exactly what a single AI-agent call changed from a single id. New `mutation_batches` table + `events.batch_id` column; new endpoints `POST /api/v1/mutation-batches`, `POST /api/v1/mutation-batches/{id}/commit`, `GET /api/v1/mutation-batches`, `GET /api/v1/mutation-batches/{id}`, and `GET /api/v1/mutation-batches/{id}/events`. Permission-gated by the existing `admin.events` for cross-actor reads; batch owners can read their own.
+- **`get_change_history` MCP tool.** Read-only tool that surfaces the new audit endpoint to AI agents — pass a `batch_id` to recover every event under a specific batch, or filter the recent-batch list by `actor_user_id` / `tool_name` / `origin`.
+- **Confirm-token gate for large MCP commits.** A `dry_run=True` batch above the per-call confirmation threshold (`MCP_BATCH_CONFIRMATION_THRESHOLD`, default 20 rows) issues a short-lived `confirm_token`; the matching commit call must echo it back. Backed by a 15-minute TTL so stale dry-runs cannot be replayed. The MCP wrapper enforces this at the agent-facing edge (configurable via `MCP_REQUIRE_DRYRUN_FIRST`, default on); the backend `/mutation-batches/{id}/commit` endpoint enforces the same gate independently.
+- **MCP tool annotations on every tool.** All 31 MCP tools (25 reads + 1 audit + 5 writes — and the new `get_change_history`) now declare `readOnlyHint` / `destructiveHint` / `idempotentHint` so MCP clients (Claude Desktop, Inspector) can surface destructiveness in their UI.
+
+### Changed
+- **`event_bus.publish` accepts an optional `batch_id`** and reads a new `request_batch_id` contextvar populated by the existing origin-tracking middleware from the `X-Turbo-EA-Batch` header. Pre-existing publish call sites are unchanged — the contextvar carries the batch id transparently when an MCP wrapper opened one.
+- **`X-Turbo-EA-Batch` header** is now whitelisted on the CORS configuration and mirrored into the audit log payload through the same middleware as `X-Turbo-EA-Origin`.
+
 ## [1.28.0] - 2026-05-23
 
 ### Changed

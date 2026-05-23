@@ -49,7 +49,9 @@ def _env_bool(name: str, default: bool) -> bool:
 # something an attentive reviewer can scan in a dry-run preview. Operators
 # can raise these if their use case demands it.
 MCP_MAX_CARDS_PER_CALL: int = int(os.environ.get("MCP_MAX_CARDS_PER_CALL", "200"))
-MCP_MAX_RELATIONS_PER_CALL: int = int(os.environ.get("MCP_MAX_RELATIONS_PER_CALL", "500"))
+MCP_MAX_RELATIONS_PER_CALL: int = int(
+    os.environ.get("MCP_MAX_RELATIONS_PER_CALL", "500")
+)
 
 # Kill switch — set to ``false`` to disable all MCP write tools without a
 # code redeploy. Read tools keep working.
@@ -59,3 +61,17 @@ MCP_WRITES_ENABLED: bool = _env_bool("MCP_WRITES_ENABLED", True)
 # The web-UI relation bulk endpoint still supports it; turning this on is an
 # explicit operator choice.
 MCP_ALLOW_RELATION_DELETE: bool = _env_bool("MCP_ALLOW_RELATION_DELETE", False)
+
+# Above this row count, a commit must echo back the ``confirm_token`` issued
+# by the prior dry-run. The backend has its own floor (currently 20); the
+# MCP wrapper enforces this value first so the agent gets a clear error
+# before the backend round-trip.
+MCP_BATCH_CONFIRMATION_THRESHOLD: int = int(
+    os.environ.get("MCP_BATCH_CONFIRMATION_THRESHOLD", "20")
+)
+
+# When ``True`` (default), the MCP wrapper refuses a commit call that has no
+# matching prior dry-run in the same session. Operators can opt out for
+# trusted automation pipelines that explicitly do not want the second
+# round-trip.
+MCP_REQUIRE_DRYRUN_FIRST: bool = _env_bool("MCP_REQUIRE_DRYRUN_FIRST", True)

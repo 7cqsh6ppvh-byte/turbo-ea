@@ -21,6 +21,12 @@ class Event(Base, UUIDMixin):
     )
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     data: Mapped[dict | None] = mapped_column(JSONB, default=dict)
+    batch_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("mutation_batches.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", lazy="noload")
