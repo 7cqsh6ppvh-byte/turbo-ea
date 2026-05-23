@@ -109,15 +109,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # ``Base.metadata.create_all`` (used on fresh DBs and by the
-    # migration-rollback CI job) auto-generates the FK with a different
-    # name than the one Alembic chose on the upgrade path, so naming
-    # the constraint here would mismatch on either side. Postgres
-    # auto-drops the FK when the column is dropped — same with the
-    # index — so a plain ``drop_column`` is the portable downgrade.
+    # Postgres cascade-drops indexes (and the FK that ``events.batch_id``
+    # depends on) when we drop the column / table directly. We use
+    # column- and table-level drops here on purpose: the explicit
+    # ``drop_index`` calls would fail in the migration-rollback CI job,
+    # which seeds the schema via ``Base.metadata.create_all`` (no model
+    # indexes on ``mutation_batches``) before stamping head and
+    # downgrading.
     op.drop_column("events", "batch_id")
-
-    op.drop_index("ix_mutation_batches_origin_created", table_name="mutation_batches")
-    op.drop_index("ix_mutation_batches_tool_created", table_name="mutation_batches")
-    op.drop_index("ix_mutation_batches_actor_created", table_name="mutation_batches")
     op.drop_table("mutation_batches")
