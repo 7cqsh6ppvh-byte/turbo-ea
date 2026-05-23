@@ -29,6 +29,38 @@ def _patched_post(payload):
     return patch.object(server.TurboEAClient, "post", mock), mock
 
 
+def _patched_post_batch_aware(write_payload: dict, batch_id: str = "batch-uuid-001"):
+    """Patch ``TurboEAClient.post`` for write tools that flow through the
+    mutation-batch wrapper. Routes calls based on path so the open /
+    underlying-write / commit triplet each get the right payload.
+
+    Returns ``(patcher, write_mock_assert)`` where ``write_mock_assert``
+    is a helper that returns the single non-batch call args/kwargs (the
+    actual write) so tests can keep their existing assertions roughly
+    unchanged.
+    """
+    write_calls: list = []
+
+    async def router(path: str, json: dict | None = None):
+        if path.startswith("/mutation-batches/") and path.endswith("/commit"):
+            return {"id": batch_id, "committed_at": "2026-05-23T12:00:00Z"}
+        if path.startswith("/mutation-batches"):
+            return {"id": batch_id, "dry_run": (json or {}).get("dry_run", False)}
+        # The actual write call — capture for later assertion.
+        write_calls.append((path, json))
+        return write_payload
+
+    mock = AsyncMock(side_effect=router)
+    patcher = patch.object(server.TurboEAClient, "post", mock)
+
+    def write_call() -> tuple:
+        assert write_calls, "expected exactly one underlying-write call"
+        path, body = write_calls[-1]
+        return path, body
+
+    return patcher, write_call
+
+
 def _patched_put(payload):
     mock = AsyncMock(return_value=payload)
     return patch.object(server.TurboEAClient, "put", mock), mock
@@ -49,7 +81,7 @@ def _parse(s: str) -> dict | list:
 class TestCreateCardsBulk:
     @pytest.mark.asyncio
     async def test_dry_run_default(self, fake_token):
-        patcher, mock = _patched_post(
+        patcher, write_call = _patched_post_batch_aware(
             {
                 "results": [
                     {"row_index": 0, "status": "created", "id": "card-1"},
@@ -63,15 +95,16 @@ class TestCreateCardsBulk:
             out = await server.create_cards_bulk(
                 cards=[{"row_index": 0, "type": "Application", "name": "Test App"}]
             )
-        mock.assert_awaited_once()
-        args, kwargs = mock.call_args
-        assert args[0] == "/cards/bulk-create"
-        assert kwargs["json"]["dry_run"] is True
-        assert _parse(out)["dry_run"] is True
+        path, body = write_call()
+        assert path == "/cards/bulk-create"
+        assert body["dry_run"] is True
+        parsed = _parse(out)
+        assert parsed["dry_run"] is True
+        assert parsed["batch_id"] == "batch-uuid-001"
 
     @pytest.mark.asyncio
     async def test_commit(self, fake_token):
-        patcher, mock = _patched_post(
+        patcher, write_call = _patched_post_batch_aware(
             {"results": [], "created": 0, "failed": 0, "dry_run": False}
         )
         with patcher:
@@ -79,13 +112,15 @@ class TestCreateCardsBulk:
                 cards=[{"row_index": 0, "type": "Application", "name": "X"}],
                 dry_run=False,
             )
-        _, kwargs = mock.call_args
-        assert kwargs["json"]["dry_run"] is False
-        assert kwargs["json"]["cards"][0]["name"] == "X"
+        path, body = write_call()
+        assert body["dry_run"] is False
+        assert body["cards"][0]["name"] == "X"
 
     @pytest.mark.asyncio
     async def test_single_row(self, fake_token):
-        patcher, mock = _patched_post({"results": [], "created": 0, "failed": 0})
+        patcher, write_call = _patched_post_batch_aware(
+            {"results": [], "created": 0, "failed": 0}
+        )
         with patcher:
             await server.create_cards_bulk(
                 cards=[
@@ -98,8 +133,8 @@ class TestCreateCardsBulk:
                 ],
                 dry_run=False,
             )
-        _, kwargs = mock.call_args
-        cards = kwargs["json"]["cards"]
+        path, body = write_call()
+        cards = body["cards"]
         assert len(cards) == 1
         assert cards[0]["attributes"] == {"businessCriticality": "high"}
 
@@ -107,7 +142,7 @@ class TestCreateCardsBulk:
     async def test_backend_validation_error_surfaces(self, fake_token):
         # Backend reports per-row failure for unknown type — the tool just
         # passes the payload through.
-        patcher, mock = _patched_post(
+        patcher, write_call = _patched_post_batch_aware(
             {
                 "results": [
                     {
@@ -539,13 +574,20 @@ class TestGuardrails:
     @pytest.mark.asyncio
     async def test_cards_batch_at_cap_passes(self, fake_token, monkeypatch):
         monkeypatch.setattr(server, "MCP_MAX_CARDS_PER_CALL", 3)
+        # Disable the dry-run-first gate so this test can commit
+        # without first running a dry-run (3 rows is below the
+        # default 20-row threshold anyway, but be explicit).
+        monkeypatch.setattr(server, "MCP_REQUIRE_DRYRUN_FIRST", False)
         rows = [
             {"row_index": i, "type": "Application", "name": f"A{i}"} for i in range(3)
         ]
-        patcher, mock = _patched_post({"results": [], "created": 0, "failed": 0})
+        patcher, write_call = _patched_post_batch_aware(
+            {"results": [], "created": 0, "failed": 0}
+        )
         with patcher:
             await server.create_cards_bulk(cards=rows, dry_run=False)
-        mock.assert_awaited_once()
+        path, _ = write_call()
+        assert path == "/cards/bulk-create"
 
     @pytest.mark.asyncio
     async def test_relations_batch_over_cap_rejected(self, fake_token, monkeypatch):

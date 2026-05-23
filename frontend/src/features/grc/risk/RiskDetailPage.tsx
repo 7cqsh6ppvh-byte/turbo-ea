@@ -9,7 +9,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
@@ -177,8 +177,29 @@ export default function RiskDetailPage() {
   const { t: tCommon } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [risk, setRisk] = useState<Risk | null>(null);
+
+  // Deep-link from the MCP `pending` workflow:
+  // /grc/risks/:id?task={task_id}#occurrence-{occurrence_id} lands here.
+  // We can't open the mitigation-task drawer programmatically yet (the
+  // panel doesn't take a deep-link prop), so we just scroll to any
+  // hash anchor the link carried and clear the query param.
+  useEffect(() => {
+    if (!id) return;
+    const hasTask = searchParams.get("task");
+    if (!hasTask) return;
+    setSearchParams({}, { replace: true });
+    const hash = window.location.hash;
+    if (hash) {
+      // Defer until after the panel mounts.
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
+    }
+  }, [id, searchParams, setSearchParams]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

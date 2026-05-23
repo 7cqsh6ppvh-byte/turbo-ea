@@ -379,6 +379,7 @@
   "settings.tabs.servicenow": "ServiceNow",
   "settings.tabs.turbolens": "TurboLens",
   "settings.tabs.migration": "迁移",
+  "settings.tabs.auditLog": "审计日志",
   "settings.section.appearance": "外观",
   "settings.section.modules": "模块",
   "settings.section.authentication": "认证",

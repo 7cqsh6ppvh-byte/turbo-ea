@@ -379,6 +379,7 @@
   "settings.tabs.servicenow": "ServiceNow",
   "settings.tabs.turbolens": "TurboLens",
   "settings.tabs.migration": "Migrazione",
+  "settings.tabs.auditLog": "Registro di audit",
   "settings.section.appearance": "Aspetto",
   "settings.section.modules": "Moduli",
   "settings.section.authentication": "Autenticazione",

@@ -41,6 +41,7 @@ const ServiceNowAdmin = lazy(() => import("./ServiceNowAdmin"));
 const AiAdmin = lazy(() => import("./AiAdmin"));
 const TurboLensAdmin = lazy(() => import("./TurboLensAdmin"));
 const MigrationAdmin = lazy(() => import("./MigrationAdmin"));
+const AuditLogAdmin = lazy(() => import("./AuditLogAdmin"));
 
 const TAB_KEYS = [
   "general",
@@ -51,6 +52,7 @@ const TAB_KEYS = [
   "servicenow",
   "turbolens",
   "migration",
+  "audit-log",
 ];
 
 function TabLoader() {
@@ -1267,6 +1269,7 @@ export default function SettingsAdmin() {
     t("settings.tabs.servicenow"),
     t("settings.tabs.turbolens"),
     t("settings.tabs.migration"),
+    t("settings.tabs.auditLog", "Audit log"),
   ];
 
   const handleTabChange = (_: React.SyntheticEvent, newIndex: number) => {
@@ -1333,6 +1336,11 @@ export default function SettingsAdmin() {
       {tabIndex === 7 && (
         <Suspense fallback={<TabLoader />}>
           <MigrationAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 8 && (
+        <Suspense fallback={<TabLoader />}>
+          <AuditLogAdmin />
         </Suspense>
       )}
     </Box>

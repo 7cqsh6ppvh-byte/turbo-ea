@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -49,6 +49,7 @@ export default function SoAWEditor() {
   const { t } = useTranslation(["delivery", "common"]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { formatDate, formatDateTime } = useDateFormat();
 
   const STATUS_CHIP: Record<string, { label: string; color: "default" | "warning" | "success" | "info" }> = {
@@ -109,6 +110,17 @@ export default function SoAWEditor() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  // Deep-link from the MCP `pending` workflow: /ea-delivery/soaw/:id?action=sign|reject
+  // opens the matching dialog so the human can finish in one click.
+  useEffect(() => {
+    if (!id) return;
+    const action = searchParams.get("action");
+    if (!action) return;
+    if (action === "sign") setSignDialogOpen(true);
+    else if (action === "reject") setRejectDialogOpen(true);
+    setSearchParams({}, { replace: true });
+  }, [id, searchParams, setSearchParams]);
   const isSigned = status === "signed";
 
   // ── load data ──────────────────────────────────────────────────────────

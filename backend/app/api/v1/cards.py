@@ -126,6 +126,46 @@ async def _validate_url_attributes(db: AsyncSession, card_type: str, attributes:
                 )
 
 
+async def _validate_strict_attributes(db: AsyncSession, card_type: str, attributes: dict) -> None:
+    """Reject ``attributes`` keys that are not declared in the type's
+    ``fields_schema`` (S5).
+
+    Off by default — importers legitimately stash side-channel metadata
+    on the JSONB column. AI-agent writes opt in via
+    ``strict_attributes=True`` so an LLM hallucinating a field name
+    surfaces an actionable 422 with the valid key list instead of
+    silently writing data that never renders in the UI.
+    """
+    if not attributes:
+        return
+    result = await db.execute(select(CardType.fields_schema).where(CardType.key == card_type))
+    schema = result.scalar_one_or_none()
+    if not schema:
+        return
+    valid_keys: set[str] = set()
+    for section in schema:
+        for field in section.get("fields", []):
+            key = field.get("key")
+            if key:
+                valid_keys.add(key)
+    unknown = sorted(k for k in attributes.keys() if k not in valid_keys)
+    if unknown:
+        raise HTTPException(
+            422,
+            {
+                "error": "unknown_attribute_keys",
+                "message": (
+                    f"Card type '{card_type}' does not define attribute(s): "
+                    f"{', '.join(unknown)}. Set strict_attributes=False to "
+                    "store side-channel JSONB metadata anyway."
+                ),
+                "unknown_keys": unknown,
+                "valid_keys": sorted(valid_keys),
+                "card_type": card_type,
+            },
+        )
+
+
 async def _calc_data_quality(db: AsyncSession, card: Card) -> float:
     """Calculate data quality score from fields_schema weights."""
     result = await db.execute(
@@ -709,6 +749,8 @@ async def create_card(
 ):
     await PermissionService.require_permission(db, user, "inventory.create")
     await _validate_url_attributes(db, body.type, body.attributes or {})
+    if body.strict_attributes:
+        await _validate_strict_attributes(db, body.type, body.attributes or {})
     parent_uuid = uuid.UUID(body.parent_id) if body.parent_id else None
     await check_sibling_name_unique(db, type_key=body.type, parent_id=parent_uuid, name=body.name)
     card = Card(
@@ -1238,7 +1280,7 @@ async def relation_summary(
     return CardRelationSummaryResponse(by_type=entries, hierarchy=hierarchy)
 
 
-@router.patch("/bulk", response_model=list[CardResponse])
+@router.patch("/bulk")
 async def bulk_update(
     body: CardBulkUpdate,
     db: AsyncSession = Depends(get_db),
@@ -1249,10 +1291,18 @@ async def bulk_update(
     result = await db.execute(select(Card).where(Card.id.in_(uuids)))
     sheets = list(result.scalars().all())
     updates = body.updates.model_dump(exclude_unset=True)
+    strict_attrs = updates.pop("strict_attributes", False)
     if "attributes" in updates and updates["attributes"]:
+        # Strict-attribute validation runs per distinct type because
+        # `fields_schema` is per-type.
+        seen_types: set[str] = set()
         for card in sheets:
+            if card.type in seen_types:
+                continue
+            seen_types.add(card.type)
             await _validate_url_attributes(db, card.type, updates["attributes"])
-            break  # schema is per-type; validated once per distinct type
+            if strict_attrs:
+                await _validate_strict_attributes(db, card.type, updates["attributes"])
     # Preserve cost-typed keys for any card the user may not see costs on —
     # PATCH does a full replace on `attributes`, so we merge the existing
     # cost values back into the incoming payload. Without this, a bulk edit
@@ -1262,7 +1312,13 @@ async def bulk_update(
         if "attributes" in updates and updates["attributes"]
         else {}
     )
+    # Capture per-card before/after diff so the MCP dry-run preview can
+    # surface field-level changes the agent will commit. Also lets
+    # `rollback_batch` reverse the update by replaying the snapshots.
+    diffs: list[dict] = []
     for card in sheets:
+        before: dict = {}
+        after: dict = {}
         for field, value in updates.items():
             if field == "parent_id" and value is not None:
                 value = uuid.UUID(value)
@@ -1274,8 +1330,29 @@ async def bulk_update(
                     for key in strip:
                         if key in old_attrs:
                             value[key] = old_attrs[key]
+            old_val = getattr(card, field)
+            if old_val != value:
+                before[field] = str(old_val) if field == "parent_id" and old_val else old_val
+                after[field] = str(value) if field == "parent_id" and value else value
             setattr(card, field, value)
+        if before:
+            diffs.append({"id": str(card.id), "before": before, "after": after})
         card.updated_by = user.id
+
+    if body.dry_run:
+        # Roll back so the preview never persists; return the diffs the
+        # agent can show the user before committing.
+        await db.rollback()
+        return {
+            "dry_run": True,
+            "results": [
+                {"row_index": i, "card_id": d["id"], "status": "would_update", **d}
+                for i, d in enumerate(diffs)
+            ],
+            "updated": 0,
+            "would_update": len(diffs),
+        }
+
     await db.commit()
     result = await db.execute(
         select(Card)
@@ -1715,10 +1792,14 @@ async def update_card(
         raise HTTPException(404, "Card not found")
 
     updates = body.model_dump(exclude_unset=True)
+    # `strict_attributes` is a request-side flag, not a column.
+    strict_attrs = updates.pop("strict_attributes", False)
 
     # Validate URL-typed attributes
     if "attributes" in updates and updates["attributes"]:
         await _validate_url_attributes(db, card.type, updates["attributes"])
+        if strict_attrs:
+            await _validate_strict_attributes(db, card.type, updates["attributes"])
 
     # Preserve cost-typed keys when the user lacks cost access on this card.
     # PATCH does a full replace on `attributes`, so simply dropping the

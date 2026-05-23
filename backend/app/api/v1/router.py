@@ -21,6 +21,7 @@ from app.api.v1 import (
     file_attachments,
     metamodel,
     migration,
+    mutation_batches,
     notifications,
     ppm,
     ppm_reports,
@@ -63,6 +64,7 @@ api_router.include_router(diagrams.router)
 api_router.include_router(soaw.router)
 api_router.include_router(eol.router)
 api_router.include_router(events.router)
+api_router.include_router(mutation_batches.router)
 api_router.include_router(users.router)
 api_router.include_router(notifications.router)
 api_router.include_router(surveys.router)

@@ -1778,6 +1778,11 @@
       },
       "CardBulkUpdate": {
         "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
           "ids": {
             "items": {
               "type": "string"
@@ -1890,6 +1895,11 @@
               }
             ],
             "title": "Parent Id"
+          },
+          "strict_attributes": {
+            "default": false,
+            "title": "Strict Attributes",
+            "type": "boolean"
           },
           "subtype": {
             "anyOf": [
@@ -2609,6 +2619,11 @@
               }
             ],
             "title": "Status"
+          },
+          "strict_attributes": {
+            "default": false,
+            "title": "Strict Attributes",
+            "type": "boolean"
           },
           "subtype": {
             "anyOf": [
@@ -5395,6 +5410,281 @@
           "target_type"
         ],
         "title": "ModernizationOut",
+        "type": "object"
+      },
+      "MutationBatchCommit": {
+        "description": "Close a batch after the wrapper's underlying writes complete.",
+        "properties": {
+          "confirm_token": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Token"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "title": "MutationBatchCommit",
+        "type": "object"
+      },
+      "MutationBatchEvent": {
+        "properties": {
+          "card_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "event_type": {
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "user_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Display Name"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "id",
+          "event_type",
+          "data",
+          "card_id",
+          "user_id",
+          "created_at"
+        ],
+        "title": "MutationBatchEvent",
+        "type": "object"
+      },
+      "MutationBatchHistory": {
+        "description": "Response for ``GET /mutation-batches/{id}/events`` \u2014 the batch\nmetadata plus every event emitted under it, in chronological order.",
+        "properties": {
+          "batch": {
+            "$ref": "#/components/schemas/MutationBatchOut"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/MutationBatchEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          }
+        },
+        "required": [
+          "batch",
+          "events"
+        ],
+        "title": "MutationBatchHistory",
+        "type": "object"
+      },
+      "MutationBatchListPage": {
+        "description": "Paginated response for ``GET /mutation-batches``. Mirrors the\n``{items, total, page, page_size}`` envelope used by ``GET /cards``\nand the rest of the paginated read endpoints.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MutationBatchOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "MutationBatchListPage",
+        "type": "object"
+      },
+      "MutationBatchOpen": {
+        "description": "Open a batch before a mutating tool wrapper performs writes.",
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "tool_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Tool Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool_name"
+        ],
+        "title": "MutationBatchOpen",
+        "type": "object"
+      },
+      "MutationBatchOut": {
+        "properties": {
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "committed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed At"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Token"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tool_name": {
+            "title": "Tool Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tool_name",
+          "actor_user_id",
+          "origin",
+          "dry_run",
+          "created_at",
+          "committed_at"
+        ],
+        "title": "MutationBatchOut",
         "type": "object"
       },
       "NotificationPreferencesUpdate": {
@@ -9301,6 +9591,22 @@
           }
         },
         "title": "RoleUpdate",
+        "type": "object"
+      },
+      "RollbackBody": {
+        "properties": {
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "RollbackBody",
         "type": "object"
       },
       "SavedReportCreate": {
@@ -15710,13 +16016,7 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CardResponse"
-                  },
-                  "title": "Response Bulk Update Api V1 Cards Bulk Patch",
-                  "type": "array"
-                }
+                "schema": {}
               }
             },
             "description": "Successful Response"
@@ -21050,6 +21350,392 @@
         "summary": "Skip Task Occurrence",
         "tags": [
           "Risks"
+        ]
+      }
+    },
+    "/api/v1/mutation-batches": {
+      "get": {
+        "description": "List mutation batches with filtering + pagination.\n\nReturns a ``{items, total, page, page_size}`` envelope (mirrors the\nrest of the read endpoints, e.g. ``GET /cards``). The audit-log UI\nuses the ``total`` to drive AG Grid's pagination footer; the\nbackground purge keeps ``mutation_batches`` bounded by\n``MUTATION_BATCH_RETENTION_DAYS`` so this never has to scan an\nunbounded table.",
+        "operationId": "list_batches_api_v1_mutation_batches_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "actor_user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor User Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tool_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tool Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationBatchListPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Batches",
+        "tags": [
+          "mutation-batches"
+        ]
+      },
+      "post": {
+        "description": "Open a mutation batch. Returns the batch id and, when the row\ncount exceeds the confirmation threshold on a dry-run, a one-shot\n``confirm_token`` the commit call must echo back.",
+        "operationId": "open_batch_api_v1_mutation_batches_post",
+        "parameters": [
+          {
+            "description": "Number of rows the wrapper intends to write",
+            "in": "query",
+            "name": "row_count",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Number of rows the wrapper intends to write",
+              "minimum": 0,
+              "title": "Row Count",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MutationBatchOpen"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationBatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Batch",
+        "tags": [
+          "mutation-batches"
+        ]
+      }
+    },
+    "/api/v1/mutation-batches/{batch_id}": {
+      "get": {
+        "operationId": "get_batch_meta_api_v1_mutation_batches__batch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationBatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Batch Meta",
+        "tags": [
+          "mutation-batches"
+        ]
+      }
+    },
+    "/api/v1/mutation-batches/{batch_id}/commit": {
+      "post": {
+        "operationId": "close_batch_api_v1_mutation_batches__batch_id__commit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MutationBatchCommit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationBatchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close Batch",
+        "tags": [
+          "mutation-batches"
+        ]
+      }
+    },
+    "/api/v1/mutation-batches/{batch_id}/events": {
+      "get": {
+        "operationId": "get_batch_history_api_v1_mutation_batches__batch_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationBatchHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Batch History",
+        "tags": [
+          "mutation-batches"
+        ]
+      }
+    },
+    "/api/v1/mutation-batches/{batch_id}/rollback": {
+      "post": {
+        "description": "Reverse the writes performed under a mutation batch.\n\nPermission rules: the batch owner can roll back their own batch\nwithout ``admin.events``; reverting another user's batch needs\n``admin.events``. ``force=True`` requires ``admin.events``\nregardless, since it accepts overwriting later writes by other\nusers.",
+        "operationId": "rollback_api_v1_mutation_batches__batch_id__rollback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rollback",
+        "tags": [
+          "mutation-batches"
         ]
       }
     },

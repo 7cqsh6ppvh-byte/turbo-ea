@@ -10,18 +10,30 @@ from turbo_ea_mcp.config import TURBO_EA_URL
 class TurboEAClient:
     """Thin wrapper around httpx for authenticated Turbo EA API calls."""
 
-    def __init__(self, token: str) -> None:
+    def __init__(self, token: str, batch_id: str | None = None) -> None:
         self._token = token
+        self._batch_id = batch_id
         self._base = TURBO_EA_URL.rstrip("/") + "/api/v1"
 
     def _headers(self) -> dict[str, str]:
         # `X-Turbo-EA-Origin` lets the backend tag emitted events with
         # ``origin: "mcp"`` so admins can filter MCP-driven writes out of
         # the audit log separately from web-UI actions.
-        return {
+        #
+        # `X-Turbo-EA-Batch` (when present) carries the mutation-batch id
+        # opened by the MCP tool wrapper. The backend's
+        # ``capture_request_origin`` middleware mirrors it into the
+        # ``request_batch_id`` contextvar so ``event_bus.publish`` stamps
+        # every emitted event with the same id — that's how the change-
+        # history endpoint can return a whole batch's audit trail in a
+        # single query and how rollback knows which events to reverse.
+        h = {
             "Authorization": f"Bearer {self._token}",
             "X-Turbo-EA-Origin": "mcp",
         }
+        if self._batch_id:
+            h["X-Turbo-EA-Batch"] = self._batch_id
+        return h
 
     async def get(self, path: str, params: dict | None = None) -> dict | list:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -50,6 +62,18 @@ class TurboEAClient:
     async def put(self, path: str, json: dict | None = None) -> dict | list:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.put(
+                f"{self._base}{path}",
+                headers=self._headers(),
+                json=json,
+            )
+            resp.raise_for_status()
+            if resp.status_code == 204:
+                return {}
+            return resp.json()
+
+    async def patch(self, path: str, json: dict | None = None) -> dict | list:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.patch(
                 f"{self._base}{path}",
                 headers=self._headers(),
                 json=json,

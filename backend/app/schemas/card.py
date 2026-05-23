@@ -52,6 +52,13 @@ class CardCreate(BaseModel):
     attributes: dict | None = None
     external_id: str | None = None
     alias: str | None = None
+    # When ``True``, the card-create handler validates ``attributes`` keys
+    # against the card type's ``fields_schema`` and rejects unknown keys
+    # with a 422 listing the valid keys for that type. Defaults to
+    # ``False`` for backwards compatibility with importers that legitimately
+    # store side-channel metadata on the JSONB column. Recommended for AI
+    # agent writes (S5).
+    strict_attributes: bool = False
 
     @field_validator("lifecycle")
     @classmethod
@@ -74,6 +81,8 @@ class CardUpdate(BaseModel):
     status: str | None = None
     external_id: str | None = None
     alias: str | None = None
+    # Same semantics as ``CardCreate.strict_attributes``.
+    strict_attributes: bool = False
 
     @field_validator("lifecycle")
     @classmethod
@@ -89,6 +98,11 @@ class CardUpdate(BaseModel):
 class CardBulkUpdate(BaseModel):
     ids: list[str]
     updates: CardUpdate
+    # Mirror the dry-run support already on `CardBulkCreateRequest`. When
+    # true, the handler runs every validator and rolls the transaction
+    # back instead of committing — used by the MCP `update_cards_bulk`
+    # tool to preview field-level diffs before persisting.
+    dry_run: bool = False
 
 
 class TagRef(BaseModel):
