@@ -177,6 +177,10 @@ async def _apply_inverse(db: AsyncSession, op: dict[str, Any]) -> dict[str, Any]
             return {**op, "status": "ok"}
         return {**op, "status": "skipped", "reason": "missing_card_id"}
     if kind == "restore_card":
+        # Inverse of ``card.archived`` — bring the card back. Archive
+        # sets both ``status="ARCHIVED"`` and ``archived_at``; we have
+        # to flip both back, otherwise the UI's status column still
+        # reads "Archived" even though ``archived_at`` is null.
         cid = op.get("card_id")
         if cid:
             card = (
@@ -185,9 +189,14 @@ async def _apply_inverse(db: AsyncSession, op: dict[str, Any]) -> dict[str, Any]
             if card is None:
                 return {**op, "status": "skipped", "reason": "card_not_found"}
             card.archived_at = None
+            card.status = "ACTIVE"
             return {**op, "status": "ok"}
         return {**op, "status": "skipped", "reason": "missing_card_id"}
     if kind == "archive_card":
+        # Inverse of ``card.restored`` — re-archive. Restore set
+        # ``status="ACTIVE"`` and cleared ``archived_at``; we re-stamp
+        # both so the card actually disappears from the active
+        # inventory views again.
         cid = op.get("card_id")
         if cid:
             card = (
@@ -196,6 +205,7 @@ async def _apply_inverse(db: AsyncSession, op: dict[str, Any]) -> dict[str, Any]
             if card is None:
                 return {**op, "status": "skipped", "reason": "card_not_found"}
             card.archived_at = datetime.now(timezone.utc)
+            card.status = "ARCHIVED"
             return {**op, "status": "ok"}
         return {**op, "status": "skipped", "reason": "missing_card_id"}
     if kind == "restore_card_fields":
@@ -287,15 +297,19 @@ async def execute_rollback(
         )
 
     # Open the rollback's own batch row first so the events we emit
-    # while reverting are themselves stamped with a batch id.
+    # while reverting are themselves stamped with a batch id. The
+    # origin follows the caller's request (web / api / mcp) — not
+    # always MCP — so the audit log reflects who actually triggered
+    # the reversal.
     from app.models.user import User
+    from app.services.event_bus import request_origin
 
     actor = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     rollback_batch = await create_batch(
         db,
         tool_name="rollback_batch",
         actor=actor,
-        origin="mcp",
+        origin=request_origin.get() or "api",
         dry_run=False,
     )
 

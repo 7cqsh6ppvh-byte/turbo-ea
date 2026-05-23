@@ -41,6 +41,11 @@ async function request<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    // Tag every web-UI request so the backend's audit log can
+    // distinguish browser-driven writes from direct API calls and
+    // MCP-driven AI writes. The middleware whitelists `web` / `api` /
+    // `mcp`; anything else is dropped silently.
+    "X-Turbo-EA-Origin": "web",
     ...(options.headers as Record<string, string>),
   };
 
@@ -68,6 +73,7 @@ async function request<T>(
 
 async function requestRaw(path: string, options: RequestInit = {}): Promise<Response> {
   const headers: Record<string, string> = {
+    "X-Turbo-EA-Origin": "web",
     ...(options.headers as Record<string, string>),
   };
   const res = await fetch(`${BASE}${path}`, {
@@ -114,6 +120,7 @@ export const api = {
       method: "POST",
       body: form,
       credentials: "same-origin",
+      headers: { "X-Turbo-EA-Origin": "web" },
     }).then(
       async (res) => {
         if (!res.ok) {
