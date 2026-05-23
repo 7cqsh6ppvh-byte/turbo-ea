@@ -196,14 +196,32 @@ async def save_diagram(
             user_id=current_user.id,
         )
 
+    # Capture identifiers before potential rollback — these are stable
+    # within the savepoint and surfacing them in the response gives the
+    # MCP client direct evidence that the row was created vs. inferring
+    # from version/element_count.
+    diagram_id = str(diagram.id)
+    bpmn_xml_bytes = len(body.bpmn_xml)
+    flow_nodes_extracted = len(extracted)
     if body.dry_run:
         assert dry_run_savepoint is not None
         await dry_run_savepoint.rollback()
     else:
         await db.commit()
     return {
+        # Stable ProcessDiagram row id. Allows a GET round-trip to verify
+        # the XML was stored intact.
+        "diagram_id": diagram_id if not body.dry_run else None,
         "version": new_version,
-        "element_count": len(extracted),
+        # `element_count` is the count of *flow nodes* (tasks, gateways,
+        # events) extracted into the ProcessElement table for the EA
+        # cross-reference UI. Sequence flows, lanes, BPMNDI elements and
+        # pool/collaboration metadata are NOT in this count — they live
+        # inside `bpmn_xml` and round-trip verbatim. Use
+        # `bpmn_xml_bytes` below to confirm the full payload was stored.
+        "element_count": flow_nodes_extracted,
+        "flow_nodes_extracted": flow_nodes_extracted,
+        "bpmn_xml_bytes": bpmn_xml_bytes,
         "dry_run": body.dry_run,
     }
 

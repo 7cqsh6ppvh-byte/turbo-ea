@@ -1079,6 +1079,13 @@ async def import_bpmn(
         f"/bpm/processes/{process_id}/diagram",
         json=diagram_payload,
     )
+    # `flow_nodes_extracted` counts tasks/gateways/events that land in the
+    # ProcessElement table for EA cross-referencing. It is INTENTIONALLY
+    # smaller than the total element count in the BPMN XML — sequence
+    # flows (edges), lanes, BPMNDI shapes, and Collaboration / Participant
+    # metadata are not extracted into rows, they live inside the saved
+    # `bpmn_xml` and round-trip verbatim. Use the `bpmn_xml_bytes` field
+    # on `diagram_result` to confirm the full XML was stored.
     response: dict = {
         "dry_run": dry_run,
         "committed": not dry_run,
@@ -1086,6 +1093,21 @@ async def import_bpmn(
         "business_process_created": create_card_result is not None,
         "create_card_result": create_card_result,
         "diagram_result": diagram_result,
+        "verify_urls": {
+            # GET this to retrieve the saved XML byte-for-byte and confirm
+            # the round-trip preserved Collaboration, Participants, lanes,
+            # BPMNDI, etc.
+            "raw_bpmn": f"/api/v1/bpm/processes/{process_id}/diagram",
+            # Open this in the browser to view the BusinessProcess card's
+            # Process Flow tab where bpmn-js renders the diagram.
+            "card_detail": f"/cards/{process_id}",
+        },
+        "rendering_note": (
+            "If the diagram does not render in the editor, the saved XML "
+            "is the source of truth — fetch verify_urls.raw_bpmn and "
+            "compare against the input. The backend stores BPMN XML "
+            "verbatim and never parses or rewrites the BPMNDI plane."
+        ),
     }
     if ignored_inputs:
         response["warning"] = (

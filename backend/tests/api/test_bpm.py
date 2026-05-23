@@ -269,6 +269,84 @@ class TestSaveDiagramDryRun:
         assert diagrams == []
         assert elements == []
 
+    async def test_collaboration_bpmn_with_di_round_trips_intact(self, client, db, bpm_env):
+        """Regression for the «diagram doesn't render» MCP report: a BPMN
+        with `<collaboration>`, `<participant>`, lanes and `<bpmndi:>`
+        sections must round-trip byte-for-byte. The save_diagram handler
+        is supposed to store the XML verbatim and never rewrite the DI
+        plane — if rendering fails downstream it's a frontend problem,
+        not a backend mangling problem. The response must also surface
+        `diagram_id`, `flow_nodes_extracted` and `bpmn_xml_bytes`."""
+        admin = bpm_env["admin"]
+        process = bpm_env["process"]
+        bpmn = """<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Defs_1" targetNamespace="http://example.com/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Sales" processRef="Process_1"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_1" name="Rep">
+        <bpmn:flowNodeRef>Start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_1" name="Begin"/>
+    <bpmn:task id="Task_1" name="Do work"/>
+    <bpmn:endEvent id="End_1" name="Done"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_1" targetRef="Task_1"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="End_1"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="600" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1">
+        <dc:Bounds x="220" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_1_di" bpmnElement="Task_1">
+        <dc:Bounds x="320" y="138" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1">
+        <dc:Bounds x="480" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="256" y="178"/>
+        <di:waypoint x="320" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="420" y="178"/>
+        <di:waypoint x="480" y="178"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+"""
+        save_resp = await client.put(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            json={"bpmn_xml": bpmn, "dry_run": False},
+            headers=auth_headers(admin),
+        )
+        assert save_resp.status_code == 200, save_resp.text
+        save_body = save_resp.json()
+        assert save_body["diagram_id"]  # not None / empty
+        # Flow-nodes extracted = startEvent + task + endEvent = 3.
+        # Sequence flows, lanes, BPMNDI shapes are intentionally NOT counted.
+        assert save_body["flow_nodes_extracted"] == 3
+        assert save_body["bpmn_xml_bytes"] == len(bpmn)
+        # Round-trip: the saved XML must be byte-for-byte identical.
+        get_resp = await client.get(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            headers=auth_headers(admin),
+        )
+        assert get_resp.status_code == 200
+        assert get_resp.json()["bpmn_xml"] == bpmn
+
     async def test_business_process_card_accepts_description_via_bulk(self, client, db, bpm_env):
         """Regression for the empty-card report: a BusinessProcess card
         created via /cards/bulk-create with a `description` field must
