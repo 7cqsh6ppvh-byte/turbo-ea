@@ -64,6 +64,21 @@ from app.models.user import User
 from app.models.user_favorite import UserFavorite
 from app.models.web_portal import WebPortal
 
+# UML plugin models are imported via _ensure_uml_models() on demand.
+# They are excluded from top-level import to break the circular dependency:
+#   app.models.__init__ -> app.plugins.uml.models -> app.models.base -> app.models.__init__
+_UML_MODELS: tuple | None = None
+
+
+def _ensure_uml_models() -> tuple:
+    """Import UML plugin models on demand, breaking the circular dependency."""
+    global _UML_MODELS
+    if _UML_MODELS is None:
+        from app.plugins.uml.models import UmlDiagram, UmlDiagramCard  # noqa: PLC0415
+
+        _UML_MODELS = (UmlDiagram, UmlDiagramCard)
+    return _UML_MODELS
+
 __all__ = [
     "TurboLensAnalysisRun",
     "TurboLensAssessment",
@@ -131,4 +146,18 @@ __all__ = [
     "SnowStagedRecord",
     "SnowIdentityMap",
     "UserFavorite",
+     "UmlDiagram",
+     "UmlDiagramCard",
 ]
+
+
+# Lazy module-level names for UML plugin models — imported on first access only,
+# so `app.plugins.uml.models` never appears on the call stack while the core
+# `app.models` package is still being initialised.
+def __getattr__(name: str):  # noqa: ANN001
+    if name in ("UmlDiagram", "UmlDiagramCard"):
+        UmlDiagram, UmlDiagramCard = _ensure_uml_models()
+        globals()["UmlDiagram"] = UmlDiagram
+        globals()["UmlDiagramCard"] = UmlDiagramCard
+        return {"UmlDiagram": UmlDiagram, "UmlDiagramCard": UmlDiagramCard}[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -636,6 +636,14 @@ app.add_middleware(
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
+# ── UML plugin ──
+try:
+    from app.plugins.uml.plugin import register_plugin
+
+    register_plugin(app)
+except Exception:
+    pass
+
 
 @app.get("/api/health")
 async def health():

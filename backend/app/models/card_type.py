@@ -30,3 +30,9 @@ class CardType(Base, UUIDMixin, TimestampMixin):
     is_hidden: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     translations: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+
+    # UML plugin fields (nullable for backwards compatibility)
+    notation: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    plantuml_keyword: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    plantuml_stereotype: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    plantuml_color: Mapped[str | None] = mapped_column(String(20), nullable=True)

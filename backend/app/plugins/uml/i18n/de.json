@@ -1,0 +1,53 @@
+{
+  "uml": {
+    "nav_title": "UML-Diagramme",
+    "tooltip": "UML-Diagramm-Canvas mit PlantUML-Export",
+    "list": {
+      "title": "UML-Diagramme",
+      "empty": "Noch keine Diagramme",
+      "create": "Neues Diagramm",
+      "search": "Diagramme durchsuchen..."
+    },
+    "form": {
+      "name": "Name",
+      "description": "Beschreibung",
+      "type": "Diagrammtyp",
+      "create": "Diagramm erstellen",
+      "save": "Änderungen speichern",
+      "cancel": "Abbrechen"
+    },
+    "card": {
+      "add_success": "Karte zum Diagramm hinzugefügt",
+      "remove_success": "Karte aus Diagramm entfernt",
+      "position_updated": "Position aktualisiert"
+    },
+    "export": {
+      "title": "Diagramm exportieren",
+      "format": {
+        "plantuml": "PlantUML (.puml)",
+        "svg": "SVG-Bild",
+        "png": "PNG-Bild"
+      },
+      "copy": "In die Zwischenablage kopieren",
+      "download": "Herunterladen",
+      "success": "Export erfolgreich",
+      "error": "Export fehlgeschlagen"
+    },
+    "canvas": {
+      "loading": "Diagramm wird geladen...",
+      "error": "Diagramm konnte nicht geladen werden",
+      "drop_card": "Karte auf die Leinwand ziehen",
+      "connect_cards": "Karten verbinden um Relationen zu erstellen"
+    },
+    "delete": {
+      "title": "Diagramm löschen",
+      "message": "Sind Sie sicher, dass Sie dieses Diagramm löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "duplicate": {
+      "success": "Diagramm erfolgreich dupliziert",
+      "error": "Diagramm konnte nicht dupliziert werden"
+    }
+  }
+}

@@ -1,0 +1,82 @@
+.uml-editor-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.uml-canvas-wrapper {
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+  background-color: #f7f9fb;
+}
+
+.uml-node {
+  padding: 10px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #1a1a2e;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.uml-node.selected {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.uml-node-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.uml-node-label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.uml-node-stereotype {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+}
+
+.uml-node-interface {
+  border-style: dashed;
+}
+
+.uml-node-abstract .uml-node-label {
+  font-style: italic;
+}
+
+.uml-node-delete-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  cursor: pointer;
+  display: none;
+  padding: 1px;
+  color: #d32f2f;
+  z-index: 10;
+}
+
+.uml-node:hover .uml-node-delete-button {
+  display: flex;
+}
+
+.uml-node-input {
+  width: 100%;
+  border: 1px solid #1976d2;
+  padding: 2px;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}

@@ -72,8 +72,8 @@ fi
 if $UNIT_ONLY; then
     echo "==> Running unit tests only (no database)"
     cd "$BACKEND_DIR"
-    python -m pytest tests/core/ tests/services/test_calculation_engine.py tests/services/test_bpmn_parser.py "${PYTEST_ARGS[@]}" 2>/dev/null || \
-    python -m pytest tests/core/ "${PYTEST_ARGS[@]}"
+    python -m pytest tests/core/ tests/services/test_calculation_engine.py tests/services/test_bpmn_parser.py ${PYTEST_ARGS[@]+"${PYTEST_ARGS[@]}"} 2>/dev/null || \
+    python -m pytest tests/core/ ${PYTEST_ARGS[@]+"${PYTEST_ARGS[@]}"}
     exit $?
 fi
 

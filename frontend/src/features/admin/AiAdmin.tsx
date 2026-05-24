@@ -145,6 +145,14 @@ export default function AiAdmin() {
     // Reset fields when switching providers
     if (newType === "anthropic") {
       setAiProviderUrl("");
+    } else if (newType === "xai") {
+      setAiProviderUrl("https://api.x.ai/v1");
+      setAiApiKey("");
+      setAiModel("grok-2-latest");
+    } else if (newType === "openrouter") {
+      setAiProviderUrl("https://openrouter.ai/api/v1");
+      setAiApiKey("");
+      setAiModel("x-ai/grok-2-1212");
     }
   };
 
@@ -166,14 +174,21 @@ export default function AiAdmin() {
   const hasApiKeySet = aiApiKey === AI_KEY_MASK;
 
   const providerUrlPlaceholder =
-    aiProviderType === "openai" ? "https://api.openai.com" : "http://localhost:11434";
+    aiProviderType === "openai" ? "https://api.openai.com" : 
+    aiProviderType === "xai" ? "https://api.x.ai/v1" :
+    aiProviderType === "openrouter" ? "https://openrouter.ai/api/v1" :
+    "http://localhost:11434";
 
   const modelPlaceholder =
     aiProviderType === "openai"
       ? "gpt-4o-mini"
       : aiProviderType === "anthropic"
         ? "claude-sonnet-4-20250514"
-        : "gemma3:4b";
+        : aiProviderType === "xai"
+          ? "grok-2-latest"
+          : aiProviderType === "openrouter"
+            ? "x-ai/grok-2-1212"
+            : "gemma3:4b";
 
   const modelHelper =
     aiProviderType === "openai"
@@ -242,6 +257,8 @@ export default function AiAdmin() {
           <MenuItem value="ollama">{t("settings.ai.providerOllama")}</MenuItem>
           <MenuItem value="openai">{t("settings.ai.providerOpenai")}</MenuItem>
           <MenuItem value="anthropic">{t("settings.ai.providerAnthropic")}</MenuItem>
+          <MenuItem value="xai">xAI (Grok)</MenuItem>
+          <MenuItem value="openrouter">OpenRouter</MenuItem>
         </TextField>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
           {aiProviderType === "ollama"

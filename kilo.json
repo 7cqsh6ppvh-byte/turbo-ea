@@ -1,0 +1,56 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "openrouter": {
+      "options": {}
+    },
+    "routellm": {
+      "options": {
+        "base_url": "https://routellm.abacus.ai/v1/"
+      }
+    }
+  },
+  "permission": {
+    "bash": "allow"
+  },
+  "agents": {
+    "backend-infra": {
+      "file": ".kilo/agent/backend-infra.md"
+    },
+    "backend-assembler": {
+      "file": ".kilo/agent/backend-assembler.md"
+    },
+    "backend-api": {
+      "file": ".kilo/agent/backend-api.md"
+    },
+    "frontend-core": {
+      "file": ".kilo/agent/frontend-core.md"
+    },
+    "frontend-ui": {
+      "file": ".kilo/agent/frontend-ui.md"
+    },
+    "testing": {
+      "file": ".kilo/agent/testing.md"
+    },
+    "devops": {
+      "file": ".kilo/agent/devops.md"
+    }
+  },
+  "commands": {
+    "phase-1": {
+      "file": ".kilo/command/phase-1.md"
+    },
+    "phase-2-3": {
+      "file": ".kilo/command/phase-2-3.md"
+    },
+    "phase-4": {
+      "file": ".kilo/command/phase-4.md"
+    },
+    "phase-5": {
+      "file": ".kilo/command/phase-5.md"
+    },
+    "phase-6": {
+      "file": ".kilo/command/phase-6.md"
+    }
+  }
+}

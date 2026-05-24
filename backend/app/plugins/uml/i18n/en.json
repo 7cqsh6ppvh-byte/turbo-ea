@@ -1,0 +1,53 @@
+{
+  "uml": {
+    "nav_title": "UML Diagrams",
+    "tooltip": "UML diagram canvas with PlantUML export",
+    "list": {
+      "title": "UML Diagrams",
+      "empty": "No diagrams yet",
+      "create": "New Diagram",
+      "search": "Search diagrams..."
+    },
+    "form": {
+      "name": "Name",
+      "description": "Description",
+      "type": "Diagram Type",
+      "create": "Create Diagram",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    },
+    "card": {
+      "add_success": "Card added to diagram",
+      "remove_success": "Card removed from diagram",
+      "position_updated": "Position updated"
+    },
+    "export": {
+      "title": "Export Diagram",
+      "format": {
+        "plantuml": "PlantUML (.puml)",
+        "svg": "SVG Image",
+        "png": "PNG Image"
+      },
+      "copy": "Copy to Clipboard",
+      "download": "Download",
+      "success": "Export successful",
+      "error": "Export failed"
+    },
+    "canvas": {
+      "loading": "Loading diagram...",
+      "error": "Failed to load diagram",
+      "drop_card": "Drop card onto canvas",
+      "connect_cards": "Connect cards to create relations"
+    },
+    "delete": {
+      "title": "Delete Diagram",
+      "message": "Are you sure you want to delete this diagram? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "duplicate": {
+      "success": "Diagram duplicated successfully",
+      "error": "Failed to duplicate diagram"
+    }
+  }
+}
