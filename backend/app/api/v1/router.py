@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     adr,
     ai_suggest,
+    archimate,
     auth,
     bookmarks,
     bpm,
@@ -81,6 +82,7 @@ api_router.include_router(turbolens.router)
 api_router.include_router(turbolens.cards_router)
 api_router.include_router(turbolens.compliance_router)
 api_router.include_router(ai_suggest.router)
+api_router.include_router(archimate.router)
 api_router.include_router(ppm.router)
 api_router.include_router(ppm_reports.router)
 api_router.include_router(adr.router)
