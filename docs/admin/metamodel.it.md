@@ -42,7 +42,7 @@ I campi definiscono gli attributi personalizzati disponibili sulle card di quest
 |--------------|-------------|
 | **Key** | Identificatore univoco del campo |
 | **Etichetta** | Nome visualizzato |
-| **Tipo** | text, number, cost, boolean, date, url, single_select o multiple_select |
+| **Tipo** | text, multiline_text, number, cost, boolean, date, url, single_select o multiple_select |
 | **Opzioni** | Per i campi di selezione: le scelte disponibili con etichette e colori opzionali |
 | **Obbligatorio** | Se il campo deve essere compilato per il punteggio di qualità dei dati |
 | **Peso** | Quanto questo campo contribuisce al punteggio di qualità dei dati (0-10) |

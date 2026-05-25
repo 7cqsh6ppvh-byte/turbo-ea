@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthProvider } from "@/hooks/AuthContext";
 import { ThemeModeContext, useThemeModeState } from "@/hooks/useThemeMode";
+import { useAppTitle } from "@/hooks/useAppTitle";
 import { buildTheme } from "@/theme";
 import AppLayout from "@/layouts/AppLayout";
 import LoginPage from "@/features/auth/LoginPage";
@@ -91,6 +92,15 @@ function PageLoader() {
 function AppRoutes() {
   const { user, loading, login, register, ssoCallback, setPassword, logout, refreshUser } =
     useAuth();
+
+  // Sync `document.title` for every route — authenticated and public alike —
+  // so public pages (Web Portal, set-password, forgot/reset, SSO callback)
+  // inherit the admin-configured Application Title instead of the static
+  // «Turbo EA» default baked into index.html (#590).
+  const appTitle = useAppTitle();
+  useEffect(() => {
+    document.title = appTitle;
+  }, [appTitle]);
 
   if (loading) {
     return (

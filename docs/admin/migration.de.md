@@ -1,4 +1,6 @@
-# Plattform-Migration (LeanIX)
+# Plattform-Migration
+
+> Aktuell unterstützte Quellplattformen: **SAP LeanIX**. Weitere Adapter (Ardoq, Mega HOPEX, BiZZdesign, Avolution Abacus, …) werden über dieselbe Staging- und Apply-Pipeline angebunden und erscheinen automatisch im Upload-Dialog, sobald sie ausgeliefert werden.
 
 Der Plattform-Migrations-Importer (**Admin → Einstellungen → Migration**) importiert einen vollständigen LeanIX-Workspace und legt ihn in einem überprüfbaren, abgestuften Vorgang als Turbo-EA-Karten, Beziehungen, Tags, Stakeholder, Dokumente, Kommentare und ein vollständig ausgearbeitetes Metamodell an.
 
@@ -61,9 +63,9 @@ Der Snapshot enthält Folgendes nicht — der Importer kennzeichnet Fehlendes in
 
 ## Wiederholung eines Imports
 
-Idempotenz ist eingebaut. Die Tabelle `leanix_identity_map` speichert die LeanIX → Turbo-EA-UUID-Zuordnung für jede importierte Entität. Ein erneuter Upload desselben Snapshots (oder eines aktualisierten Snapshots aus demselben Workspace) erkennt vorhandene Entitäten und erzeugt `update`/`skip`-Staged-Rows statt doppelter `create`s. Das Feld `external_id` der Karte trägt die LeanIX-`factSheetId`, sodass die Verknüpfung erhalten bleibt, selbst wenn die Identity-Map gelöscht wird.
+Idempotenz ist eingebaut. Die Tabelle `migration_identity_map` speichert die LeanIX → Turbo-EA-UUID-Zuordnung für jede importierte Entität. Ein erneuter Upload desselben Snapshots (oder eines aktualisierten Snapshots aus demselben Workspace) erkennt vorhandene Entitäten und erzeugt `update`/`skip`-Staged-Rows statt doppelter `create`s. Das Feld `external_id` der Karte trägt die LeanIX-`factSheetId`, sodass die Verknüpfung erhalten bleibt, selbst wenn die Identity-Map gelöscht wird.
 
-Wenn Sie einen Import wiederholen müssen (z. B. nach einer Bulk-Löschung der importierten Karten in der UI), nutzen Sie das Papierkorb-Symbol in der Migrations-Zeile, um sie zu löschen, und laden Sie dann erneut hoch. `applied`-Migrationen sind löschbar; das gibt die Dateihash-Idempotenz frei, sodass derselbe Snapshot erneut hochgeladen werden kann. Verwaiste `leanix_identity_map`-Zeilen, die auf nicht mehr existierende Karten zeigen, werden beim nächsten Staging-Lauf automatisch entfernt — eine manuelle Bereinigung der Identity-Map ist nie erforderlich.
+Wenn Sie einen Import wiederholen müssen (z. B. nach einer Bulk-Löschung der importierten Karten in der UI), nutzen Sie das Papierkorb-Symbol in der Migrations-Zeile, um sie zu löschen, und laden Sie dann erneut hoch. `applied`-Migrationen sind löschbar; das gibt die Dateihash-Idempotenz frei, sodass derselbe Snapshot erneut hochgeladen werden kann. Verwaiste `migration_identity_map`-Zeilen, die auf nicht mehr existierende Karten zeigen, werden beim nächsten Staging-Lauf automatisch entfernt — eine manuelle Bereinigung der Identity-Map ist nie erforderlich.
 
 ## Berechtigung
 

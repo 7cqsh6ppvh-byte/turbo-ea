@@ -73,6 +73,10 @@ class RelationBulkOperation(BaseModel):
 
 class RelationBulkRequest(BaseModel):
     operations: list[RelationBulkOperation] = Field(..., min_length=1, max_length=5000)
+    # When true, run every validator and resolver, then roll back instead of
+    # committing — used by the MCP server's `upsert_relations_bulk` tool to
+    # surface a preview before the agent confirms the write.
+    dry_run: bool = False
 
 
 class RelationBulkResult(BaseModel):
@@ -87,3 +91,4 @@ class RelationBulkResponse(BaseModel):
     upserted: int
     deleted: int
     failed: int
+    dry_run: bool = False

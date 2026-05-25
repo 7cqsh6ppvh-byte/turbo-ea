@@ -31,16 +31,16 @@ Uma barra lateral de duas abas (**Filtros** e **Colunas**) fica à esquerda da g
 
 O estado do filtro, colunas visíveis, largura da barra lateral e seu estado recolhido são persistidos **por usuário** em `localStorage` sob a chave `turboea_usersAdmin` — sobrevivem a logouts e recargas de página.
 
-#### Convidando um Novo Usuário
+#### Criando um Usuário
 
-1. Clique no botão **Convidar Usuário** (canto superior direito)
+1. Clique no botão **Criar usuário** (canto superior direito). Enviar um e-mail de convite é apenas uma opção do diálogo — a ação principal é criar a conta.
 2. Preencha o formulário:
    - **Nome de Exibição** (obrigatório): O nome completo do usuário
    - **E-mail** (obrigatório): O endereço de e-mail que eles usarão para fazer login
    - **Senha** (opcional): Se deixado em branco e o SSO estiver desabilitado, o usuário recebe um e-mail com um link de configuração de senha. Se o SSO estiver habilitado, o usuário pode entrar pelo provedor SSO sem senha
    - **Papel**: Selecione o papel a atribuir (Admin, Membro, Visualizador ou qualquer papel personalizado)
    - **Enviar e-mail de convite**: Marque para enviar uma notificação por e-mail ao usuário com instruções de login
-3. Clique em **Convidar Usuário** para criar a conta
+3. Clique em **Criar usuário** para criar a conta.
 
 **O que acontece nos bastidores:**
 - Uma conta de usuário é criada no sistema

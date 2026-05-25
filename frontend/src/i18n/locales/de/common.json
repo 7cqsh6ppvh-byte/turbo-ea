@@ -97,6 +97,7 @@
   "time.hoursAgo": "vor {{count}} Std.",
   "time.daysAgo": "vor {{count}} T.",
   "fieldTypes.text": "Text",
+  "fieldTypes.multilineText": "Mehrzeiliger Text",
   "fieldTypes.number": "Zahl",
   "fieldTypes.cost": "Kosten",
   "fieldTypes.boolean": "Wahrheitswert",

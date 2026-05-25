@@ -178,6 +178,32 @@ async def test_bulk_unknown_relation_type_fails_row(client, db, rel_env):
     assert "Unknown relation type" in (body["results"][0]["error"] or "")
 
 
+async def test_bulk_dry_run_validates_without_persisting(client, db, rel_env):
+    """Dry-run preview used by the MCP `upsert_relations_bulk` tool:
+    every validator runs, but nothing persists."""
+    admin = rel_env["admin"]
+    payload = {
+        "operations": [
+            {
+                "row_index": 1,
+                "action": "upsert",
+                "type": "app_to_itc",
+                "source": {"id": str(rel_env["app1"].id)},
+                "target": {"id": str(rel_env["itc1"].id)},
+            }
+        ],
+        "dry_run": True,
+    }
+    resp = await client.post("/api/v1/relations/bulk", json=payload, headers=auth_headers(admin))
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["dry_run"] is True
+    assert body["upserted"] == 1  # would-be-upserted
+    # No relation actually persisted.
+    rows = await db.execute(select(Relation).where(Relation.type == "app_to_itc"))
+    assert list(rows.scalars().all()) == []
+
+
 async def test_bulk_viewer_forbidden(client, db, rel_env):
     viewer = rel_env["viewer"]
     payload = {

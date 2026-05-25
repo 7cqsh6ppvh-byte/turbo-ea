@@ -83,6 +83,11 @@ export default function CardDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteSaving, setFavoriteSaving] = useState(false);
 
+  // Observer self-assignment (one-click "Observe this card")
+  const [isObserver, setIsObserver] = useState(false);
+  const [observerRoleAvailable, setObserverRoleAvailable] = useState(false);
+  const [observeSaving, setObserveSaving] = useState(false);
+
   // Inline title editing
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -169,6 +174,20 @@ export default function CardDetail() {
       .get<{ id: string; card_id: string }[]>("/favorites")
       .then((favs) => setIsFavorite(favs.some((f) => f.card_id === id)))
       .catch(() => setIsFavorite(false));
+
+    // Observe state + whether the Observer role exists on this card type.
+    api
+      .get<{ is_observer: boolean; observer_role_available: boolean }>(
+        `/cards/${id}/me/observe`,
+      )
+      .then((r) => {
+        setIsObserver(r.is_observer);
+        setObserverRoleAvailable(r.observer_role_available);
+      })
+      .catch(() => {
+        setIsObserver(false);
+        setObserverRoleAvailable(false);
+      });
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleFavorite = async () => {
@@ -186,6 +205,27 @@ export default function CardDetail() {
       // best effort
     } finally {
       setFavoriteSaving(false);
+    }
+  };
+
+  const toggleObserve = async () => {
+    if (!id || observeSaving) return;
+    setObserveSaving(true);
+    try {
+      if (isObserver) {
+        await api.delete(`/cards/${id}/me/observe`);
+        setIsObserver(false);
+        setSnack(t("cards:actions.observeRemoved"));
+      } else {
+        await api.post(`/cards/${id}/me/observe`, undefined);
+        setIsObserver(true);
+        setSnack(t("cards:actions.observeAdded"));
+      }
+    } catch {
+      // best effort — most likely the Observer role was archived between
+      // page load and click; the menu item will re-hide on next reload.
+    } finally {
+      setObserveSaving(false);
     }
   };
 
@@ -622,6 +662,28 @@ export default function CardDetail() {
                   : t("cards:actions.addToFavorites")}
               </ListItemText>
             </MenuItem>
+            {(observerRoleAvailable || isObserver) && (
+              <MenuItem
+                onClick={() => {
+                  setActionsMenuAnchor(null);
+                  toggleObserve();
+                }}
+                disabled={observeSaving}
+              >
+                <ListItemIcon>
+                  <MaterialSymbol
+                    icon={isObserver ? "visibility" : "visibility_off"}
+                    size={20}
+                    color={isObserver ? "#1976d2" : "#ccc"}
+                  />
+                </ListItemIcon>
+                <ListItemText>
+                  {isObserver
+                    ? t("cards:actions.stopObserving")
+                    : t("cards:actions.observe")}
+                </ListItemText>
+              </MenuItem>
+            )}
             {!isArchived && perms.can_archive && (
               <MenuItem onClick={() => { setActionsMenuAnchor(null); setArchiveDialogOpen(true); }}>
                 <ListItemIcon>

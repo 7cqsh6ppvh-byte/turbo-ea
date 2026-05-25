@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/api/client";
 
-const DEFAULT_APP_TITLE = "Turbo EA";
+export const DEFAULT_APP_TITLE = "Turbo EA";
 
 let _cache: string | null = null;
 let _inflight: Promise<void> | null = null;

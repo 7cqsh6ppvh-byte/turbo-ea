@@ -97,6 +97,7 @@
   "time.hoursAgo": "{{count}}h atrás",
   "time.daysAgo": "{{count}}d atrás",
   "fieldTypes.text": "Texto",
+  "fieldTypes.multilineText": "Texto multilinha",
   "fieldTypes.number": "Número",
   "fieldTypes.cost": "Custo",
   "fieldTypes.boolean": "Booleano",

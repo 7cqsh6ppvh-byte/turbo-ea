@@ -28,6 +28,12 @@ class UserCreate(BaseModel):
     password: str | None = None
     role: str = "member"
     send_email: bool = False
+    # Optional — when set, forces the auth provider on the new user.
+    # When None, falls back to the legacy heuristic (local iff a password is
+    # supplied). The import flow forwards the auth_provider column so a row
+    # explicitly tagged «local» (with a password) lands as a local account
+    # even in SSO-enabled tenants, and vice versa (#584 follow-up).
+    auth_provider: Literal["local", "sso"] | None = None
 
 
 class UserUpdate(BaseModel):
@@ -465,28 +471,54 @@ async def create_user(
     if existing_inv.scalar_one_or_none():
         raise HTTPException(409, "An invitation for this email already exists")
 
-    # Password is required when SSO is not enabled — local accounts cannot exist
-    # in a pending-setup state (the email-link flow was a footgun: the User row
-    # showed «Pending Setup» and the paired SsoInvitation lingered in the admin
-    # list with no way for the user to actually complete setup). SSO-enabled
-    # mode still allows creating users without a password since they'll
-    # authenticate via SSO.
+    # Decide the auth provider for the new user. When the caller passes an
+    # explicit value (e.g. the import flow forwarding the `auth_provider`
+    # column from the sheet), honour it; otherwise fall back to the legacy
+    # heuristic (local iff a password is supplied).
     sso_cfg = await _get_sso_config(db)
     sso_enabled = sso_cfg.get("enabled", False)
-    if not body.password and not sso_enabled:
-        raise HTTPException(
-            400,
-            "A password is required when creating a local account. "
-            "Enable SSO or set a password for the new user.",
-        )
+
+    if body.auth_provider == "local":
+        auth_provider = "local"
+        if not body.password and not body.send_email:
+            # Local account with no password and no invite — the user has
+            # no way to reach the system. Bulk imports leave the password
+            # column blank by design (passwords don't belong in
+            # spreadsheets) and rely on the welcome email to deliver a
+            # password-setup link instead.
+            raise HTTPException(
+                400,
+                "Local accounts need an invitation email to deliver the "
+                "password-setup link. Tick «send invites» on the import "
+                "step and try again.",
+            )
+    elif body.auth_provider == "sso":
+        auth_provider = "sso"
+        if not sso_enabled:
+            raise HTTPException(
+                400,
+                "Cannot create an SSO account when SSO is disabled. "
+                "Enable SSO in admin settings first.",
+            )
+    else:
+        # Legacy heuristic — no explicit provider passed.
+        if not body.password and not sso_enabled:
+            raise HTTPException(
+                400,
+                "A password is required when creating a local account. "
+                "Enable SSO or set a password for the new user.",
+            )
+        auth_provider = "sso" if not body.password else "local"
 
     pw_hash = hash_password(body.password) if body.password else None
-    # When SSO is enabled and the admin invites without a password, the user
-    # will sign in via SSO. Mark the User as auth_provider="sso" up front so
-    # the SSO callback's "link existing user" branch can attach the
-    # `sso_subject_id` on first sign-in — otherwise the callback would hit
-    # the auth_provider=="local" guard and refuse with 409.
-    auth_provider = "sso" if not body.password else "local"
+
+    # For local accounts created without a password, generate a single-use
+    # setup token. The invite email links to /auth/set-password?token=<...>
+    # so the user picks their own password — the password never has to
+    # travel through an import sheet or the admin's clipboard.
+    from app.api.v1.auth import generate_setup_token
+
+    setup_token = generate_setup_token() if auth_provider == "local" and not body.password else None
 
     u = User(
         email=email,
@@ -494,16 +526,26 @@ async def create_user(
         password_hash=pw_hash,
         role=body.role,
         auth_provider=auth_provider,
+        password_setup_token=setup_token,
     )
     db.add(u)
 
-    # Also create an SSO invitation so SSO login gives the right role
-    sso_inv = SsoInvitation(
-        email=email,
-        role=body.role,
-        invited_by=current_user.id,
-    )
-    db.add(sso_inv)
+    # Create the SsoInvitation row only when the admin actually asked to
+    # send an invite email. The row carries two semantics: (a) it's what
+    # drives the «Invited» chip in the admin grid (and the pending
+    # invitations list that powers the resend-invite UX, #539), and (b)
+    # it's the email→role binding the SSO callback consults *only when no
+    # User row exists yet*. The create_user path always creates the User
+    # row with the role baked in above, so the SSO callback's «link
+    # existing user» branch uses `user.role` directly — no SsoInvitation
+    # needed for role binding in this scenario (#584).
+    if body.send_email:
+        sso_inv = SsoInvitation(
+            email=email,
+            role=body.role,
+            invited_by=current_user.id,
+        )
+        db.add(sso_inv)
 
     await db.commit()
     await db.refresh(u)
@@ -516,20 +558,11 @@ async def create_user(
     if body.send_email:
         from app.services.email_service import _get_app_title, send_notification_email
 
-        app_title = _get_app_title()
-        invite_title = f"You've been invited to {app_title}"
-
-        if sso_enabled:
-            invite_message = (
-                f"You have been invited to join {app_title}. Click the button below to sign in."
-            )
-        else:
-            invite_message = (
-                f"You have been invited to join {app_title}. "
-                "A password has been set for your account. "
-                "Click the button below to sign in."
-            )
-        invite_link = "/"
+        invite_title, invite_message, invite_link = _build_invite_email(
+            app_title=_get_app_title(),
+            setup_token=u.password_setup_token,
+            sso_enabled=sso_enabled,
+        )
 
         try:
             sent = await send_notification_email(

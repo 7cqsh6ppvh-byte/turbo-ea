@@ -100,7 +100,14 @@ _oidc_discovery_cache: dict[str, dict] = {}
 
 def _get_jwks_client(jwks_url: str) -> PyJWKClient:
     if jwks_url not in _jwks_clients:
-        _jwks_clients[jwks_url] = PyJWKClient(jwks_url, cache_keys=True)
+        # PyJWKClient defaults to stdlib urllib, whose `Python-urllib/x.y`
+        # User-Agent is blocked with 403 by many WAFs (Cloudflare bot
+        # protection in particular) sitting in front of OIDC providers.
+        _jwks_clients[jwks_url] = PyJWKClient(
+            jwks_url,
+            cache_keys=True,
+            headers={"User-Agent": "turbo-ea/jwks-client"},
+        )
     return _jwks_clients[jwks_url]
 
 

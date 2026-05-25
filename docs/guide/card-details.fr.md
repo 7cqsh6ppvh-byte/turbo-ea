@@ -14,7 +14,7 @@ Le haut de la fiche affiche :
 - **Badge de statut d'approbation** -- Brouillon, Approuvé, Cassé ou Rejeté
 - **Bouton de suggestion IA** -- Cliquez pour générer une description avec l'IA (visible lorsque l'IA est activée pour ce type de fiche et que l'utilisateur a la permission de modification)
 - **Anneau de qualité des données** -- Indicateur visuel de complétude des informations (0-100%)
-- **Menu d'actions** -- Archiver, supprimer et actions d'approbation
+- **Menu d'actions** -- Archiver, supprimer et actions d'approbation. Contient aussi une option en un clic **Observer cette fiche** (lorsque le type de fiche définit un rôle Observateur) qui permet à tout utilisateur disposant d'un accès en lecture de suivre la fiche sans passer par l'onglet Parties prenantes.
 
 ### Workflow d'approbation
 
@@ -57,6 +57,7 @@ Chaque phase dispose d'un **sélecteur de date** pour enregistrer quand le compo
 Selon le type de fiche, vous verrez des sections supplémentaires avec des **champs personnalisés** configurés dans le métamodèle. Les types de champs incluent :
 
 - **Texte** -- Saisie de texte libre
+- **Texte multiligne** -- Saisie de texte libre qui préserve les retours à la ligne, affichée comme une zone de texte à hauteur automatique
 - **Nombre** -- Valeur numérique
 - **Coût** -- Valeur numérique affichée avec la devise configurée de la plateforme
 - **Booléen** -- Interrupteur marche/arrêt

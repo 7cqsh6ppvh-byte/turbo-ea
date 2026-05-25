@@ -19,8 +19,8 @@ export interface ParsedUserRow {
   email: string;
   display_name: string;
   role: string;
-  password?: string;
   locale?: string;
+  auth_provider?: "local" | "sso";
   existing?: User;
   changes?: Record<string, { old: unknown; new: unknown }>;
 }
@@ -135,8 +135,33 @@ export function validateUserImport(
       return;
     }
 
-    const password = s(raw.password) || undefined;
     const locale = s(raw.locale) || undefined;
+
+    // Optional `auth_provider` column from the export sheet. When set,
+    // forwards to the backend so a row tagged «local» lands as a local
+    // account even in SSO-enabled tenants (and vice versa). Empty cells
+    // fall back to the backend's heuristic. Passwords are intentionally
+    // NOT accepted from the sheet — local accounts receive a setup-link
+    // invite email and the user picks their own password.
+    if (s(raw.password)) {
+      warnings.push({
+        row: rowNum,
+        column: "password",
+        message: `Row ${rowNum}: password column is ignored — local users set their own password via the invite email`,
+      });
+    }
+    const providerRaw = s(raw.auth_provider).toLowerCase();
+    let authProvider: "local" | "sso" | undefined;
+    if (providerRaw === "local" || providerRaw === "sso") {
+      authProvider = providerRaw;
+    } else if (providerRaw) {
+      errors.push({
+        row: rowNum,
+        column: "auth_provider",
+        message: `Row ${rowNum}: auth_provider must be 'local' or 'sso' (got '${providerRaw}')`,
+      });
+      return;
+    }
 
     const existing = usersByEmail.get(email);
 
@@ -155,9 +180,6 @@ export function validateUserImport(
       if (isActiveRaw !== null && existing.is_active !== isActiveRaw) {
         changes.is_active = { old: existing.is_active, new: isActiveRaw };
       }
-      if (password) {
-        changes.password = { old: "••••••", new: "••••••" };
-      }
       if (Object.keys(changes).length === 0) {
         // No-op update — drop the row but mention it as a warning so the
         // admin can see we noticed it.
@@ -173,7 +195,6 @@ export function validateUserImport(
         email,
         display_name: displayName,
         role,
-        password,
         locale,
         existing,
         changes,
@@ -184,8 +205,8 @@ export function validateUserImport(
         email,
         display_name: displayName,
         role,
-        password,
         locale,
+        auth_provider: authProvider,
       });
     }
   });
@@ -226,9 +247,9 @@ export async function executeUserImport(
       const created = await api.post<UserCreateResponse>("/users", {
         email: row.email,
         display_name: row.display_name,
-        password: row.password || null,
         role: row.role,
         send_email: sendInvites,
+        ...(row.auth_provider ? { auth_provider: row.auth_provider } : {}),
       });
       result.created++;
       if (sendInvites && created.email_error) {
@@ -259,7 +280,6 @@ export async function executeUserImport(
     if (row.changes?.is_active !== undefined) {
       payload.is_active = row.changes.is_active.new;
     }
-    if (row.password) payload.password = row.password;
 
     try {
       await api.patch(`/users/${row.existing.id}`, payload);

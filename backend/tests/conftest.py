@@ -168,6 +168,13 @@ async def app(db):
     test_app = FastAPI()
     test_app.state.limiter = limiter
     test_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Mirror the production origin-tracking middleware so tests can verify
+    # the audit log tags `X-Turbo-EA-Origin: mcp` writes correctly.
+    from app.main import capture_request_origin
+
+    test_app.middleware("http")(capture_request_origin)
+
     test_app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
     async def _override_get_db():

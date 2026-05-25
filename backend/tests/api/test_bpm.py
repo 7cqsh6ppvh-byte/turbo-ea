@@ -5,7 +5,10 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from sqlalchemy import select
 
+from app.models.process_diagram import ProcessDiagram
+from app.models.process_element import ProcessElement
 from tests.conftest import (
     auth_headers,
     create_card,
@@ -214,3 +217,194 @@ class TestProcessAssessments:
             headers=auth_headers(admin),
         )
         assert resp.status_code == 404
+
+
+_MINIMAL_BPMN = """<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="Defs" targetNamespace="http://example.com/bpmn">
+  <bpmn:process id="P1" isExecutable="true">
+    <bpmn:startEvent id="Start1" name="Start" />
+    <bpmn:task id="T1" name="Pick item" />
+    <bpmn:endEvent id="End1" name="Done" />
+  </bpmn:process>
+</bpmn:definitions>
+"""
+
+
+class TestSaveDiagramDryRun:
+    """Dry-run path used by the MCP `import_bpmn` tool."""
+
+    async def test_dry_run_parses_but_does_not_persist(self, client, db, bpm_env):
+        admin = bpm_env["admin"]
+        process = bpm_env["process"]
+        resp = await client.put(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            json={"bpmn_xml": _MINIMAL_BPMN, "dry_run": True},
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["dry_run"] is True
+        # The parser ran and extracted elements.
+        assert body["element_count"] >= 1
+        # …but nothing persisted.
+        diagrams = (
+            (
+                await db.execute(
+                    select(ProcessDiagram).where(ProcessDiagram.process_id == process.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        elements = (
+            (
+                await db.execute(
+                    select(ProcessElement).where(ProcessElement.process_id == process.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert diagrams == []
+        assert elements == []
+
+    async def test_collaboration_bpmn_with_di_round_trips_intact(self, client, db, bpm_env):
+        """Regression for the «diagram doesn't render» MCP report: a BPMN
+        with `<collaboration>`, `<participant>`, lanes and `<bpmndi:>`
+        sections must round-trip byte-for-byte. The save_diagram handler
+        is supposed to store the XML verbatim and never rewrite the DI
+        plane — if rendering fails downstream it's a frontend problem,
+        not a backend mangling problem. The response must also surface
+        `diagram_id`, `flow_nodes_extracted` and `bpmn_xml_bytes`."""
+        admin = bpm_env["admin"]
+        process = bpm_env["process"]
+        bpmn = """<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Defs_1" targetNamespace="http://example.com/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Sales" processRef="Process_1"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_1" name="Rep">
+        <bpmn:flowNodeRef>Start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_1" name="Begin"/>
+    <bpmn:task id="Task_1" name="Do work"/>
+    <bpmn:endEvent id="End_1" name="Done"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_1" targetRef="Task_1"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="End_1"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_1">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="600" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_1_di" bpmnElement="Start_1">
+        <dc:Bounds x="220" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_1_di" bpmnElement="Task_1">
+        <dc:Bounds x="320" y="138" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_1_di" bpmnElement="End_1">
+        <dc:Bounds x="480" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="256" y="178"/>
+        <di:waypoint x="320" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="420" y="178"/>
+        <di:waypoint x="480" y="178"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+"""
+        save_resp = await client.put(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            json={"bpmn_xml": bpmn, "dry_run": False},
+            headers=auth_headers(admin),
+        )
+        assert save_resp.status_code == 200, save_resp.text
+        save_body = save_resp.json()
+        assert save_body["diagram_id"]  # not None / empty
+        # Flow-nodes extracted = startEvent + task + endEvent = 3.
+        # Sequence flows, lanes, BPMNDI shapes are intentionally NOT counted.
+        assert save_body["flow_nodes_extracted"] == 3
+        assert save_body["bpmn_xml_bytes"] == len(bpmn)
+        # Round-trip: the saved XML must be byte-for-byte identical.
+        get_resp = await client.get(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            headers=auth_headers(admin),
+        )
+        assert get_resp.status_code == 200
+        assert get_resp.json()["bpmn_xml"] == bpmn
+
+    async def test_business_process_card_accepts_description_via_bulk(self, client, db, bpm_env):
+        """Regression for the empty-card report: a BusinessProcess card
+        created via /cards/bulk-create with a `description` field must
+        land with that description set on the card row, exactly like any
+        other card type. The BPMN flow does not change card-level
+        description semantics; description is a top-level column on
+        `cards`, not a per-type attribute."""
+        from sqlalchemy import select
+
+        from app.models.card import Card
+
+        admin = bpm_env["admin"]
+        payload = {
+            "cards": [
+                {
+                    "row_index": 0,
+                    "type": "BusinessProcess",
+                    "name": "Procure to Pay",
+                    "description": "End-to-end procurement workflow.",
+                    "attributes": {"processType": "Core"},
+                }
+            ]
+        }
+        resp = await client.post(
+            "/api/v1/cards/bulk-create", json=payload, headers=auth_headers(admin)
+        )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["created"] == 1
+        cid = body["results"][0]["id"]
+        card = (await db.execute(select(Card).where(Card.id == uuid.UUID(cid)))).scalar_one()
+        assert card.description == "End-to-end procurement workflow."
+        assert card.attributes.get("processType") == "Core"
+
+    async def test_commit_persists_after_dry_run(self, client, db, bpm_env):
+        admin = bpm_env["admin"]
+        process = bpm_env["process"]
+        # Dry-run first.
+        await client.put(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            json={"bpmn_xml": _MINIMAL_BPMN, "dry_run": True},
+            headers=auth_headers(admin),
+        )
+        # Then commit.
+        resp = await client.put(
+            f"/api/v1/bpm/processes/{process.id}/diagram",
+            json={"bpmn_xml": _MINIMAL_BPMN, "dry_run": False},
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 200
+        assert resp.json()["dry_run"] is False
+        rows = (
+            (
+                await db.execute(
+                    select(ProcessDiagram).where(ProcessDiagram.process_id == process.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert len(rows) == 1

@@ -114,10 +114,6 @@ export default function AppLayout({ children, user, onLogout }: Props) {
   const { mode, toggleMode } = useThemeMode();
   const appTitle = useAppTitle();
 
-  useEffect(() => {
-    document.title = appTitle;
-  }, [appTitle]);
-
   // Permission check helper
   const can = useCallback(
     (permission: string): boolean => {

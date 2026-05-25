@@ -31,16 +31,16 @@ Une barre latérale à deux onglets (**Filtres** et **Colonnes**) se trouve à g
 
 L'état des filtres, les colonnes visibles, la largeur de la barre latérale et son état réduit sont persistés **par utilisateur** dans `localStorage` sous la clé `turboea_usersAdmin` — ils survivent aux déconnexions et aux rechargements de page.
 
-#### Inviter un nouvel utilisateur
+#### Créer un utilisateur
 
-1. Cliquez sur le bouton **Inviter un utilisateur** (en haut à droite)
+1. Cliquez sur le bouton **Créer un utilisateur** (en haut à droite). L'envoi d'un e-mail d'invitation n'est qu'une option du dialogue — l'action principale est la création du compte.
 2. Remplissez le formulaire :
    - **Nom d'affichage** (obligatoire) : Le nom complet de l'utilisateur
    - **E-mail** (obligatoire) : L'adresse e-mail qu'il utilisera pour se connecter
    - **Mot de passe** (optionnel) : Si laissé vide et que le SSO est désactivé, l'utilisateur reçoit un e-mail avec un lien de configuration du mot de passe. Si le SSO est activé, l'utilisateur peut se connecter via son fournisseur SSO sans mot de passe
    - **Rôle** : Sélectionnez le rôle à attribuer (Admin, Membre, Lecteur, ou tout rôle personnalisé)
    - **Envoyer un e-mail d'invitation** : Cochez cette case pour envoyer une notification par e-mail à l'utilisateur avec les instructions de connexion
-3. Cliquez sur **Inviter l'utilisateur** pour créer le compte
+3. Cliquez sur **Créer un utilisateur** pour créer le compte.
 
 **Ce qui se passe en arrière-plan :**
 - Un compte utilisateur est créé dans le système

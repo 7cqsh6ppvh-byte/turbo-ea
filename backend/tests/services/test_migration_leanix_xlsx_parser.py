@@ -4,7 +4,7 @@ The tests build small synthetic workbooks in-memory (never real
 customer data) and assert that the dynamic columns LeanIX's export
 emits — ``lifecycle:<phase>``, ``tags:<group>``,
 ``subscriptions:<roleType>[:<roleName>]`` — translate cleanly into the
-shared :class:`LeanixSnapshot` dataclass.
+shared :class:`MigrationSnapshot` dataclass.
 """
 
 from __future__ import annotations
@@ -14,7 +14,11 @@ from io import BytesIO
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
 
-from app.services.leanix_xlsx_parser import is_xlsx_payload, parse_xlsx, parse_xlsx_path
+from app.services.migration.sources.leanix.xlsx_parser import (
+    is_xlsx_payload,
+    parse_xlsx,
+    parse_xlsx_path,
+)
 
 
 def _write_sheet(wb: Workbook, name: str, rows: list[list]) -> None:
@@ -294,11 +298,11 @@ def test_xlsx_detection_by_magic_bytes() -> None:
 def test_parses_factsheets_with_dynamic_columns() -> None:
     snap = parse_xlsx(_to_stream(_minimal_workbook()))
     assert snap.version == "xlsx"
-    assert len(snap.fact_sheets) == 3
-    apps = [fs for fs in snap.fact_sheets if fs.type == "Application"]
+    assert len(snap.entities) == 3
+    apps = [fs for fs in snap.entities if fs.type == "Application"]
     assert len(apps) == 1
     fs = apps[0]
-    assert fs.leanix_id == "fs-app-1"
+    assert fs.source_id == "fs-app-1"
     assert fs.name == "Salesforce"
     assert fs.display_name == "Salesforce CRM"
     assert fs.quality_seal == "GREEN"
@@ -316,13 +320,13 @@ def test_parses_factsheets_with_dynamic_columns() -> None:
 
 def test_tags_resolve_via_group_name_lookup() -> None:
     snap = parse_xlsx(_to_stream(_minimal_workbook()))
-    app = next(fs for fs in snap.fact_sheets if fs.type == "Application")
+    app = next(fs for fs in snap.entities if fs.type == "Application")
     # ``tags:Region`` cell was "EMEA, APAC" — expect both ids resolved
     # via the Tags sheet, plus the "Pilot" tag from the second group.
     assert sorted(app.tags) == sorted(["tag-emea", "tag-apac", "tag-pilot"])
     # Tag metadata is exposed at the snapshot level too.
-    assert {t.leanix_id for t in snap.tags} == {"tag-emea", "tag-apac", "tag-pilot"}
-    region = next(t for t in snap.tags if t.leanix_id == "tag-emea")
+    assert {t.source_id for t in snap.tags} == {"tag-emea", "tag-apac", "tag-pilot"}
+    region = next(t for t in snap.tags if t.source_id == "tag-emea")
     assert region.group_name == "Region"
     assert region.group_mode == "MULTIPLE"
     assert region.color == "#1194e0"
@@ -346,7 +350,7 @@ def test_subscriptions_split_per_role_and_dedupe_bare_aggregates() -> None:
 
 def test_child_parent_relation_becomes_parent_id() -> None:
     snap = parse_xlsx(_to_stream(_minimal_workbook()))
-    child = next(fs for fs in snap.fact_sheets if fs.leanix_id == "fs-bc-child")
+    child = next(fs for fs in snap.entities if fs.source_id == "fs-bc-child")
     assert child.parent_id == "fs-bc-parent"
     # The relation itself must NOT be emitted — TEA uses Card.parent_id
     # and the staging layer should not see a duplicate edge.
@@ -431,8 +435,8 @@ def test_relation_endpoints_resolve_by_display_name_and_type() -> None:
     rels = [r for r in snap.relations if r.type == "applicationBusinessCapabilityRelation"]
     assert len(rels) == 1
     rel = rels[0]
-    assert rel.source_id == "fs-app-1"
-    assert rel.target_id == "fs-bc-child"
+    assert rel.from_entity_id == "fs-app-1"
+    assert rel.to_entity_id == "fs-bc-child"
     # Attributes outside the standard relation columns flow through.
     assert rel.attributes == {"technicalSuitability": "appropriate"}
 
@@ -441,13 +445,13 @@ def test_documents_and_comments_resolve_factsheet_by_display_name() -> None:
     snap = parse_xlsx(_to_stream(_minimal_workbook()))
     assert len(snap.documents) == 1
     doc = snap.documents[0]
-    assert doc.fact_sheet_id == "fs-app-1"
+    assert doc.entity_id == "fs-app-1"
     assert doc.url == "https://wiki/runbook"
 
     # Comment + reply both land as flat comments on the same FS.
     bodies = sorted(c.body for c in snap.comments)
     assert bodies == ["First comment", "First reply"]
-    assert all(c.fact_sheet_id == "fs-app-1" for c in snap.comments)
+    assert all(c.entity_id == "fs-app-1" for c in snap.comments)
 
 
 def test_synthesized_metamodel_surfaces_tenant_custom_columns() -> None:
@@ -482,8 +486,8 @@ def test_unknown_factsheet_type_passes_through_for_admin_review() -> None:
         ],
     )
     snap = parse_xlsx(_to_stream(wb))
-    assert len(snap.fact_sheets) == 1
-    assert snap.fact_sheets[0].type == "ESGCapability"
+    assert len(snap.entities) == 1
+    assert snap.entities[0].type == "ESGCapability"
     assert any(t.name == "ESGCapability" for t in snap.metamodel_types)
 
 
@@ -534,14 +538,14 @@ def test_generic_successor_relation_specialised_by_endpoint_type() -> None:
     )
     snap = parse_xlsx(_to_stream(wb))
     # The row must have been promoted to the type-specific form so the
-    # downstream LX_TO_TEA_RELATION mapping can catch it.
+    # downstream LeanIX relation_mapping can catch it.
     rels = [r for r in snap.relations if "uccessor" in r.type]
     assert len(rels) == 1
     assert rels[0].type == "applicationSuccessorRelation"
     # Direction is preserved at parse time — the staging-layer flip is
     # what actually swaps source/target. Parser stays direction-neutral.
-    assert rels[0].source_id == "fs-old"
-    assert rels[0].target_id == "fs-new"
+    assert rels[0].from_entity_id == "fs-old"
+    assert rels[0].to_entity_id == "fs-new"
 
 
 def test_generic_successor_relation_with_mixed_endpoints_left_alone() -> None:
@@ -594,7 +598,7 @@ def test_generic_successor_relation_with_mixed_endpoints_left_alone() -> None:
         ],
     )
     snap = parse_xlsx(_to_stream(wb))
-    mixed = [r for r in snap.relations if r.leanix_id == "rel-mixed"]
+    mixed = [r for r in snap.relations if r.source_id == "rel-mixed"]
     assert len(mixed) == 1
     assert mixed[0].type == "successorRelation"  # untouched
 
@@ -610,4 +614,4 @@ def test_parse_xlsx_path_loads_workbook_regardless_of_extension(tmp_path) -> Non
     wb.save(str(wb_path))
     snap = parse_xlsx_path(str(wb_path))
     assert snap.version == "xlsx"
-    assert len(snap.fact_sheets) == 3
+    assert len(snap.entities) == 3

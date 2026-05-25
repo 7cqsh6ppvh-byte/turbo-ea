@@ -10,10 +10,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
   LinearProgress,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   Tab,
   Table,
@@ -30,15 +34,23 @@ import { useTranslation } from "react-i18next";
 import { api } from "@/api/client";
 import MaterialSymbol from "@/components/MaterialSymbol";
 
-// Phase 1 admin surface for the LeanIX workspace-snapshot importer.
-// Lives under Settings → Migration. Minimal end-to-end flow: pick a
-// LeanIX Full Snapshot xlsx workbook, watch the backend stage it,
-// browse the diff, and apply. Phase-3+ will swap the bare staged-record
-// list for a richer `MetamodelMappingPanel` and per-entity tabs.
+// Admin surface for the platform-migration importer. Lives under
+// Settings → Migration. End-to-end flow: pick a source platform, upload
+// a snapshot, watch the backend stage it, browse the diff, and apply.
+// The source picker is registry-driven (GET /migration/sources) so
+// adding a new adapter on the backend shows up here without a frontend
+// change.
+
+interface SourceInfo {
+  key: string;
+  label: string;
+  accepted_extensions: string[];
+}
 
 interface Migration {
   id: string;
   name: string;
+  source_type: string;
   status: string;
   file_hash: string;
   file_size: number | null;
@@ -55,7 +67,8 @@ interface Migration {
 interface StagedRecord {
   id: string;
   entity_kind: string;
-  leanix_id: string;
+  source_id: string;
+  source_type: string;
   card_type_key: string | null;
   action: string;
   status: string;
@@ -136,6 +149,7 @@ function fmtDate(iso: string | null): string {
 export default function MigrationAdmin() {
   const { t } = useTranslation(["admin", "common"]);
   const [migrations, setMigrations] = useState<Migration[]>([]);
+  const [sources, setSources] = useState<SourceInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -144,9 +158,14 @@ export default function MigrationAdmin() {
   const [activeKind, setActiveKind] = useState<EntityKind>("card");
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const sourceLabel = useCallback(
+    (key: string) => sources.find((s) => s.key === key)?.label || key,
+    [sources],
+  );
+
   const loadList = useCallback(async () => {
     try {
-      const rows = await api.get<Migration[]>("/migration/leanix");
+      const rows = await api.get<Migration[]>("/migration");
       setMigrations(rows);
       setError(null);
     } catch (e) {
@@ -156,9 +175,19 @@ export default function MigrationAdmin() {
     }
   }, []);
 
+  const loadSources = useCallback(async () => {
+    try {
+      const rows = await api.get<SourceInfo[]>("/migration/sources");
+      setSources(rows);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, []);
+
   useEffect(() => {
     loadList();
-  }, [loadList]);
+    loadSources();
+  }, [loadList, loadSources]);
 
   // Active migration polling — when a migration is mid-parse or
   // mid-apply, refresh the row every 3 s so the status moves on its
@@ -181,12 +210,12 @@ export default function MigrationAdmin() {
   }, [migrations, loadList]);
 
   const fetchPreview = useCallback(async (id: string, kind: EntityKind): Promise<PreviewPage> => {
-    return api.get<PreviewPage>(`/migration/leanix/${id}/preview?entity_kind=${kind}&limit=100`);
+    return api.get<PreviewPage>(`/migration/${id}/preview?entity_kind=${kind}&limit=100`);
   }, []);
 
   const refreshSelected = useCallback(async () => {
     if (!selected) return;
-    const m = await api.get<Migration>(`/migration/leanix/${selected.id}`);
+    const m = await api.get<Migration>(`/migration/${selected.id}`);
     setSelected(m);
     setMigrations((prev) => prev.map((row) => (row.id === m.id ? m : row)));
     if (m.status === "parsed" || m.status === "applied" || m.status === "failed") {
@@ -207,11 +236,17 @@ export default function MigrationAdmin() {
     }
   }, [migrations, selected, refreshSelected]);
 
-  const handleUpload = async (file: File, name: string, includeArchived: boolean) => {
+  const handleUpload = async (
+    file: File,
+    name: string,
+    sourceKey: string,
+    includeArchived: boolean,
+  ) => {
     setError(null);
     try {
-      await api.upload("/migration/leanix/upload", file, "file", {
+      await api.upload("/migration/upload", file, "file", {
         name,
+        source_key: sourceKey,
         include_archived: includeArchived ? "true" : "false",
       });
       setUploadOpen(false);
@@ -224,7 +259,7 @@ export default function MigrationAdmin() {
   const handleApply = async (m: Migration) => {
     setError(null);
     try {
-      await api.post<Migration>(`/migration/leanix/${m.id}/apply`);
+      await api.post<Migration>(`/migration/${m.id}/apply`);
       loadList();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -234,7 +269,7 @@ export default function MigrationAdmin() {
   const handleDelete = async (m: Migration) => {
     if (!window.confirm(t("migration.confirmDelete", { name: m.name }))) return;
     try {
-      await api.delete(`/migration/leanix/${m.id}`);
+      await api.delete(`/migration/${m.id}`);
       if (selected?.id === m.id) {
         setSelected(null);
         setPreviews({});
@@ -296,11 +331,16 @@ export default function MigrationAdmin() {
           <Typography variant="body2" color="text.secondary">
             {t(
               "migration.subtitle",
-              "Import a LeanIX workspace snapshot. Phase 1 lands cards; relations, tags, stakeholders and the metamodel diff follow.",
+              "Import a platform snapshot. Supported sources today: SAP LeanIX. Cards, relations, tags, stakeholders, and the metamodel diff all land in one reviewable operation.",
             )}
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<MaterialSymbol icon="upload" />} onClick={() => setUploadOpen(true)}>
+        <Button
+          variant="contained"
+          startIcon={<MaterialSymbol icon="upload" />}
+          onClick={() => setUploadOpen(true)}
+          disabled={sources.length === 0}
+        >
           {t("migration.newButton", "New migration")}
         </Button>
       </Stack>
@@ -316,10 +356,11 @@ export default function MigrationAdmin() {
           <TableHead>
             <TableRow>
               <TableCell>{t("migration.col.name", "Name")}</TableCell>
+              <TableCell>{t("migration.col.source", "Source")}</TableCell>
               <TableCell>{t("migration.col.status", "Status")}</TableCell>
               <TableCell>{t("migration.col.version", "Snapshot")}</TableCell>
               <TableCell align="right">{t("migration.col.size", "Size")}</TableCell>
-              <TableCell align="right">{t("migration.col.factSheets", "Fact sheets")}</TableCell>
+              <TableCell align="right">{t("migration.col.entities", "Entities")}</TableCell>
               <TableCell>{t("migration.col.created", "Uploaded")}</TableCell>
               <TableCell align="right">{t("migration.col.actions", "")}</TableCell>
             </TableRow>
@@ -327,19 +368,32 @@ export default function MigrationAdmin() {
           <TableBody>
             {migrations.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 4 }}>
-                    {t("migration.empty", "No migrations yet. Upload a LeanIX snapshot to get started.")}
+                    {t(
+                      "migration.empty",
+                      "No migrations yet. Upload a platform snapshot to get started.",
+                    )}
                   </Typography>
                 </TableCell>
               </TableRow>
             )}
             {migrations.map((m) => {
               const rowStats = (m.stats ?? {}) as Record<string, unknown>;
-              const factSheetCount = rowStats.fact_sheets as number | undefined;
+              const entityCount =
+                (rowStats.entities as number | undefined) ??
+                (rowStats.fact_sheets as number | undefined);
               return (
-                <TableRow key={m.id} hover sx={{ cursor: "pointer" }} onClick={() => handleOpenDetail(m)}>
+                <TableRow
+                  key={m.id}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleOpenDetail(m)}
+                >
                   <TableCell>{m.name}</TableCell>
+                  <TableCell>
+                    <Chip size="small" label={sourceLabel(m.source_type)} variant="outlined" />
+                  </TableCell>
                   <TableCell>
                     <Chip
                       size="small"
@@ -352,7 +406,7 @@ export default function MigrationAdmin() {
                   </TableCell>
                   <TableCell>{m.snapshot_version || "—"}</TableCell>
                   <TableCell align="right">{fmtBytes(m.file_size)}</TableCell>
-                  <TableCell align="right">{factSheetCount ?? "—"}</TableCell>
+                  <TableCell align="right">{entityCount ?? "—"}</TableCell>
                   <TableCell>{fmtDate(m.created_at)}</TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     {(m.status === "parsed" || m.status === "previewed") && (
@@ -381,18 +435,31 @@ export default function MigrationAdmin() {
         </Table>
       </Paper>
 
-      <UploadDialog open={uploadOpen} onClose={() => setUploadOpen(false)} onSubmit={handleUpload} />
+      <UploadDialog
+        open={uploadOpen}
+        sources={sources}
+        onClose={() => setUploadOpen(false)}
+        onSubmit={handleUpload}
+      />
 
       <Dialog open={!!selected} onClose={() => setSelected(null)} maxWidth="md" fullWidth>
         <DialogTitle>
-          {selected?.name}{" "}
+          {selected?.name}
           {selected && (
-            <Chip
-              size="small"
-              label={selected.status}
-              color={STATUS_COLORS[selected.status] || "default"}
-              sx={{ ml: 1 }}
-            />
+            <>
+              <Chip
+                size="small"
+                label={sourceLabel(selected.source_type)}
+                variant="outlined"
+                sx={{ ml: 1 }}
+              />
+              <Chip
+                size="small"
+                label={selected.status}
+                color={STATUS_COLORS[selected.status] || "default"}
+                sx={{ ml: 1 }}
+              />
+            </>
           )}
         </DialogTitle>
         <DialogContent dividers>
@@ -406,7 +473,13 @@ export default function MigrationAdmin() {
             {t("migration.detail.stats", "Stats")}
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
-            <Chip label={`${(stats.fact_sheets as number | undefined) ?? 0} fact sheets`} />
+            <Chip
+              label={`${
+                (stats.entities as number | undefined) ??
+                (stats.fact_sheets as number | undefined) ??
+                0
+              } entities`}
+            />
             <Chip label={`${(stats.relation_count as number | undefined) ?? 0} relations`} />
             <Chip label={`${(stats.tag_count as number | undefined) ?? 0} tags`} />
           </Stack>
@@ -521,7 +594,7 @@ export default function MigrationAdmin() {
               )) && (
               <Button
                 startIcon={<MaterialSymbol icon="download" />}
-                href={`/api/v1/migration/leanix/${selected.id}/errors.csv`}
+                href={`/api/v1/migration/${selected.id}/errors.csv`}
                 target="_blank"
                 rel="noopener"
               >
@@ -558,7 +631,7 @@ function StagedTable({ rows }: StagedTableProps) {
     <Table size="small">
       <TableHead>
         <TableRow>
-          <TableCell>{t("migration.col.leanixId", "LeanIX ID")}</TableCell>
+          <TableCell>{t("migration.col.sourceId", "Source ID")}</TableCell>
           <TableCell>{t("migration.col.type", "Type")}</TableCell>
           <TableCell>{t("migration.col.action", "Action")}</TableCell>
           <TableCell>{t("migration.col.statusShort", "Status")}</TableCell>
@@ -569,7 +642,7 @@ function StagedTable({ rows }: StagedTableProps) {
         {rows.map((row) => (
           <TableRow key={row.id}>
             <TableCell>
-              <code>{row.leanix_id}</code>
+              <code>{row.source_id}</code>
             </TableCell>
             <TableCell>{row.card_type_key || "—"}</TableCell>
             <TableCell>
@@ -605,14 +678,21 @@ function StagedTable({ rows }: StagedTableProps) {
 
 interface UploadDialogProps {
   open: boolean;
+  sources: SourceInfo[];
   onClose: () => void;
-  onSubmit: (file: File, name: string, includeArchived: boolean) => Promise<void>;
+  onSubmit: (
+    file: File,
+    name: string,
+    sourceKey: string,
+    includeArchived: boolean,
+  ) => Promise<void>;
 }
 
-function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
+function UploadDialog({ open, sources, onClose, onSubmit }: UploadDialogProps) {
   const { t } = useTranslation(["admin", "common"]);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
+  const [sourceKey, setSourceKey] = useState<string>("");
   const [includeArchived, setIncludeArchived] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -622,14 +702,21 @@ function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
       setName("");
       setIncludeArchived(false);
       setSubmitting(false);
+    } else {
+      // Default to the first registered source so single-source installs
+      // (the case today) don't make the user click the picker.
+      setSourceKey((prev) => prev || sources[0]?.key || "");
     }
-  }, [open]);
+  }, [open, sources]);
+
+  const activeSource = sources.find((s) => s.key === sourceKey);
+  const acceptedExts = activeSource?.accepted_extensions.join(",") || ".xlsx";
 
   const handleSubmit = async () => {
-    if (!file || !name) return;
+    if (!file || !name || !sourceKey) return;
     setSubmitting(true);
     try {
-      await onSubmit(file, name, includeArchived);
+      await onSubmit(file, name, sourceKey, includeArchived);
     } finally {
       setSubmitting(false);
     }
@@ -637,15 +724,32 @@ function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t("migration.upload.title", "Import a LeanIX snapshot")}</DialogTitle>
+      <DialogTitle>{t("migration.upload.title", "Import a platform snapshot")}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary">
             {t(
               "migration.upload.help",
-              "Drop a LeanIX Full Snapshot xlsx workbook here (Administration → Export → Full Snapshot in LeanIX). The file stays on disk and is purged when you delete the migration.",
+              "Pick the source platform, then drop the snapshot export. The file stays on disk and is purged when you delete the migration.",
             )}
           </Typography>
+          <FormControl fullWidth>
+            <InputLabel id="migration-source-label">
+              {t("migration.upload.source", "Source platform")}
+            </InputLabel>
+            <Select
+              labelId="migration-source-label"
+              label={t("migration.upload.source", "Source platform")}
+              value={sourceKey}
+              onChange={(e) => setSourceKey(String(e.target.value))}
+            >
+              {sources.map((s) => (
+                <MenuItem key={s.key} value={s.key}>
+                  {s.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             autoFocus
             label={t("migration.upload.name", "Migration label")}
@@ -663,7 +767,7 @@ function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
             <input
               type="file"
               hidden
-              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept={acceptedExts}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </Button>
@@ -681,7 +785,7 @@ function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
             }
             label={t(
               "migration.upload.includeArchived",
-              "Also import LeanIX-archived fact sheets (off by default)",
+              "Also import archived entities (off by default)",
             )}
           />
         </Stack>
@@ -690,7 +794,7 @@ function UploadDialog({ open, onClose, onSubmit }: UploadDialogProps) {
         <Button onClick={onClose}>{t("common.cancel", "Cancel")}</Button>
         <Button
           variant="contained"
-          disabled={!file || !name || submitting}
+          disabled={!file || !name || !sourceKey || submitting}
           onClick={handleSubmit}
         >
           {submitting ? <CircularProgress size={18} /> : t("migration.upload.submit", "Upload")}

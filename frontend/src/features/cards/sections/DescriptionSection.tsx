@@ -161,13 +161,26 @@ function DescriptionSection({
               {card.description || t("description.noDescription")}
             </Typography>
             {extraFields && extraFields.length > 0 && (
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr", rowGap: 1, columnGap: 2, "@container (min-width: 480px)": { gridTemplateColumns: "180px 1fr", alignItems: "center" } }}>
-                {extraFields.map((field) => (
-                  <Box key={field.key} sx={{ display: "contents" }}>
-                    <Typography variant="body2" color="text.secondary">{rl(field.key, field.translations)}</Typography>
-                    <FieldValue field={field} value={(card.attributes || {})[field.key]} currencyFmt={currencyFmt} />
-                  </Box>
-                ))}
+              <Box sx={{ display: "flex", flexDirection: "column", rowGap: 1 }}>
+                {extraFields.map((field) => {
+                  // Multi-line text breaks out of the 180px label column to get full width.
+                  if (field.type === "multiline_text") {
+                    return (
+                      <Box key={field.key}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          {rl(field.key, field.translations)}
+                        </Typography>
+                        <FieldValue field={field} value={(card.attributes || {})[field.key]} currencyFmt={currencyFmt} />
+                      </Box>
+                    );
+                  }
+                  return (
+                    <Box key={field.key} sx={{ display: "grid", gridTemplateColumns: "1fr", columnGap: 2, "@container (min-width: 480px)": { gridTemplateColumns: "180px 1fr", alignItems: "center" } }}>
+                      <Typography variant="body2" color="text.secondary">{rl(field.key, field.translations)}</Typography>
+                      <FieldValue field={field} value={(card.attributes || {})[field.key]} currencyFmt={currencyFmt} />
+                    </Box>
+                  );
+                })}
               </Box>
             )}
           </Box>

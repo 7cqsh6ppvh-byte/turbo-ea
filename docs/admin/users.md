@@ -31,16 +31,16 @@ A two-tab sidebar (**Filters** and **Columns**) sits on the left of the grid:
 
 Filter state, visible columns, the sidebar width and its collapsed state are persisted **per user** in `localStorage` under the `turboea_usersAdmin` key — they survive logouts and page reloads.
 
-#### Inviting a New User
+#### Creating a User
 
-1. Click the **Invite User** button (top right)
+1. Click the **Create user** button (top right). Sending an invitation email is just one option on the dialog — the primary action is creating the account.
 2. Fill in the form:
    - **Display Name** (required): The user's full name
    - **Email** (required): The email address they will use to log in
    - **Password** (optional): If left blank and SSO is disabled, the user receives an email with a password setup link. If SSO is enabled, the user can sign in via their SSO provider without a password
    - **Role**: Select the role to assign (Admin, Member, Viewer, or any custom role)
    - **Send invitation email**: Check this to send an email notification to the user with login instructions
-3. Click **Invite User** to create the account
+3. Click **Create user** to create the account.
 
 **What happens behind the scenes:**
 - A user account is created in the system

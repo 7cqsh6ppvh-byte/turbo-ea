@@ -8,6 +8,9 @@ from pydantic import BaseModel
 class DiagramSave(BaseModel):
     bpmn_xml: str
     svg_thumbnail: str | None = None
+    # When true, parse + validate the BPMN and report the would-be element
+    # count, then roll back. Used by the MCP `import_bpmn` tool's dry-run.
+    dry_run: bool = False
 
 
 class ElementUpdate(BaseModel):

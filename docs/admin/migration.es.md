@@ -1,4 +1,6 @@
-# Migración de plataforma (LeanIX)
+# Migración de plataforma
+
+> Plataformas de origen admitidas hoy: **SAP LeanIX**. Otros adaptadores (Ardoq, Mega HOPEX, BiZZdesign, Avolution Abacus, …) se conectan a la misma canalización de preparación y aplicación, y aparecen automáticamente en el diálogo de carga cuando se entregan.
 
 El importador de migración de plataforma (**Administración → Configuración → Migración**) ingiere un workspace completo de LeanIX y lo deposita como tarjetas, relaciones, etiquetas, partes interesadas, documentos, comentarios y un metamodelo totalmente desarrollado de Turbo EA en una sola operación por etapas, revisable.
 
@@ -61,9 +63,9 @@ El snapshot no contiene lo siguiente — el importador marca lo faltante en la c
 
 ## Reejecución de un import
 
-La idempotencia está incorporada. La tabla `leanix_identity_map` registra la asignación UUID LeanIX → Turbo EA para cada entidad importada. Un re-upload del mismo snapshot (o de un snapshot actualizado del mismo workspace) detecta entidades existentes y escribe filas staged `update`/`skip` en vez de duplicar `create`s. El `external_id` de la tarjeta lleva el `factSheetId` de LeanIX, por lo que el vínculo sobrevive incluso si se borra la identity map.
+La idempotencia está incorporada. La tabla `migration_identity_map` registra la asignación UUID LeanIX → Turbo EA para cada entidad importada. Un re-upload del mismo snapshot (o de un snapshot actualizado del mismo workspace) detecta entidades existentes y escribe filas staged `update`/`skip` en vez de duplicar `create`s. El `external_id` de la tarjeta lleva el `factSheetId` de LeanIX, por lo que el vínculo sobrevive incluso si se borra la identity map.
 
-Si necesita rehacer una importación (p. ej., borró en bloque las tarjetas importadas en la UI y quiere ingresarlas de nuevo), use el icono de papelera en la fila de migración para eliminarla y luego vuelva a cargar. Las migraciones `applied` son eliminables; al borrarlas se libera el lock de idempotencia por hash de archivo, permitiendo volver a cargar el mismo snapshot. Las filas huérfanas de `leanix_identity_map` que apuntan a tarjetas inexistentes se podan automáticamente en la siguiente pasada de staging — nunca se requiere limpieza manual del mapa de identidad.
+Si necesita rehacer una importación (p. ej., borró en bloque las tarjetas importadas en la UI y quiere ingresarlas de nuevo), use el icono de papelera en la fila de migración para eliminarla y luego vuelva a cargar. Las migraciones `applied` son eliminables; al borrarlas se libera el lock de idempotencia por hash de archivo, permitiendo volver a cargar el mismo snapshot. Las filas huérfanas de `migration_identity_map` que apuntan a tarjetas inexistentes se podan automáticamente en la siguiente pasada de staging — nunca se requiere limpieza manual del mapa de identidad.
 
 ## Permiso
 

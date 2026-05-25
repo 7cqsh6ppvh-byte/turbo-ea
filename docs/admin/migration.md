@@ -1,10 +1,22 @@
-# Platform Migration (LeanIX)
+# Platform Migration
 
-The platform-migration importer (**Admin → Settings → Migration**) ingests a complete LeanIX workspace and lands it as Turbo EA cards, relations, tags, stakeholders, documents, comments, and a fully-fleshed-out metamodel in one staged, reviewable operation.
+The platform-migration importer (**Admin → Settings → Migration**) ingests a complete enterprise-architecture workspace from a supported source platform and lands it as Turbo EA cards, relations, tags, stakeholders, documents, comments, and a fully-fleshed-out metamodel in one staged, reviewable operation.
+
+## Supported sources
+
+| Source | Format |
+|---|---|
+| **SAP LeanIX** | Full Snapshot xlsx workbook (Administration → Export → Full Snapshot) |
+
+Additional source platforms (Ardoq, Mega HOPEX, BiZZdesign, Avolution Abacus, …) plug into the same staging + apply pipeline via per-source adapters. When a new adapter ships, it appears automatically in the **Source platform** picker on the upload dialog with no admin configuration required.
 
 ## Who is this for?
 
-Customers moving from LeanIX (SAP LeanIX) to Turbo EA. The importer accepts the LeanIX **Full Snapshot** xlsx workbook — the multi-sheet export with one sheet per fact-sheet type, one sheet per relation type, plus `TagGroups`, `Tags`, `Documents`, `Comments`, `Types`, and a `ReadMe` reference sheet. Non-xlsx uploads are rejected at the upload step with a clear error.
+Customers moving from one of the supported source platforms to Turbo EA. Each source has its own adapter that translates the source's native shape (fact sheets / components / objects / elements …) into Turbo EA cards.
+
+### LeanIX
+
+The LeanIX adapter accepts the **Full Snapshot** xlsx workbook — the multi-sheet export with one sheet per fact-sheet type, one sheet per relation type, plus `TagGroups`, `Tags`, `Documents`, `Comments`, `Types`, and a `ReadMe` reference sheet. Files that fail the adapter's payload check are rejected at the upload step with a clear error.
 
 ## How to obtain the export
 
@@ -14,7 +26,7 @@ In LeanIX, open **Administration → Export → Full Snapshot**. This produces a
 
 ## The workflow
 
-1. **Upload** the snapshot at **Settings → Migration → New migration**. The file stays on the server's disk; the database only holds metadata. Parsing runs in the background and the status moves through `uploaded → parsed` automatically.
+1. **Upload** the snapshot at **Settings → Migration → New migration**. Pick the source platform (LeanIX is the only option today), give the migration a label, and attach the snapshot file. The file stays on the server's disk; the database only holds metadata. Parsing runs in the background and the status moves through `uploaded → parsed` automatically.
 
 2. **Review** each entity kind in the per-tab view. Every staged row carries an action:
     - `create` — will be added to Turbo EA
@@ -61,9 +73,9 @@ The snapshot does not carry these — the importer surfaces what is missing in t
 
 ## Re-running an import
 
-Idempotency is built in. The `leanix_identity_map` table records the LeanIX → Turbo EA UUID for every entity that has been imported. A re-upload of the same snapshot (or an updated snapshot from the same workspace) detects existing entities and writes `update` / `skip` staged rows rather than duplicate `create`s. The card's `external_id` carries the LeanIX `factSheetId` so the link survives even if the identity map is wiped.
+Idempotency is built in. The `migration_identity_map` table records the source-side → Turbo EA UUID for every entity that has been imported (keyed by `(source_id, entity_kind, source_type)` so the same external id can legitimately exist in imports from two different sources). A re-upload of the same snapshot (or an updated snapshot from the same workspace) detects existing entities and writes `update` / `skip` staged rows rather than duplicate `create`s. The card's `external_id` carries the source-side id (LeanIX `factSheetId`, Ardoq component id, …) so the link survives even if the identity map is wiped.
 
-If you need to redo an import (e.g. you bulk-deleted the imported cards in the UI and want to land them fresh), use the trash icon on the migration row to delete it, then re-upload. `applied` migrations are deletable; doing so releases the file-hash idempotency lock so the same snapshot can be uploaded again. Dangling `leanix_identity_map` rows that point at cards that no longer exist are auto-pruned on the next staging pass, so a manual cleanup of the identity map is never required.
+If you need to redo an import (e.g. you bulk-deleted the imported cards in the UI and want to land them fresh), use the trash icon on the migration row to delete it, then re-upload. `applied` migrations are deletable; doing so releases the `(file_hash, source_type)` idempotency lock so the same snapshot can be uploaded again. Dangling `migration_identity_map` rows that point at cards that no longer exist are auto-pruned on the next staging pass, so a manual cleanup of the identity map is never required.
 
 ## Permission
 
@@ -71,7 +83,7 @@ This page is gated by the `admin.migrate` permission. Only the **admin** role ho
 
 ## Limitations to plan for
 
-- **One in-progress migration per file hash.** Re-uploading the exact same bytes while a migration for that hash is still active returns the existing migration record (the SHA-256 hash is the natural idempotency key). Delete the migration record first if you really want a fresh ingest of the same file.
+- **One in-progress migration per `(file_hash, source_type)` pair.** Re-uploading the exact same bytes for the same source while a migration is still active returns the existing migration record (the SHA-256 hash + source key is the natural idempotency key). Delete the migration record first if you really want a fresh ingest of the same file. Uploading the same hash under a different source key (if you ever do) lands as a separate migration.
 - **Large workspaces** (10k+ fact sheets): the parser is streaming, but the apply pipeline writes rows in one transaction per pass. Plan ~15 minutes for very large imports.
 - **Custom fields, values, and tags are tolerated, not pre-mapped.** Any LeanIX column that isn't in Turbo EA's built-in metamodel lands on the imported card's `attributes` map verbatim and is surfaced in the **Custom fields** tab so an admin can promote it. Same for tenant-defined tag groups and for relation types LeanIX customers have added (e.g. `lxSystemSystem*`, `*Lx*Dora*`, `microservice*`, `eSGCapability*`) — they appear in the **New types** / **New relations** tabs unchanged, ready for an admin decision.
 

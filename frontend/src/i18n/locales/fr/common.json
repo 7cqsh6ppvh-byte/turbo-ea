@@ -97,6 +97,7 @@
   "time.hoursAgo": "il y a {{count}} h",
   "time.daysAgo": "il y a {{count}} j",
   "fieldTypes.text": "Texte",
+  "fieldTypes.multilineText": "Texte multiligne",
   "fieldTypes.number": "Nombre",
   "fieldTypes.cost": "Coût",
   "fieldTypes.boolean": "Booléen",

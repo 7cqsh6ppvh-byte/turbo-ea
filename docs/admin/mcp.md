@@ -1,6 +1,6 @@
 # MCP Integration (AI Tool Access)
 
-Turbo EA includes a built-in **MCP server** (Model Context Protocol) that allows AI tools — such as Claude Desktop, GitHub Copilot, Cursor, and VS Code — to query your EA data directly. Users authenticate through your existing SSO provider, and every query respects their individual permissions.
+Turbo EA includes a built-in **MCP server** (Model Context Protocol) that allows AI tools — such as Claude Desktop, GitHub Copilot, Cursor, and VS Code — to query and update your EA data directly. AI tools can also upload artifacts (spreadsheets, BPMN diagrams, DrawIO diagrams, freeform documents) and turn them into cards, relations and diagrams that fit the existing metamodel. Users authenticate through your existing SSO provider, and every action respects their individual permissions.
 
 This feature is **optional** and **does not start automatically**. It requires SSO to be configured, the MCP profile to be activated in Docker Compose, and an admin to toggle it on in the settings UI.
 
@@ -155,11 +155,15 @@ In this mode, the server authenticates with email/password and refreshes the tok
 
 ## Available Capabilities
 
-The MCP server provides **read-only** access to EA data. It cannot create, modify, or delete anything.
+The MCP server exposes **30 tools** across two groups: **25 read tools** that query EA data and **5 write tools** that turn artifacts an AI tool has in its own context (spreadsheets, BPMN XML, DrawIO XML, documents, images) into cards, relations and diagrams.
 
-### Tools
+### Dry-run safety on writes
 
-The server exposes 25 read-only tools grouped into six clusters.
+Every write tool defaults to **`dry_run=true`**. In this mode the backend runs every validator and resolver, builds the complete plan, then **rolls back the transaction** so nothing is persisted. The AI tool returns the preview to the user; only after explicit confirmation should it call the tool again with `dry_run=false` to commit. This prevents an enthusiastic agent from quietly seeding hundreds of cards on a misinterpreted spreadsheet.
+
+### Read tools
+
+The server exposes 25 read tools grouped into six clusters.
 
 **Cards & metamodel**
 
@@ -223,6 +227,45 @@ The server exposes 25 read-only tools grouped into six clusters.
 
 All tools are bound by the authenticated user's RBAC — a viewer will simply get an empty list (or 403) for areas they cannot see; nothing on the MCP layer needs configuring per tool.
 
+### Write tools — artifact upload
+
+Five tools let an AI agent turn artifacts into structured EA data. The agent reads the source file from its own context (multimodal vision, file attachments), extracts structured rows, and calls these tools. The MCP server itself never parses files — it expects already-structured input.
+
+| Tool | Description |
+|------|-------------|
+| `create_cards_bulk` | Create many cards in one call (e.g. spreadsheet rows). Supports same-batch parent references by name with server-side topological sort. |
+| `resolve_card_refs` | Pre-validate name-based references before a bulk import — useful for surfacing ambiguous or missing parents to the user. |
+| `upsert_relations_bulk` | Create or delete relations between cards. Source / target / type are validated against the metamodel. |
+| `create_diagram` | Create a free-form DrawIO diagram with optional links to existing cards. |
+| `import_bpmn` | Save a BPMN 2.0 XML diagram against an **existing** Business Process card. If no card matches the given name, the tool returns a `card_not_found` error pointing the agent at `create_cards_bulk` — this forces the agent to create the card explicitly with description, subtype and attributes first, instead of taking a shortcut that lands a sparse card. |
+
+Typical workflow when a user shares a spreadsheet with the AI agent:
+
+1. The agent calls `list_card_types` and `get_relation_types` to understand the metamodel.
+2. The agent parses the spreadsheet (in its own context, not in MCP) and builds row dicts.
+3. The agent calls `create_cards_bulk(cards=…, dry_run=True)` and shows the preview to the user.
+4. The user confirms; the agent calls again with `dry_run=False` to commit.
+5. If relation columns are present, the agent then calls `upsert_relations_bulk` with the same dry-run / confirm cycle.
+
+### Write-tool guardrails
+
+Defense in depth on top of dry-run, so an LLM mishap can't cause mass damage:
+
+- **Per-call size caps.** The MCP write tools enforce a much smaller cap than the underlying Excel-importer endpoints: 200 rows for `create_cards_bulk`, 500 ops for `upsert_relations_bulk`. Big enough for any realistic single artifact upload, small enough that a dry-run preview is still scannable.
+- **No relation deletion by default.** `upsert_relations_bulk` refuses `action: "delete"` ops — to remove relations, use the web UI where the action is captured under the user's identity. Operators can opt in by setting `MCP_ALLOW_RELATION_DELETE=true`.
+- **Kill switch.** `MCP_WRITES_ENABLED=false` turns off all five write tools without redeploying code. The 25 read tools keep working.
+- **Audit origin tag.** Every backend request from the MCP server carries an `X-Turbo-EA-Origin: mcp` header. Events emitted from those requests are tagged `origin: "mcp"` in the audit-log payload, so admins can filter MCP-driven writes out of the timeline distinct from web-UI actions.
+- **No mass-destruction tools.** The toolset deliberately omits card delete, archive, and bulk-update. Adding any such tool would require an explicit design review.
+
+The four guardrail environment variables on the MCP container:
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `MCP_WRITES_ENABLED` | `true` | Master switch for write tools. `false` → read-only MCP. |
+| `MCP_MAX_CARDS_PER_CALL` | `200` | Hard cap on `create_cards_bulk` rows per request. |
+| `MCP_MAX_RELATIONS_PER_CALL` | `500` | Hard cap on `upsert_relations_bulk` operations per request. |
+| `MCP_ALLOW_RELATION_DELETE` | `false` | When `true`, `upsert_relations_bulk` accepts `action: "delete"` ops. |
+
 ### Resources
 
 | URI | Description |
@@ -245,12 +288,12 @@ All tools are bound by the authenticated user's RBAC — a viewer will simply ge
 
 | Role | Access |
 |------|--------|
-| **Admin** | Configure MCP settings (`admin.mcp` permission) |
-| **All authenticated users** | Query EA data through the MCP server (respects their existing card-level and app-level permissions) |
+| **Admin** | Configure MCP settings (`admin.mcp` permission). Full read + write through MCP. |
+| **All authenticated users** | Read access governed by their existing RBAC. Write tools require the matching backend permissions — `inventory.create` (cards), `relations.manage` (relations), `diagrams.manage` (diagrams), `bpm.edit` (BPMN). |
 
 The `admin.mcp` permission controls who can manage MCP settings. It is only available to the Admin role by default. Custom roles can be granted this permission through the Roles administration page.
 
-Data access through MCP follows the same RBAC model as the web UI — there are no separate MCP-specific data permissions.
+Data access through MCP — read or write — follows the same RBAC model as the web UI. If a user cannot create cards in the inventory UI, they cannot create them through MCP either; there are no separate MCP-specific data permissions.
 
 ---
 
@@ -258,8 +301,9 @@ Data access through MCP follows the same RBAC model as the web UI — there are 
 
 - **SSO-delegated authentication**: Users authenticate via their corporate SSO provider. The MCP server never sees or stores passwords.
 - **OAuth 2.1 with PKCE**: The authentication flow uses Proof Key for Code Exchange (S256) to prevent authorization code interception.
-- **Per-user RBAC**: Every MCP query is executed with the authenticated user's permissions. No shared service accounts.
-- **Read-only access**: The MCP server can only read data. It cannot create, update, or delete cards, relations, or any other resources.
+- **Per-user RBAC**: Every MCP query — read or write — runs with the authenticated user's permissions. No shared service accounts.
+- **Dry-run by default on writes**: Write tools default to a validate-and-rollback preview. The AI tool must explicitly call again with `dry_run=false` before anything is persisted, and every change is audited under the user's identity.
+- **No file parsing in MCP**: The MCP server itself does not accept PDFs, Excel files, images or other binary artifacts. The calling AI tool parses them in its own context and sends structured rows. This keeps the attack surface narrow and avoids exposing the server to malformed binary input.
 - **Token rotation**: Access tokens expire after 1 hour. Refresh tokens last 30 days. Authorization codes are single-use and expire after 10 minutes.
 - **Internal-only port**: The MCP container exposes port 8001 only on the internal Docker network. All external access goes through the Nginx reverse proxy.
 

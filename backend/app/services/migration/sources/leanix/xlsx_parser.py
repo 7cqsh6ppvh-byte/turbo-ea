@@ -1,9 +1,8 @@
 """LeanIX xlsx (workspace export) parser.
 
 LeanIX customers most often export their workspace as a multi-sheet
-Excel workbook (the "Reports → Full Export" feature). The shape is
-completely different from the tenant-cloning JSON snapshot handled in
-:mod:`leanix_snapshot_parser`:
+Excel workbook (the "Administration → Export → Full Snapshot"
+feature). Layout:
 
 - One sheet per fact-sheet type (``Application``, ``BusinessCapability``,
   ``Process``, …). Column names are stable LeanIX field keys.
@@ -18,7 +17,7 @@ completely different from the tenant-cloning JSON snapshot handled in
   ``Comments``, ``Types`` (enum option lists), ``ReadMe`` (skipped).
 
 This parser is **schema-tolerant**: anything outside the documented
-LeanIX core columns flows through to :attr:`FactSheet.custom_fields`
+LeanIX core columns flows through to :attr:`SourceEntity.custom_fields`
 unchanged. Tenant-defined fact-sheet types, tag groups, and relation
 types all surface via the existing metamodel-staging pipeline so the
 admin can map them post-import.
@@ -40,15 +39,15 @@ from typing import Any, BinaryIO
 
 from openpyxl import load_workbook  # type: ignore[import-untyped]
 
-from app.services.leanix_snapshot_parser import (
+from app.services.migration.snapshot import (
     Comment,
     Document,
-    FactSheet,
-    LeanixSnapshot,
     MetamodelField,
     MetamodelRelationType,
     MetamodelType,
+    MigrationSnapshot,
     Relation,
+    SourceEntity,
     Subscription,
     Tag,
     UserRef,
@@ -56,7 +55,7 @@ from app.services.leanix_snapshot_parser import (
 
 logger = logging.getLogger(__name__)
 
-# Fact-sheet column keys that map 1:1 to ``FactSheet`` dataclass slots.
+# Fact-sheet column keys that map 1:1 to ``SourceEntity`` dataclass slots.
 # Anything outside this set (after stripping the dynamic ``lifecycle:``,
 # ``tags:`` and ``subscriptions:`` prefixes) is treated as a custom
 # attribute.
@@ -116,7 +115,7 @@ _REL_CORE_COLS: frozenset[str] = frozenset(
 # ---------------------------------------------------------------------------
 
 
-def parse_xlsx_path(path: str) -> LeanixSnapshot:
+def parse_xlsx_path(path: str) -> MigrationSnapshot:
     """Parse a LeanIX workbook export from disk.
 
     Always reads via :class:`BytesIO` rather than handing openpyxl the
@@ -132,7 +131,7 @@ def parse_xlsx_path(path: str) -> LeanixSnapshot:
     return _parse_workbook(wb)
 
 
-def parse_xlsx(stream: BinaryIO) -> LeanixSnapshot:
+def parse_xlsx(stream: BinaryIO) -> MigrationSnapshot:
     """Parse a LeanIX workbook export from a binary stream."""
     raw = stream.read()
     wb = load_workbook(BytesIO(raw), read_only=True, data_only=True)
@@ -153,16 +152,16 @@ def is_xlsx_payload(prefix: bytes) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _parse_workbook(wb: Any) -> LeanixSnapshot:
+def _parse_workbook(wb: Any) -> MigrationSnapshot:
     errors: list[str] = []
 
-    fact_sheets: list[FactSheet] = []
+    fact_sheets: list[SourceEntity] = []
     relations: list[Relation] = []
     subscriptions: list[Subscription] = []
     documents: list[Document] = []
     comments: list[Comment] = []
 
-    # Build the (display_name, fs_type) → leanix_id lookup as we walk
+    # Build the (display_name, fs_type) → source_id lookup as we walk
     # the fact-sheet sheets; relation/document/comment endpoints resolve
     # against it in a second pass.
     display_index: dict[tuple[str, str], str] = {}
@@ -170,7 +169,7 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
 
     # Tag-group + tag dicts go through their own sheets but FS rows
     # reference tags by ``<groupName>:<tagName>`` — build the inverse
-    # lookup so we can populate ``FactSheet.tags`` with stable ids.
+    # lookup so we can populate ``SourceEntity.tags`` with stable ids.
     tag_groups: dict[str, dict[str, Any]] = {}
     tag_records: list[Tag] = []
     tag_by_group_and_name: dict[tuple[str, str], str] = {}
@@ -213,7 +212,7 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
             if not name:
                 continue
             tag_groups[name] = {
-                "leanix_id": _str_or_none(row.get("id")) or name,
+                "source_id": _str_or_none(row.get("id")) or name,
                 "name": name,
                 "mode": _str_or_none(row.get("mode")) or "MULTIPLE",
                 "restrict_to_types": _str_or_none(row.get("restrictToFactSheetTypes")),
@@ -231,7 +230,7 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
             group_info = tag_groups.get(group_name) or {}
             tag_records.append(
                 Tag(
-                    leanix_id=tag_id,
+                    source_id=tag_id,
                     name=name,
                     group_name=group_name,
                     group_mode=group_info.get("mode") or "MULTIPLE",
@@ -261,7 +260,7 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                 continue
             fact_sheets.append(fs)
 
-            display_index[(_norm_name(fs.display_name or fs.name), fs.type)] = fs.leanix_id
+            display_index[(_norm_name(fs.display_name or fs.name), fs.type)] = fs.source_id
 
             # Track every column seen per type for synthetic-metamodel emission.
             cols = seen_columns_per_type.setdefault(fs.type, {})
@@ -302,8 +301,8 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                 for email in emails:
                     subscriptions.append(
                         Subscription(
-                            leanix_id=f"{fs.leanix_id}:{role_type}:{role_name}:{email}",
-                            fact_sheet_id=fs.leanix_id,
+                            source_id=f"{fs.source_id}:{role_type}:{role_name}:{email}",
+                            entity_id=fs.source_id,
                             user_email=email,
                             user_display_name=None,
                             role_name=role_name,
@@ -318,8 +317,8 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                 for email in fallback:
                     subscriptions.append(
                         Subscription(
-                            leanix_id=f"{fs.leanix_id}:{role_type}::{email}",
-                            fact_sheet_id=fs.leanix_id,
+                            source_id=f"{fs.source_id}:{role_type}::{email}",
+                            entity_id=fs.source_id,
                             user_email=email,
                             user_display_name=None,
                             role_name=None,
@@ -373,8 +372,8 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                 continue
             documents.append(
                 Document(
-                    leanix_id=_str_or_none(row.get("id")) or "",
-                    fact_sheet_id=fs_id,
+                    source_id=_str_or_none(row.get("id")) or "",
+                    entity_id=fs_id,
                     name=_str_or_none(row.get("name")) or "",
                     url=_str_or_none(row.get("url")),
                     raw={k: v for k, v in row.items() if v not in (None, "")},
@@ -399,8 +398,8 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
             author = _str_or_none(row.get("userEmail")) or ""
             comments.append(
                 Comment(
-                    leanix_id=_synth_comment_id(fs_id, created, author, body, sheet_index),
-                    fact_sheet_id=fs_id,
+                    source_id=_synth_comment_id(fs_id, created, author, body, sheet_index),
+                    entity_id=fs_id,
                     author_email=author or None,
                     body=body,
                     created_at=created,
@@ -417,10 +416,10 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                 reply_author = _str_or_none(row.get("replierEmail")) or ""
                 comments.append(
                     Comment(
-                        leanix_id=_synth_comment_id(
+                        source_id=_synth_comment_id(
                             fs_id, reply_created, reply_author, reply_body, sheet_index, reply=True
                         ),
-                        fact_sheet_id=fs_id,
+                        entity_id=fs_id,
                         author_email=reply_author or None,
                         body=reply_body,
                         created_at=reply_created,
@@ -428,7 +427,7 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
                     )
                 )
 
-    # Resolve hierarchy (childParentRelation → FactSheet.parent_id).
+    # Resolve hierarchy (childParentRelation → SourceEntity.parent_id).
     _apply_child_parent_relations(fact_sheets, relations)
 
     # Synthesize a metamodel summary so the admin sees every column
@@ -439,11 +438,11 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
 
     # Every distinct relation type observed in the workbook surfaces as
     # a synthetic MetamodelRelationType. The migration service filters
-    # out names already mapped in ``LX_TO_TEA_RELATION`` (those route to
-    # an existing Turbo EA edge); what's left becomes a new non-builtin
-    # relation type on apply, so custom relations involving the new
-    # fact-sheet types (Server, ESGCapability, lxSystem…) actually
-    # land in the database.
+    # out names already mapped in the adapter's relation_mapping (those
+    # route to an existing Turbo EA edge); what's left becomes a new
+    # non-builtin relation type on apply, so custom relations involving
+    # the new fact-sheet types (Server, ESGCapability, lxSystem…)
+    # actually land in the database.
     metamodel_relation_types = [
         MetamodelRelationType(
             name=rel_type,
@@ -464,9 +463,9 @@ def _parse_workbook(wb: Any) -> LeanixSnapshot:
     # no separate user sheet).
     users = _distinct_users(subscriptions)
 
-    return LeanixSnapshot(
+    return MigrationSnapshot(
         version="xlsx",
-        fact_sheets=fact_sheets,
+        entities=fact_sheets,
         relations=relations,
         subscriptions=subscriptions,
         tags=tag_records,
@@ -488,12 +487,12 @@ class _SkipRowError(Exception):
     """Sentinel used by row builders to bail without aborting the sheet."""
 
 
-def _build_fact_sheet(row: dict[str, Any], errors: list[str]) -> FactSheet:
-    leanix_id = _str_or_none(row.get("id"))
+def _build_fact_sheet(row: dict[str, Any], errors: list[str]) -> SourceEntity:
+    source_id = _str_or_none(row.get("id"))
     fs_type = _str_or_none(row.get("type"))
-    if not leanix_id or not fs_type:
+    if not source_id or not fs_type:
         raise _SkipRowError
-    name = _str_or_none(row.get("name")) or _str_or_none(row.get("displayName")) or leanix_id
+    name = _str_or_none(row.get("name")) or _str_or_none(row.get("displayName")) or source_id
     display_name = _str_or_none(row.get("displayName")) or name
 
     lifecycle: dict[str, str] = {}
@@ -516,8 +515,8 @@ def _build_fact_sheet(row: dict[str, Any], errors: list[str]) -> FactSheet:
             continue
         custom_fields[col] = _jsonify(value)
 
-    return FactSheet(
-        leanix_id=leanix_id,
+    return SourceEntity(
+        source_id=source_id,
         type=fs_type,
         name=name,
         display_name=display_name,
@@ -555,10 +554,10 @@ def _build_relation(
     # ``successorRelation`` — the latter relies on the row's
     # ``fromRelatedFactSheetType`` to disambiguate which TEA edge it maps
     # to. Rewrite the generic form to the prefixed form at parse time so
-    # the static ``LX_TO_TEA_RELATION`` map and the ``LX_FLIP_DIRECTION``
-    # set catch them just like the prefixed rows. Same treatment for the
-    # GraphQL ``relSuccessor`` equivalent. Mixed-type successor rows
-    # (extremely rare in LeanIX) are left untouched so they surface as
+    # the adapter's relation_mapping + flip_direction sets catch them
+    # just like the prefixed rows. Same treatment for the GraphQL
+    # ``relSuccessor`` equivalent. Mixed-type successor rows (extremely
+    # rare in LeanIX) are left untouched so they surface as
     # admin-reviewable conflicts.
     rel_type = _specialise_generic_successor(rel_type, from_type, to_type)
 
@@ -583,10 +582,10 @@ def _build_relation(
         attributes[col] = _jsonify(value)
 
     return Relation(
-        leanix_id=rel_id or f"{rel_type}:{src}:{tgt}",
+        source_id=rel_id or f"{rel_type}:{src}:{tgt}",
         type=rel_type,
-        source_id=src,
-        target_id=tgt,
+        from_entity_id=src,
+        to_entity_id=tgt,
         attributes=attributes,
         raw={k: v for k, v in row.items() if v not in (None, "")},
     )
@@ -720,10 +719,10 @@ def _resolve_endpoint_id(
 ) -> str | None:
     if not (display_name and fs_type):
         return None
-    leanix_id = display_index.get((display_name.strip(), fs_type.strip()))
-    if leanix_id is None:
+    source_id = display_index.get((display_name.strip(), fs_type.strip()))
+    if source_id is None:
         errors.append(f"{context}: unresolved endpoint ({display_name!r}, {fs_type!r})")
-    return leanix_id
+    return source_id
 
 
 # LeanIX fact-sheet type names → camelCased prefix the type-specific
@@ -765,23 +764,23 @@ def _specialise_generic_successor(rel_type: str, from_type: str | None, to_type:
 
 
 def _apply_child_parent_relations(
-    fact_sheets: list[FactSheet],
+    fact_sheets: list[SourceEntity],
     relations: list[Relation],
 ) -> None:
-    """Translate ``childParentRelation`` rows into ``FactSheet.parent_id``.
+    """Translate ``childParentRelation`` rows into ``SourceEntity.parent_id``.
 
     Direction in the LeanIX export: ``from = child``, ``to = parent``.
-    We drop the relation from the list after applying so the staging
+    The relation is dropped from the list after applying so the staging
     layer doesn't try to re-create it as a Turbo EA relation (TEA uses
     ``Card.parent_id`` exclusively for hierarchy).
     """
-    by_id = {fs.leanix_id: fs for fs in fact_sheets}
+    by_id = {fs.source_id: fs for fs in fact_sheets}
     remaining: list[Relation] = []
     for rel in relations:
         if rel.type == "childParentRelation":
-            child = by_id.get(rel.source_id)
+            child = by_id.get(rel.from_entity_id)
             if child is not None:
-                child.parent_id = rel.target_id
+                child.parent_id = rel.to_entity_id
             continue
         remaining.append(rel)
     relations[:] = remaining
@@ -854,11 +853,11 @@ def _synthesize_metamodel(
 # ---------------------------------------------------------------------------
 
 
-# ReadMe ``Type`` column → LeanIX ``data_type`` value the migration
-# service can route through :data:`LX_DATATYPE_TO_TEA_TYPE`. We keep
-# the LeanIX-flavoured names rather than already collapsing to
-# ``text``/``number``/… here, so the migration service stays the
-# single point that maps LX → TEA.
+# ReadMe ``Type`` column → LeanIX ``data_type`` value the adapter's
+# field_type_mapping translates to a Turbo EA fields_schema type. The
+# LeanIX-flavoured names are kept rather than already collapsing to
+# ``text``/``number``/… here, so the adapter stays the single point
+# that maps native → TEA.
 _README_TYPE_MAP: dict[str, str] = {
     "string": "STRING",
     "string (uuid)": "STRING",
@@ -963,7 +962,7 @@ def _distinct_users(subscriptions: list[Subscription]) -> list[UserRef]:
         if not email or email in seen:
             continue
         seen[email] = UserRef(
-            leanix_id=email,
+            source_id=email,
             email=email,
             display_name=sub.user_display_name or email,
         )

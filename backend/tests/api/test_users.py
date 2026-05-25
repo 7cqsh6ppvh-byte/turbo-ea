@@ -416,6 +416,296 @@ class TestUpdateUser:
         assert "logged-in@test.com" not in emails
         assert "never-logged-in@test.com" in emails
 
+    async def test_create_user_no_invite_local_mode_skips_invitation(self, client, db, users_env):
+        """Bulk-importing a user with «send invites» unchecked must NOT flag
+        the account as Invited. In local-mode (SSO disabled) the SsoInvitation
+        row serves no purpose other than the «pending invitations» list — and
+        the admin explicitly opted out (#584).
+        """
+        from sqlalchemy import select
+
+        from app.models.sso_invitation import SsoInvitation
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "import-no-invite@test.com",
+                "display_name": "Import No Invite",
+                "password": "StrongPass1",
+                "role": "member",
+                "send_email": False,
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201
+
+        # No SsoInvitation row.
+        inv_q = await db.execute(
+            select(SsoInvitation).where(SsoInvitation.email == "import-no-invite@test.com")
+        )
+        assert inv_q.scalar_one_or_none() is None
+
+        # And the user is not surfaced on the pending list.
+        resp = await client.get("/api/v1/users/invitations", headers=auth_headers(admin))
+        assert resp.status_code == 200
+        assert all(inv["email"] != "import-no-invite@test.com" for inv in resp.json())
+
+    async def test_create_user_with_invite_local_mode_creates_invitation(
+        self, client, db, users_env
+    ):
+        """When the admin explicitly asks to invite (send_email=True), the
+        SsoInvitation row IS created so the user stays on the pending list
+        until first login — that's what powers «resend invite» (#539)."""
+        from sqlalchemy import select
+
+        from app.models.sso_invitation import SsoInvitation
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "import-with-invite@test.com",
+                "display_name": "Import With Invite",
+                "password": "StrongPass1",
+                "role": "member",
+                "send_email": True,
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201
+
+        inv_q = await db.execute(
+            select(SsoInvitation).where(SsoInvitation.email == "import-with-invite@test.com")
+        )
+        assert inv_q.scalar_one_or_none() is not None
+
+        resp = await client.get("/api/v1/users/invitations", headers=auth_headers(admin))
+        assert resp.status_code == 200
+        assert any(inv["email"] == "import-with-invite@test.com" for inv in resp.json())
+
+    async def test_create_user_sso_enabled_without_invite_skips_invitation(
+        self, client, db, users_env
+    ):
+        """In SSO mode with send_email=False the SsoInvitation row must NOT
+        be created either — the admin explicitly opted out of notifying the
+        user, so the «Invited» chip must stay off (#584 round 2). The User
+        row still carries `auth_provider="sso"` and the chosen role, so the
+        SSO callback's «link existing user» branch picks up the right role
+        on first sign-in without needing a binding row.
+        """
+        from sqlalchemy import select
+
+        from app.models.app_settings import AppSettings
+        from app.models.sso_invitation import SsoInvitation
+        from app.models.user import User
+
+        db.add(
+            AppSettings(
+                id="default",
+                general_settings={"sso": {"enabled": True, "provider": "generic_oidc"}},
+            )
+        )
+        await db.commit()
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "sso-no-invite@test.com",
+                "display_name": "SSO No Invite",
+                "role": "member",
+                "send_email": False,
+                # No password — allowed in SSO mode.
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201, resp.text
+
+        # No SsoInvitation row → no «Invited» chip.
+        inv_q = await db.execute(
+            select(SsoInvitation).where(SsoInvitation.email == "sso-no-invite@test.com")
+        )
+        assert inv_q.scalar_one_or_none() is None
+
+        # User row IS there with the chosen role + SSO auth provider, so SSO
+        # sign-in will resolve the role from `user.role` directly.
+        user_q = await db.execute(select(User).where(User.email == "sso-no-invite@test.com"))
+        u = user_q.scalar_one()
+        assert u.auth_provider == "sso"
+        assert u.role == "member"
+
+        # Not on the pending invitations list.
+        resp = await client.get("/api/v1/users/invitations", headers=auth_headers(admin))
+        assert resp.status_code == 200
+        assert all(inv["email"] != "sso-no-invite@test.com" for inv in resp.json())
+
+    async def test_create_user_sso_enabled_with_invite_creates_invitation(
+        self, client, db, users_env
+    ):
+        """SSO mode + send_email=True still creates the SsoInvitation so the
+        resend-invite UX continues to work for genuine SSO invitations."""
+        from sqlalchemy import select
+
+        from app.models.app_settings import AppSettings
+        from app.models.sso_invitation import SsoInvitation
+
+        db.add(
+            AppSettings(
+                id="default",
+                general_settings={"sso": {"enabled": True, "provider": "generic_oidc"}},
+            )
+        )
+        await db.commit()
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "sso-with-invite@test.com",
+                "display_name": "SSO With Invite",
+                "role": "member",
+                "send_email": True,
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201, resp.text
+
+        inv_q = await db.execute(
+            select(SsoInvitation).where(SsoInvitation.email == "sso-with-invite@test.com")
+        )
+        assert inv_q.scalar_one_or_none() is not None
+
+    async def test_create_user_explicit_auth_provider_local(self, client, db, users_env):
+        """The import flow forwards `auth_provider="local"` for sheet rows
+        explicitly tagged as local. The new user lands as a local account even
+        in SSO-enabled tenants (#584 follow-up)."""
+        from sqlalchemy import select
+
+        from app.models.app_settings import AppSettings
+        from app.models.user import User
+
+        # SSO enabled, so the legacy heuristic would have stamped this user
+        # as sso (no password) — the explicit field must override it.
+        db.add(
+            AppSettings(
+                id="default",
+                general_settings={"sso": {"enabled": True, "provider": "generic_oidc"}},
+            )
+        )
+        await db.commit()
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "local-in-sso-tenant@test.com",
+                "display_name": "Local In SSO Tenant",
+                "password": "StrongPass1",
+                "role": "member",
+                "send_email": False,
+                "auth_provider": "local",
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201, resp.text
+
+        user_q = await db.execute(select(User).where(User.email == "local-in-sso-tenant@test.com"))
+        u = user_q.scalar_one()
+        assert u.auth_provider == "local"
+        assert u.password_hash is not None
+
+    async def test_create_user_local_no_password_with_invite_issues_setup_token(
+        self, client, db, users_env
+    ):
+        """Local account, no password, send_email=True → the user is created
+        with a single-use password_setup_token; the invite email carries the
+        /auth/set-password?token=… link so the user picks their own password.
+        Passwords are never transported through the import sheet (#584)."""
+        from sqlalchemy import select
+
+        from app.models.user import User
+
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "local-pending@test.com",
+                "display_name": "Local Pending",
+                "role": "member",
+                "send_email": True,
+                "auth_provider": "local",
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 201, resp.text
+
+        user_q = await db.execute(select(User).where(User.email == "local-pending@test.com"))
+        u = user_q.scalar_one()
+        assert u.auth_provider == "local"
+        assert u.password_hash is None
+        assert u.password_setup_token is not None
+        assert len(u.password_setup_token) >= 32  # urlsafe(48) → 64 chars
+
+    async def test_create_user_local_no_password_without_invite_rejected(
+        self, client, db, users_env
+    ):
+        """Local account, no password, no invite → reject. The setup link
+        only travels via email, so without the welcome email the user has
+        no way into the system."""
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "local-orphan@test.com",
+                "display_name": "Local Orphan",
+                "role": "member",
+                "send_email": False,
+                "auth_provider": "local",
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 400
+        assert "invitation" in resp.json()["detail"].lower()
+
+    async def test_create_user_explicit_auth_provider_sso_requires_sso_enabled(
+        self, client, db, users_env
+    ):
+        """`auth_provider="sso"` is rejected when SSO is disabled — the user
+        would have no way to sign in."""
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "sso-without-sso@test.com",
+                "display_name": "SSO Without SSO",
+                "role": "member",
+                "send_email": False,
+                "auth_provider": "sso",
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 400
+        assert "sso" in resp.json()["detail"].lower()
+
+    async def test_create_user_unknown_auth_provider_rejected_by_schema(
+        self, client, db, users_env
+    ):
+        """Pydantic should reject auth_provider values outside the literal set."""
+        admin = users_env["admin"]
+        resp = await client.post(
+            "/api/v1/users",
+            json={
+                "email": "bad-provider@test.com",
+                "display_name": "Bad Provider",
+                "password": "Pass1234",
+                "role": "member",
+                "auth_provider": "ldap",
+            },
+            headers=auth_headers(admin),
+        )
+        assert resp.status_code == 422
+
 
 # -------------------------------------------------------------------
 # DELETE /users/{id}  (hard delete — row is removed)

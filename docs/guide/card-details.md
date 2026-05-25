@@ -14,7 +14,7 @@ The top of the card shows:
 - **Approval status badge** — Draft, Approved, Broken, or Rejected
 - **AI suggest button** — Click to generate a description with AI (visible when AI is enabled for this card type and the user has edit permission)
 - **Data quality ring** — Visual indicator of information completeness (0–100%)
-- **Actions menu** — Archive, delete, and approval actions
+- **Actions menu** — Archive, delete, and approval actions. Also includes a one-click **Observe this card** toggle (when the card type defines an Observer role) so any user with view access can follow the card without going through the Stakeholders tab.
 
 ### Approval Workflow
 
@@ -57,6 +57,7 @@ Each phase has a **date picker** so you can record when the component entered or
 Depending on the card type, you will see additional sections with **custom fields** configured in the metamodel. Field types include:
 
 - **Text** — Free text input
+- **Multi-line Text** — Free text input that preserves line breaks, rendered as an auto-growing text area
 - **Number** — Numeric value
 - **Cost** — Numeric value displayed with the platform's configured currency
 - **Boolean** — On/off toggle

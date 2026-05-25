@@ -42,7 +42,7 @@ Los campos definen los atributos personalizados disponibles en fichas de este ti
 |---------------|-------------|
 | **Clave** | Identificador único del campo |
 | **Etiqueta** | Nombre para mostrar |
-| **Tipo** | texto, número, costo, booleano, fecha, url, selección_única o selección_múltiple |
+| **Tipo** | texto, texto_multilínea, número, costo, booleano, fecha, url, selección_única o selección_múltiple |
 | **Opciones** | Para campos de selección: las opciones disponibles con etiquetas y colores opcionales |
 | **Requerido** | Si el campo debe completarse para la puntuación de calidad de datos |
 | **Peso** | Cuánto contribuye este campo a la puntuación de calidad de datos (0–10) |

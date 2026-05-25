@@ -42,7 +42,7 @@ Fields define the custom attributes available on cards of this type. Each field 
 |---------|-------------|
 | **Key** | Unique field identifier |
 | **Label** | Display name |
-| **Type** | text, number, cost, boolean, date, url, single_select, or multiple_select |
+| **Type** | text, multiline_text, number, cost, boolean, date, url, single_select, or multiple_select |
 | **Options** | For select fields: the available choices with labels and optional colors |
 | **Required** | Whether the field must be filled for data quality scoring |
 | **Weight** | How much this field contributes to the data quality score (0–10) |

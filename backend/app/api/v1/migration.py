@@ -1,28 +1,34 @@
-"""LeanIX migration HTTP endpoints.
+"""Platform-migration HTTP endpoints.
 
-The admin's view onto the importer: upload a workspace snapshot, see
-what would change, apply it, and inspect the result. Mirrors the
+The admin's view onto the importer: pick a source, upload a snapshot,
+see what would change, apply it, and inspect the result. Mirrors the
 ServiceNow REST shape (``app/api/v1/servicenow.py``) — same staging /
-preview / apply rhythm, gated by the new ``admin.migrate`` permission.
-
-Phase 1 surface (cards only):
-
-- ``POST /migration/leanix/upload`` — multipart upload, returns the
-  migration id, fires a background task to parse the snapshot and
-  stage cards.
-- ``GET /migration/leanix`` — list past migrations.
-- ``GET /migration/leanix/{id}`` — status + stats.
-- ``GET /migration/leanix/{id}/preview`` — paginated staged records.
-- ``POST /migration/leanix/{id}/apply`` — kick off the apply pipeline
-  in the background. 202 with the migration object.
-- ``DELETE /migration/leanix/{id}`` — purge a migration that has not
-  yet been applied.
+preview / apply rhythm, gated by the ``admin.migrate`` permission.
 
 The HTTP layer is intentionally thin — every meaningful operation
-lives in :mod:`leanix_xlsx_parser`,
-:mod:`leanix_migration_service`, and :mod:`leanix_migration_apply` so
-the same logic can be exercised from unit tests without spinning up a
-FastAPI app.
+lives in :mod:`app.services.migration.staging`,
+:mod:`app.services.migration.apply`, and the per-source adapter under
+``app.services.migration.sources``. The route dispatches by reading
+``migration.source_type`` and resolving the matching adapter via
+:func:`~app.services.migration.registry.get_source`.
+
+Endpoints:
+
+- ``GET /migration/sources`` — list every registered source adapter so
+  the upload picker knows what's available.
+- ``POST /migration/upload`` — multipart upload with ``source_key``.
+  Returns the migration id and fires a background task to parse +
+  stage.
+- ``GET /migration`` — list past migrations (optionally filtered by
+  ``source_type``).
+- ``GET /migration/{id}`` — status + stats.
+- ``GET /migration/{id}/preview`` — paginated staged records.
+- ``POST /migration/{id}/apply`` — kick off the apply pipeline in the
+  background. 202 with the migration object.
+- ``GET /migration/{id}/errors.csv`` — CSV report of staged rows in
+  error status.
+- ``DELETE /migration/{id}`` — purge a migration (any non-applying
+  status).
 """
 
 from __future__ import annotations
@@ -52,10 +58,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.database import async_session, get_db
-from app.models.leanix import LeanixMigration, LeanixStagedRecord
+from app.models.migration import Migration, StagedRecord
 from app.models.user import User
-from app.services.leanix_migration_apply import apply_migration
-from app.services.leanix_migration_service import (
+from app.services.migration.apply import apply_migration
+from app.services.migration.registry import SOURCES, get_source
+from app.services.migration.staging import (
     stage_cards,
     stage_comments,
     stage_documents,
@@ -64,16 +71,17 @@ from app.services.leanix_migration_service import (
     stage_tags,
     stage_users_and_subscriptions,
 )
-from app.services.leanix_xlsx_parser import is_xlsx_payload, parse_xlsx_path
 from app.services.permission_service import PermissionService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/migration/leanix", tags=["Migration"])
+router = APIRouter(prefix="/migration", tags=["Migration"])
 
 # Snapshot binaries live on disk rather than in Postgres so that the
-# table stays small and ``DELETE`` is cheap.
-_SNAPSHOT_DIR = Path("data/leanix_snapshots")
+# table stays small and ``DELETE`` is cheap. Pre-refactor migrations
+# stored under ``data/leanix_snapshots/`` still resolve because their
+# absolute paths live on the row.
+_SNAPSHOT_DIR = Path("data/migration_snapshots")
 
 
 # ---------------------------------------------------------------------------
@@ -81,9 +89,16 @@ _SNAPSHOT_DIR = Path("data/leanix_snapshots")
 # ---------------------------------------------------------------------------
 
 
+class SourceOut(BaseModel):
+    key: str
+    label: str
+    accepted_extensions: list[str]
+
+
 class MigrationOut(BaseModel):
     id: str
     name: str
+    source_type: str
     status: str
     file_hash: str
     file_size: int | None
@@ -100,7 +115,8 @@ class MigrationOut(BaseModel):
 class StagedRecordOut(BaseModel):
     id: str
     entity_kind: str
-    leanix_id: str
+    source_id: str
+    source_type: str
     card_type_key: str | None
     action: str
     status: str
@@ -116,10 +132,11 @@ class PreviewPage(BaseModel):
     limit: int
 
 
-def _migration_to_out(m: LeanixMigration) -> MigrationOut:
+def _migration_to_out(m: Migration) -> MigrationOut:
     return MigrationOut(
         id=str(m.id),
         name=m.name,
+        source_type=m.source_type,
         status=m.status,
         file_hash=m.file_hash,
         file_size=m.file_size,
@@ -134,11 +151,12 @@ def _migration_to_out(m: LeanixMigration) -> MigrationOut:
     )
 
 
-def _staged_to_out(r: LeanixStagedRecord) -> StagedRecordOut:
+def _staged_to_out(r: StagedRecord) -> StagedRecordOut:
     return StagedRecordOut(
         id=str(r.id),
         entity_kind=r.entity_kind,
-        leanix_id=r.leanix_id,
+        source_id=r.source_id,
+        source_type=r.source_type,
         card_type_key=r.card_type_key,
         action=r.action,
         status=r.status,
@@ -153,9 +171,27 @@ def _staged_to_out(r: LeanixStagedRecord) -> StagedRecordOut:
 # ---------------------------------------------------------------------------
 
 
+@router.get("/sources", response_model=list[SourceOut])
+async def list_sources(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[SourceOut]:
+    """Return every registered source adapter so the picker can render them."""
+    await PermissionService.require_permission(db, user, "admin.migrate")
+    return [
+        SourceOut(
+            key=src.key,
+            label=src.label,
+            accepted_extensions=list(src.accepted_extensions),
+        )
+        for src in SOURCES.values()
+    ]
+
+
 @router.post("/upload", response_model=MigrationOut, status_code=201)
 async def upload_snapshot(
     background_tasks: BackgroundTasks,
+    source_key: str = Form(..., description="Registered source adapter key (e.g. 'leanix')"),
     name: str = Form(...),
     file: UploadFile = File(...),
     include_archived: bool = Form(False),
@@ -164,19 +200,31 @@ async def upload_snapshot(
 ) -> MigrationOut:
     await PermissionService.require_permission(db, user, "admin.migrate")
 
+    try:
+        source = get_source(source_key)
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     raw = await file.read()
     if not raw:
         raise HTTPException(status_code=400, detail="Empty snapshot file")
-    if not is_xlsx_payload(raw[:4]):
+    if not source.validate_payload(raw[:16]):
+        exts = ", ".join(source.accepted_extensions) or "the expected format"
         raise HTTPException(
             status_code=400,
-            detail="Only .xlsx LeanIX Full Snapshot exports are supported.",
+            detail=f"File does not match {source.label} ({exts}).",
         )
     file_hash = hashlib.sha256(raw).hexdigest()
 
-    # Reject duplicate uploads — the file hash is the natural idempotency key.
+    # Reject duplicate uploads — the (file_hash, source_type) pair is
+    # the natural idempotency key.
     existing = (
-        await db.execute(select(LeanixMigration).where(LeanixMigration.file_hash == file_hash))
+        await db.execute(
+            select(Migration).where(
+                Migration.file_hash == file_hash,
+                Migration.source_type == source.key,
+            )
+        )
     ).scalar_one_or_none()
     if existing is not None:
         return _migration_to_out(existing)
@@ -186,9 +234,10 @@ async def upload_snapshot(
     storage_path = _SNAPSHOT_DIR / f"{migration_id}.bin"
     storage_path.write_bytes(raw)
 
-    migration = LeanixMigration(
+    migration = Migration(
         id=migration_id,
         name=name,
+        source_type=source.key,
         file_hash=file_hash,
         file_size=len(raw),
         storage_path=str(storage_path),
@@ -208,19 +257,15 @@ async def upload_snapshot(
 
 @router.get("", response_model=list[MigrationOut])
 async def list_migrations(
+    source_type: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[MigrationOut]:
     await PermissionService.require_permission(db, user, "admin.migrate")
-    rows = (
-        (
-            await db.execute(
-                select(LeanixMigration).order_by(LeanixMigration.created_at.desc()).limit(100)
-            )
-        )
-        .scalars()
-        .all()
-    )
+    stmt = select(Migration).order_by(Migration.created_at.desc()).limit(100)
+    if source_type:
+        stmt = stmt.where(Migration.source_type == source_type)
+    rows = (await db.execute(stmt)).scalars().all()
     return [_migration_to_out(r) for r in rows]
 
 
@@ -248,21 +293,17 @@ async def preview_migration(
 ) -> PreviewPage:
     await PermissionService.require_permission(db, user, "admin.migrate")
     await _load_migration(db, migration_id)
-    base = select(LeanixStagedRecord).where(
-        LeanixStagedRecord.migration_id == migration_id,
-        LeanixStagedRecord.entity_kind == entity_kind,
+    base = select(StagedRecord).where(
+        StagedRecord.migration_id == migration_id,
+        StagedRecord.entity_kind == entity_kind,
     )
     if card_type_key is not None:
-        base = base.where(LeanixStagedRecord.card_type_key == card_type_key)
+        base = base.where(StagedRecord.card_type_key == card_type_key)
     if action is not None:
-        base = base.where(LeanixStagedRecord.action == action)
+        base = base.where(StagedRecord.action == action)
     total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar() or 0
     rows = (
-        (
-            await db.execute(
-                base.order_by(LeanixStagedRecord.created_at.asc()).offset(offset).limit(limit)
-            )
-        )
+        (await db.execute(base.order_by(StagedRecord.created_at.asc()).offset(offset).limit(limit)))
         .scalars()
         .all()
     )
@@ -312,14 +353,14 @@ async def download_error_report(
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord)
+                select(StagedRecord)
                 .where(
-                    LeanixStagedRecord.migration_id == migration_id,
-                    LeanixStagedRecord.status == "error",
+                    StagedRecord.migration_id == migration_id,
+                    StagedRecord.status == "error",
                 )
                 .order_by(
-                    LeanixStagedRecord.entity_kind.asc(),
-                    LeanixStagedRecord.created_at.asc(),
+                    StagedRecord.entity_kind.asc(),
+                    StagedRecord.created_at.asc(),
                 )
             )
         )
@@ -328,12 +369,12 @@ async def download_error_report(
     )
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["entity_kind", "leanix_id", "card_type_key", "action", "error_message"])
+    writer.writerow(["entity_kind", "source_id", "card_type_key", "action", "error_message"])
     for r in rows:
         writer.writerow(
             [
                 r.entity_kind,
-                r.leanix_id,
+                r.source_id,
                 r.card_type_key or "",
                 r.action,
                 (r.error_message or "").replace("\n", " "),
@@ -377,30 +418,33 @@ async def delete_migration(
 
 
 async def _parse_and_stage_job(migration_id_str: str) -> None:
-    """Parse the snapshot on disk and stage every card from it."""
+    """Parse the snapshot on disk and stage every entity from it."""
     async with async_session() as db:
         try:
             m = (
                 await db.execute(
-                    select(LeanixMigration).where(LeanixMigration.id == uuid.UUID(migration_id_str))
+                    select(Migration).where(Migration.id == uuid.UUID(migration_id_str))
                 )
             ).scalar_one_or_none()
             if m is None or m.storage_path is None:
-                logger.warning("LeanIX parse job: migration %s missing", migration_id_str)
+                logger.warning("migration parse job: migration %s missing", migration_id_str)
                 return
 
-            snapshot = parse_xlsx_path(m.storage_path)
+            source = get_source(m.source_type)
+            snapshot = source.parse(m.storage_path)
             m.snapshot_version = snapshot.version
             include_archived = bool(
                 ((m.stats or {}).get("options") or {}).get("include_archived", False)
             )
-            metamodel_stats = await stage_metamodel(db, m, snapshot)
-            card_stats = await stage_cards(db, m, snapshot, include_archived=include_archived)
-            relation_stats = await stage_relations(db, m, snapshot)
-            tag_stats = await stage_tags(db, m, snapshot)
-            user_stats, sub_stats = await stage_users_and_subscriptions(db, m, snapshot)
-            document_stats = await stage_documents(db, m, snapshot)
-            comment_stats = await stage_comments(db, m, snapshot)
+            metamodel_stats = await stage_metamodel(db, m, source, snapshot)
+            card_stats = await stage_cards(
+                db, m, source, snapshot, include_archived=include_archived
+            )
+            relation_stats = await stage_relations(db, m, source, snapshot)
+            tag_stats = await stage_tags(db, m, source, snapshot)
+            user_stats, sub_stats = await stage_users_and_subscriptions(db, m, source, snapshot)
+            document_stats = await stage_documents(db, m, source, snapshot)
+            comment_stats = await stage_comments(db, m, source, snapshot)
             stats = {
                 "metamodel": metamodel_stats,
                 "cards": card_stats,
@@ -411,13 +455,16 @@ async def _parse_and_stage_job(migration_id_str: str) -> None:
                 "documents": document_stats,
                 "comments": comment_stats,
                 "parse_errors": len(snapshot.parse_errors),
-                "fact_sheets": len(snapshot.fact_sheets),
+                "entities": len(snapshot.entities),
+                # Legacy alias retained so any UI / scripts that read
+                # ``stats.fact_sheets`` keep working after the rename.
+                "fact_sheets": len(snapshot.entities),
                 "relation_count": len(snapshot.relations),
                 "tag_count": len(snapshot.tags),
                 "subscription_count": len(snapshot.subscriptions),
                 "document_count": len(snapshot.documents),
                 "comment_count": len(snapshot.comments),
-                # Keep the flat counter for the legacy Phase-1 UI dashboard.
+                # Keep the flat counter for the legacy UI dashboard.
                 **card_stats,
             }
             m.stats = {**(m.stats or {}), **stats}
@@ -425,15 +472,13 @@ async def _parse_and_stage_job(migration_id_str: str) -> None:
             m.parsed_at = datetime.now(timezone.utc)
             await db.commit()
         except Exception as exc:  # noqa: BLE001 — surface to UI, don't crash worker
-            logger.exception("LeanIX parse job failed")
+            logger.exception("migration parse job failed")
             await db.rollback()
             try:
                 async with async_session() as db2:
                     m2 = (
                         await db2.execute(
-                            select(LeanixMigration).where(
-                                LeanixMigration.id == uuid.UUID(migration_id_str)
-                            )
+                            select(Migration).where(Migration.id == uuid.UUID(migration_id_str))
                         )
                     ).scalar_one_or_none()
                     if m2 is not None:
@@ -450,7 +495,7 @@ async def _apply_job(migration_id_str: str, user_id_str: str) -> None:
         try:
             m = (
                 await db.execute(
-                    select(LeanixMigration).where(LeanixMigration.id == uuid.UUID(migration_id_str))
+                    select(Migration).where(Migration.id == uuid.UUID(migration_id_str))
                 )
             ).scalar_one_or_none()
             if m is None:
@@ -472,15 +517,13 @@ async def _apply_job(migration_id_str: str, user_id_str: str) -> None:
                 m.error_message = f"{counts['errors']} entity error(s) — see staged records"
             await db.commit()
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply job failed")
+            logger.exception("migration apply job failed")
             await db.rollback()
             try:
                 async with async_session() as db2:
                     m2 = (
                         await db2.execute(
-                            select(LeanixMigration).where(
-                                LeanixMigration.id == uuid.UUID(migration_id_str)
-                            )
+                            select(Migration).where(Migration.id == uuid.UUID(migration_id_str))
                         )
                     ).scalar_one_or_none()
                     if m2 is not None:
@@ -496,9 +539,9 @@ async def _apply_job(migration_id_str: str, user_id_str: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def _load_migration(db: AsyncSession, migration_id: uuid.UUID) -> LeanixMigration:
+async def _load_migration(db: AsyncSession, migration_id: uuid.UUID) -> Migration:
     m = (
-        await db.execute(select(LeanixMigration).where(LeanixMigration.id == migration_id))
+        await db.execute(select(Migration).where(Migration.id == migration_id))
     ).scalar_one_or_none()
     if m is None:
         raise HTTPException(status_code=404, detail="Migration not found")

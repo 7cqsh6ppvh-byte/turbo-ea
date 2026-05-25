@@ -14,7 +14,7 @@ La parte superiore della card mostra:
 - **Badge dello stato di approvazione** — Draft, Approved, Broken o Rejected
 - **Pulsante suggerimento AI** — Cliccate per generare una descrizione con AI (visibile quando l'AI è abilitata per questo tipo di card e l'utente ha il permesso di modifica)
 - **Anello della qualità dei dati** — Indicatore visivo della completezza delle informazioni (0-100%)
-- **Menu azioni** — Archiviazione, eliminazione e azioni di approvazione
+- **Menu azioni** — Archiviazione, eliminazione e azioni di approvazione. Include anche un'azione con un clic **Osserva questa scheda** (quando il tipo di scheda definisce un ruolo Osservatore) che consente a qualsiasi utente con permessi di lettura di seguire la scheda senza passare dalla scheda Stakeholder.
 
 ### Workflow di approvazione
 
@@ -57,6 +57,7 @@ Ogni fase ha un **selettore di data** per registrare quando il componente è ent
 A seconda del tipo di card, vedrete sezioni aggiuntive con **campi personalizzati** configurati nel metamodello. I tipi di campo includono:
 
 - **Testo** — Input di testo libero
+- **Testo multilinea** — Input di testo libero che preserva le interruzioni di riga, visualizzato come un'area di testo a crescita automatica
 - **Numero** — Valore numerico
 - **Costo** — Valore numerico visualizzato con la valuta configurata della piattaforma
 - **Booleano** — Interruttore on/off

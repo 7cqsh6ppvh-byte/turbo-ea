@@ -48,14 +48,82 @@ When working on this codebase, follow these conventions:
 
 ### MCP Server Conventions
 - The MCP server lives in `mcp-server/` — a separate Python package (`turbo-ea-mcp`) with its own `pyproject.toml` and Dockerfile.
-- It provides **read-only** AI tool access to EA data via the [Model Context Protocol](https://modelcontextprotocol.io/) (FastMCP library).
+- It provides AI tool access to EA data via the [Model Context Protocol](https://modelcontextprotocol.io/) (FastMCP library).
 - **Two transport modes**: HTTP/SSE (production, via Docker `--profile mcp`) and stdio (local testing with Claude Desktop).
 - **Authentication**: In HTTP mode, users authenticate via OAuth 2.1 delegated to the Turbo EA SSO provider. The MCP server resolves OAuth tokens to Turbo EA JWTs. In stdio mode, `TURBO_EA_EMAIL`/`TURBO_EA_PASSWORD` env vars are used for direct login.
-- **Tools are read-only**: 25 tools across six clusters. **Cards & metamodel**: `search_cards`, `get_card`, `get_card_relations`, `get_card_hierarchy`, `list_card_types`, `get_relation_types`. **Dashboards**: `get_dashboard`, `get_landscape`. **GRC (Risk Register)**: `list_risks`, `get_risk`, `get_risk_metrics`, `get_card_risks`. **GRC (Compliance)**: `list_compliance_findings`, `get_compliance_overview`. **Governance & Delivery**: `list_principles`, `list_adrs`, `get_adr`, `list_soaws`. **Reports**: `get_portfolio_report`, `get_cost_treemap`, `get_capability_heatmap`, `get_data_quality_report`. **Card context**: `get_card_stakeholders`, `get_card_comments`, `get_card_documents`. Do not add mutating tools without careful security review.
-- **All data access respects RBAC**: The user's JWT is passed through to the backend API, so permission checks are enforced server-side.
-- **Config** is in `mcp-server/turbo_ea_mcp/config.py` — reads from env vars (`TURBO_EA_URL`, `TURBO_EA_PUBLIC_URL`, `MCP_PUBLIC_URL`, `MCP_PORT`).
+- **Read tools** (25, across six clusters). **Cards & metamodel**: `search_cards`, `get_card`, `get_card_relations`, `get_card_hierarchy`, `list_card_types`, `get_relation_types`. **Dashboards**: `get_dashboard`, `get_landscape`. **GRC (Risk Register)**: `list_risks`, `get_risk`, `get_risk_metrics`, `get_card_risks`. **GRC (Compliance)**: `list_compliance_findings`, `get_compliance_overview`. **Governance & Delivery**: `list_principles`, `list_adrs`, `get_adr`, `list_soaws`. **Reports**: `get_portfolio_report`, `get_cost_treemap`, `get_capability_heatmap`, `get_data_quality_report`. **Card context**: `get_card_stakeholders`, `get_card_comments`, `get_card_documents`.
+- **Audit & change history** (1). `get_change_history(batch_id?, actor_user_id?, tool_name?, origin?, limit?)` surfaces the mutation-batch ledger so agents and admins can reconstruct exactly what a previous MCP commit changed from a single id. Wraps `GET /mutation-batches` and `GET /mutation-batches/{id}/events`.
+- **Write tools — artifact import** (5). The agent reads artifacts from its own context (spreadsheets, BPMN XML, DrawIO XML, PDFs, images) and calls these tools to land structured rows in Turbo EA: `create_cards_bulk(cards, dry_run=True)` → `POST /cards/bulk-create`; `resolve_card_refs(refs)` → `POST /cards/resolve-refs` (name-to-UUID pre-check); `upsert_relations_bulk(operations, dry_run=True)` → `POST /relations/bulk`; `create_diagram(name, drawio_xml, …, dry_run=True)` → `POST /diagrams`; `import_bpmn(business_process_name, bpmn_xml, …, dry_run=True)` → find-or-create `BusinessProcess` card via `/cards/bulk-create` then `PUT /bpm/processes/{id}/diagram`. **Dry-run by default**: every write tool defaults to `dry_run=True`, which runs every validator and resolver server-side then rolls the transaction back so the agent can show the user a preview before committing. The backend's bulk endpoints (`/cards/bulk-create`, `/relations/bulk`, `/bpm/processes/{id}/diagram`) carry the matching `dry_run: bool = False` request flag; `event_bus.publish` calls and side-effect emitters in those handlers are gated on `not dry_run` so a preview never leaks events. Adding more mutating tools warrants careful security review.
+- **All data access respects RBAC**: The user's JWT is passed through to the backend API, so permission checks are enforced server-side. Write tools require the same permissions as the underlying REST routes — `inventory.create`, `relations.manage`, `diagrams.manage`, `bpm.edit`.
+- **Write-tool guardrails.** Defense in depth so an LLM mishap can't cause mass damage. (a) Per-call size caps on the MCP path — defaults `MCP_MAX_CARDS_PER_CALL=200`, `MCP_MAX_RELATIONS_PER_CALL=500`. The underlying backend bulk endpoints still accept up to 2000/5000 for the legitimate Excel-importer UI, but the MCP tool wrappers reject larger payloads before forwarding. (b) `upsert_relations_bulk` refuses `action: "delete"` ops by default — relations should be removed from the web UI for an auditable trail; flip `MCP_ALLOW_RELATION_DELETE=true` only when an operator explicitly opts in. (c) Kill switch — `MCP_WRITES_ENABLED=false` disables all 5 write tools without a code redeploy; read tools keep working. (d) Audit origin — the MCP server sends `X-Turbo-EA-Origin: mcp` on every backend call; the `capture_request_origin` middleware in `app.main` mirrors it into the `request_origin` contextvar that `event_bus.publish` stamps into the event data payload (`{"origin": "mcp"}`) so admins can filter MCP-driven writes out of the timeline. Header values are whitelisted to `{mcp, web, api}` — any other value is dropped. (e) The toolset deliberately omits card delete / archive / bulk-update; any future MCP write tool that crosses that line needs an RFC discussion first.
+- **Mutation batches.** Every MCP write call opens a `mutation_batches` row (`POST /mutation-batches`) before any writes, threads the resulting `batch_id` through every subsequent backend call via the `X-Turbo-EA-Batch` header, and closes the batch on success (`POST /mutation-batches/{id}/commit`). The same middleware that captures `X-Turbo-EA-Origin` mirrors the batch id into the `request_batch_id` contextvar so `event_bus.publish` stamps every event emitted during the request with that id — admins (or the `get_change_history` MCP tool) can then reconstruct the full per-event diff of a single batch from one id. Commits above `MCP_BATCH_CONFIRMATION_THRESHOLD` (default 20 rows) must echo back a one-shot `confirm_token` issued by the prior dry-run; the token has a 15-minute TTL. The MCP wrapper enforces the gate at the agent edge; the backend enforces it again on `POST /mutation-batches/{id}/commit`. The wrapper helper lives in `mcp-server/turbo_ea_mcp/batches.py`; the standardised mutation pattern is documented on its `mutation_batch` async-context-manager. **All 31 MCP tools carry `ToolAnnotations`** (`readOnlyHint` / `destructiveHint` / `idempotentHint`) so connectors can surface destructiveness in their UI.
+- **Config** is in `mcp-server/turbo_ea_mcp/config.py` — reads from env vars (`TURBO_EA_URL`, `TURBO_EA_PUBLIC_URL`, `MCP_PUBLIC_URL`, `MCP_PORT`, plus the six guardrail vars `MCP_WRITES_ENABLED`, `MCP_MAX_CARDS_PER_CALL`, `MCP_MAX_RELATIONS_PER_CALL`, `MCP_ALLOW_RELATION_DELETE`, `MCP_BATCH_CONFIRMATION_THRESHOLD`, `MCP_REQUIRE_DRYRUN_FIRST`).
 - **Tests** live in `mcp-server/tests/` and use `pytest` + `pytest-asyncio`. Run with `cd mcp-server && pip install -e ".[dev]" && pytest`.
 - The MCP server shares the `/VERSION` file with backend/frontend for version consistency.
+
+### Platform Migration Conventions
+
+The **Admin → Settings → Migration** importer ingests workspace exports from third-party EA platforms (LeanIX today; Ardoq, Mega HOPEX, BiZZdesign, Avolution Abacus, … in the future) and lands them as Turbo EA cards, relations, tags, stakeholders, documents, comments, and metamodel extensions. The importer is built around an **adapter pattern** so adding a new source platform is a self-contained module — no schema churn, no pipeline rewrites, no route changes.
+
+**Module layout** (`backend/app/services/migration/`):
+
+```
+migration/
+  __init__.py          # re-exports MigrationSource, SOURCES, MigrationSnapshot, …
+  protocol.py          # MigrationSource Protocol — the adapter contract
+  registry.py          # SOURCES dict + register_source() + get_source()
+  snapshot.py          # source-neutral typed payloads (SourceEntity, Relation,
+                       # Subscription, Tag, Document, Comment, UserRef,
+                       # MetamodelType/Field/RelationType, MigrationSnapshot)
+  staging.py           # source-agnostic staging pipeline (takes MigrationSource arg)
+  apply.py             # source-agnostic apply pipeline (12 dependency-ordered passes)
+  sources/
+    __init__.py        # registers every built-in adapter at import time
+    leanix/            # SAP LeanIX adapter
+      adapter.py       # LeanixSource implementing MigrationSource
+      mappings.py      # TYPE_MAPPING, RELATION_MAPPING, FLIP_DIRECTION,
+                       # FIELD_TYPE_MAPPING, SUBSCRIPTION_ROLE_MAPPING,
+                       # HIERARCHY_RELATIONS
+      xlsx_parser.py   # parser → MigrationSnapshot
+```
+
+**DB schema** is uniform across sources (`backend/app/models/migration.py`): `migrations`, `staged_records`, `migration_identity_map` tables, each carrying a `source_type` discriminator column. Identity-map uniqueness is `(source_id, entity_kind, source_type)`; file-hash uniqueness is `(file_hash, source_type)`. Same shape for every source.
+
+**HTTP routes** (`backend/app/api/v1/migration.py`) are source-neutral too: `GET /migration/sources`, `POST /migration/upload` (with `source_key` on the form), `GET /migration`, `GET /migration/{id}`, `GET /migration/{id}/preview`, `POST /migration/{id}/apply`, `DELETE /migration/{id}`. Gated by the single `admin.migrate` permission across all sources.
+
+#### Adding a new source platform
+
+To add an Ardoq / HOPEX / BiZZdesign / etc. adapter, the only surface area is a new subpackage under `sources/` plus one import line. Backend pipeline, DB schema, HTTP routes, frontend UI, and permission gating are all untouched.
+
+1. **Create the adapter subpackage** at `backend/app/services/migration/sources/<key>/`:
+   - **`mappings.py`** — five module-level constants the staging pipeline reads via the adapter: `TYPE_MAPPING: dict[str, str]` (native entity-type → TEA card-type key), `RELATION_MAPPING: dict[str, str]` (native relation name → TEA relation-type key, both wire-format flavours if the source has more than one), `FLIP_DIRECTION: frozenset[str]` (native relation types whose direction is the reverse of TEA's convention), `FIELD_TYPE_MAPPING: dict[str, str]` (native field-data-type string → TEA `fields_schema` type), `SUBSCRIPTION_ROLE_MAPPING: dict[str, str]` (lowercased native role-name → TEA stakeholder-role key). Optional: `HIERARCHY_RELATIONS: frozenset[str]` — relations the parser folds into `SourceEntity.parent_id` and that staging must skip.
+   - **`<format>_parser.py`** — reads the source's export format off disk and returns a `MigrationSnapshot`. The dataclasses in `snapshot.py` are source-neutral, so the parser stays small and focused. Always read the file via `BytesIO` if you use openpyxl or any extension-checking library — uploads land on disk with a `.bin` suffix.
+   - **`adapter.py`** — `class <Source>Source` implementing the `MigrationSource` Protocol (`backend/app/services/migration/protocol.py`). Required attributes/methods: `key`, `label`, `accepted_extensions`, `validate_payload(head: bytes) -> bool` (magic-byte signature check), `parse(path) -> MigrationSnapshot`, the five mapping dicts (re-exported from `mappings.py`), and two extension hooks: `post_build_card_payload(entity, target_type, payload)` (apply source-specific quirks the mapping tables can't express — e.g. LeanIX's `UserGroup → Organization w/ subtype="team"` writes a `source_origin = "<key>:UserGroup"` attribute) and `map_subscription_role(role_name, role_type) -> str` (free-form role-name → TEA role key with a sensible fallback).
+   - **`__init__.py`** — `from app.services.migration.registry import register_source; from .adapter import <Source>Source; register_source(<Source>Source())`. Registration happens at import time.
+
+2. **Wire the subpackage into the built-in source list** in `backend/app/services/migration/sources/__init__.py`: add `from app.services.migration.sources import <key>  # noqa: F401`. That's the only place outside the new subpackage that needs to change.
+
+3. **Tests** — mirror the LeanIX layout: `backend/tests/services/test_migration_<key>_parser.py` (parser unit tests with synthetic export payloads built in-memory; never check in real customer data). The staging + apply tests in `test_migration_staging.py` / `test_migration_apply.py` are source-agnostic and don't need duplicates; just make sure the new adapter is covered by the registry contract test in `test_migration_registry.py` (assert `SOURCES["<key>"]` resolves and exposes the expected `label`/`accepted_extensions`).
+
+4. **Frontend** — no changes required. The source picker in `MigrationAdmin.tsx`'s upload dialog reads from `GET /migration/sources`, so the new adapter shows up automatically. The file picker's `accept=` attribute is driven by the adapter's `accepted_extensions`.
+
+5. **i18n** — no new keys required. The picker uses the adapter's `label` directly; the staging/apply UI is source-agnostic and uses the existing `migration.*` keys in all 8 locales.
+
+6. **Docs** — update `docs/admin/migration.md` (+ 7 locale variants `.de`/`.fr`/`.es`/`.it`/`.pt`/`.zh`/`.ru`) to add the new source to the **Supported sources** table at the top. If the new source has format-specific guidance (e.g. how to obtain the export), add a short subsection like the existing LeanIX one. Keep the workflow / re-running / permissions sections generic.
+
+7. **Database schema** — **no Alembic migration**. The three tables (`migrations`, `staged_records`, `migration_identity_map`) are source-uniform; the only per-source DB knowledge is the `source_type` value, which is just a string. Adding a Postgres CHECK constraint on `source_type` would be tempting but is intentionally avoided — the registry is the source of truth and the route layer rejects unknown keys before any insert.
+
+8. **Permissions** — no change. All sources share the single `admin.migrate` permission. Splitting into per-source permissions (`admin.migrate.<key>`) is deferred until a customer actually requests it (the registry already knows the key, so splitting later is a five-minute change).
+
+**Guardrails when writing an adapter**:
+
+- **Mapping dicts on the adapter, not inlined**. Module-level constants in `mappings.py` keep the LX/Ardoq-specific knowledge in one obvious place. Resist the temptation to special-case in `staging.py`.
+- **Source-specific quirks belong in `post_build_card_payload`**, not in the staging pipeline. If a source needs more than a simple mapping (e.g. force a subtype, rewrite an attribute, tag the origin), express it as a payload mutation in the hook. The hook is allowed to be empty for adapters that don't need it.
+- **Don't expand the `MigrationSource` Protocol** without a second adapter actually needing the new method. YAGNI applies — `post_build_card_payload` + `map_subscription_role` covered every LeanIX quirk; the next adapter likely needs the same two, possibly nothing more.
+- **Identity map is keyed by `(source_id, entity_kind, source_type)`**. Two sources can legitimately share an external id; the schema reflects that and the staging pipeline's identity-resolution queries already filter by `source_type` via `migration.source_type`. Never strip the `source_type` filter from a query.
+- **Snapshot dataclasses are source-neutral** — don't add source-specific fields to `SourceEntity` / `Relation` / etc. Stuff source-specific data into `raw` or `custom_fields` instead.
+- **The apply pipeline is source-agnostic**. It walks `entity_kind` rows by action; it never reads the adapter. If you find yourself wanting to dispatch on `source_type` in `apply.py`, push the logic into a per-source extension hook on the adapter instead.
+- **Hierarchy edges go on `SourceEntity.parent_id`** at parse time (via the optional `HIERARCHY_RELATIONS` set + a parser pass). Never let a hierarchy edge surface as a Turbo EA relation.
 
 ### Frontend Conventions
 - Route-level pages use `lazy()` imports in `App.tsx` for code splitting.
@@ -658,6 +726,10 @@ turbo-ea/
 | `TURBO_EA_PUBLIC_URL` | `http://localhost:8920` | Public-facing Turbo EA URL for OAuth redirects and bundled nginx hostname/proto derivation |
 | `MCP_PUBLIC_URL` | `http://localhost:8001` | (MCP server) Public URL for OAuth metadata |
 | `MCP_PORT` | `8001` | (MCP server) Bind port |
+| `MCP_WRITES_ENABLED` | `true` | (MCP server) Kill switch for all 5 write tools — set to `false` to put the MCP server into read-only mode without a code redeploy. Read tools keep working. |
+| `MCP_MAX_CARDS_PER_CALL` | `200` | (MCP server) Per-call size cap for `create_cards_bulk`. The backend `/cards/bulk-create` endpoint still accepts up to 2000 for the legitimate Excel importer; the MCP wrapper enforces this lower cap so a dry-run preview stays reviewable. |
+| `MCP_MAX_RELATIONS_PER_CALL` | `500` | (MCP server) Per-call size cap for `upsert_relations_bulk`. Backend accepts up to 5000 from the UI. |
+| `MCP_ALLOW_RELATION_DELETE` | `false` | (MCP server) When `false` (default), `upsert_relations_bulk` refuses `action: "delete"` ops — relations must be removed via the web UI for an explicit audit trail. Set `true` only when an operator opts in. |
 
 For local frontend dev without Docker, create `frontend/.env.development`:
 ```

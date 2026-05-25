@@ -45,7 +45,7 @@ import BulkActionsToolbar from "./users/BulkActionsToolbar";
 import BulkRoleDialog from "./users/BulkRoleDialog";
 import { exportUsersToXlsx } from "./users/userExcelExport";
 
-interface InviteFormState {
+interface CreateUserFormState {
   email: string;
   display_name: string;
   password: string;
@@ -53,7 +53,7 @@ interface InviteFormState {
   send_email: boolean;
 }
 
-const EMPTY_INVITE: InviteFormState = {
+const EMPTY_CREATE_USER: CreateUserFormState = {
   email: "",
   display_name: "",
   password: "",
@@ -110,11 +110,11 @@ export default function UsersAdmin() {
   const [warning, setWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Invite dialog state
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviteForm, setInviteForm] = useState<InviteFormState>(EMPTY_INVITE);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const [inviteSubmitting, setInviteSubmitting] = useState(false);
+  // Create-user dialog state
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState<CreateUserFormState>(EMPTY_CREATE_USER);
+  const [createUserError, setCreateUserError] = useState<string | null>(null);
+  const [createUserSubmitting, setCreateUserSubmitting] = useState(false);
 
   // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
@@ -353,49 +353,49 @@ export default function UsersAdmin() {
     setSuccess(t("users.exportSuccess", { count: list.length }));
   }, [t]);
 
-  // --- Invite dialog ---
-  const openInvite = () => {
-    setInviteForm(EMPTY_INVITE);
-    setInviteError(null);
-    setInviteOpen(true);
+  // --- Create-user dialog ---
+  const openCreateUser = () => {
+    setCreateUserForm(EMPTY_CREATE_USER);
+    setCreateUserError(null);
+    setCreateUserOpen(true);
   };
 
-  const handleInvite = async () => {
-    if (!inviteForm.email.trim() || !inviteForm.display_name.trim()) {
-      setInviteError(t("users.invite.requiredFields"));
+  const handleCreateUser = async () => {
+    if (!createUserForm.email.trim() || !createUserForm.display_name.trim()) {
+      setCreateUserError(t("users.create.requiredFields"));
       return;
     }
-    if (!ssoEnabled && !inviteForm.password) {
-      setInviteError(t("users.invite.passwordRequiredLocal"));
+    if (!ssoEnabled && !createUserForm.password) {
+      setCreateUserError(t("users.create.passwordRequiredLocal"));
       return;
     }
     try {
-      setInviteSubmitting(true);
-      setInviteError(null);
+      setCreateUserSubmitting(true);
+      setCreateUserError(null);
       const created = await api.post<User & { email_error?: string; email_sent?: boolean }>(
         "/users",
         {
-          email: inviteForm.email.trim(),
-          display_name: inviteForm.display_name.trim(),
-          password: inviteForm.password || null,
-          role: inviteForm.role,
-          send_email: inviteForm.send_email,
+          email: createUserForm.email.trim(),
+          display_name: createUserForm.display_name.trim(),
+          password: createUserForm.password || null,
+          role: createUserForm.role,
+          send_email: createUserForm.send_email,
         }
       );
       setUsers((prev) => [...prev, created]);
-      setInviteOpen(false);
-      if (inviteForm.send_email && created.email_error) {
+      setCreateUserOpen(false);
+      if (createUserForm.send_email && created.email_error) {
         setWarning(created.email_error);
       } else {
         setWarning(null);
       }
       fetchInvitations();
     } catch (err) {
-      setInviteError(
+      setCreateUserError(
         err instanceof Error ? err.message : t("common:errors.generic")
       );
     } finally {
-      setInviteSubmitting(false);
+      setCreateUserSubmitting(false);
     }
   };
 
@@ -987,9 +987,9 @@ export default function UsersAdmin() {
             <Button
               variant="contained"
               startIcon={<MaterialSymbol icon="person_add" size={20} />}
-              onClick={openInvite}
+              onClick={openCreateUser}
             >
-              {t("users.inviteUser")}
+              {t("users.createUser")}
             </Button>
           </Box>
 
@@ -1091,31 +1091,31 @@ export default function UsersAdmin() {
             roles={roles}
           />
 
-          {/* Invite User Dialog */}
+          {/* Create User Dialog */}
           <Dialog
-            open={inviteOpen}
-            onClose={() => setInviteOpen(false)}
+            open={createUserOpen}
+            onClose={() => setCreateUserOpen(false)}
             maxWidth="sm"
             fullWidth
           >
-            <DialogTitle>{t("users.invite.title")}</DialogTitle>
+            <DialogTitle>{t("users.create.title")}</DialogTitle>
             <DialogContent>
               <Stack spacing={2.5} sx={{ mt: 1 }}>
                 {ssoEnabled && (
                   <Alert severity="info" variant="outlined">
-                    {t("users.invite.ssoHint")}
+                    {t("users.create.ssoHint")}
                   </Alert>
                 )}
                 {!ssoEnabled && (
                   <Alert severity="info" variant="outlined">
-                    {t("users.invite.emailHint")}
+                    {t("users.create.emailHint")}
                   </Alert>
                 )}
                 <TextField
-                  label={t("users.invite.displayName")}
-                  value={inviteForm.display_name}
+                  label={t("users.create.displayName")}
+                  value={createUserForm.display_name}
                   onChange={(e) =>
-                    setInviteForm((p) => ({ ...p, display_name: e.target.value }))
+                    setCreateUserForm((p) => ({ ...p, display_name: e.target.value }))
                   }
                   fullWidth
                   required
@@ -1125,9 +1125,9 @@ export default function UsersAdmin() {
                 <TextField
                   label={t("users.columns.email")}
                   type="email"
-                  value={inviteForm.email}
+                  value={createUserForm.email}
                   onChange={(e) =>
-                    setInviteForm((p) => ({ ...p, email: e.target.value }))
+                    setCreateUserForm((p) => ({ ...p, email: e.target.value }))
                   }
                   fullWidth
                   required
@@ -1136,30 +1136,30 @@ export default function UsersAdmin() {
                 <TextField
                   label={
                     ssoEnabled
-                      ? t("users.invite.passwordOptional")
-                      : t("users.invite.password")
+                      ? t("users.create.passwordOptional")
+                      : t("users.create.password")
                   }
                   type="password"
-                  value={inviteForm.password}
+                  value={createUserForm.password}
                   onChange={(e) =>
-                    setInviteForm((p) => ({ ...p, password: e.target.value }))
+                    setCreateUserForm((p) => ({ ...p, password: e.target.value }))
                   }
                   fullWidth
                   size="small"
                   required={!ssoEnabled}
                   helperText={
                     ssoEnabled
-                      ? t("users.invite.passwordSsoHelperText")
-                      : t("users.invite.passwordHelperText")
+                      ? t("users.create.passwordSsoHelperText")
+                      : t("users.create.passwordHelperText")
                   }
                 />
                 <FormControl fullWidth size="small">
                   <InputLabel>{t("users.columns.role")}</InputLabel>
                   <Select
                     label={t("users.columns.role")}
-                    value={inviteForm.role}
+                    value={createUserForm.role}
                     onChange={(e) =>
-                      setInviteForm((p) => ({
+                      setCreateUserForm((p) => ({
                         ...p,
                         role: e.target.value as string,
                       }))
@@ -1185,35 +1185,35 @@ export default function UsersAdmin() {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={inviteForm.send_email}
+                      checked={createUserForm.send_email}
                       onChange={(e) =>
-                        setInviteForm((p) => ({
+                        setCreateUserForm((p) => ({
                           ...p,
                           send_email: e.target.checked,
                         }))
                       }
                     />
                   }
-                  label={t("users.invite.sendEmail")}
+                  label={t("users.create.sendEmail")}
                 />
-                {inviteError && <Alert severity="error">{inviteError}</Alert>}
+                {createUserError && <Alert severity="error">{createUserError}</Alert>}
               </Stack>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
               <Button
-                onClick={() => setInviteOpen(false)}
-                disabled={inviteSubmitting}
+                onClick={() => setCreateUserOpen(false)}
+                disabled={createUserSubmitting}
               >
                 {t("common:actions.cancel")}
               </Button>
               <Button
                 variant="contained"
-                onClick={handleInvite}
-                disabled={inviteSubmitting}
+                onClick={handleCreateUser}
+                disabled={createUserSubmitting}
               >
-                {inviteSubmitting
-                  ? t("users.invite.inviting")
-                  : t("users.inviteUser")}
+                {createUserSubmitting
+                  ? t("users.create.creating")
+                  : t("users.createUser")}
               </Button>
             </DialogActions>
           </Dialog>
@@ -1229,7 +1229,7 @@ export default function UsersAdmin() {
             <DialogContent>
               <Stack spacing={2.5} sx={{ mt: 1 }}>
                 <TextField
-                  label={t("users.invite.displayName")}
+                  label={t("users.create.displayName")}
                   value={editForm.display_name}
                   onChange={(e) =>
                     setEditForm((p) => ({ ...p, display_name: e.target.value }))

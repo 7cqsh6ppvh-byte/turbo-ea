@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -39,6 +39,7 @@ export default function ADREditor() {
   const { t } = useTranslation(["delivery", "common"]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { formatDate } = useDateFormat();
   const isNew = !id;
 
@@ -70,6 +71,20 @@ export default function ADREditor() {
   // Reject dialog
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
+
+  // Deep-link handler: when the MCP server returns a `pending` response
+  // with `deep_link: /ea-delivery/adr/{id}?action=sign|reject|request-
+  // signatures`, the user clicks it and lands here. Auto-open the
+  // matching dialog so the human can finish the workflow in one click.
+  // The param is consumed (cleared) so a refresh doesn't re-open.
+  useEffect(() => {
+    if (isNew) return;
+    const action = searchParams.get("action");
+    if (!action) return;
+    if (action === "sign") setSignDialogOpen(true);
+    else if (action === "reject") setRejectDialogOpen(true);
+    setSearchParams({}, { replace: true });
+  }, [isNew, searchParams, setSearchParams]);
 
   // Current user
   const [currentUserId, setCurrentUserId] = useState<string>("");

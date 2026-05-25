@@ -14,7 +14,7 @@ Der obere Bereich der Karte zeigt:
 - **Genehmigungsstatus-Badge** — Entwurf, Genehmigt, Ungültig oder Abgelehnt
 - **KI-Vorschlags-Schaltfläche** — Klicken, um eine Beschreibung mit KI zu generieren (sichtbar, wenn KI für diesen Kartentyp aktiviert ist und der Benutzer Bearbeitungsrechte hat)
 - **Datenqualitätsring** — Visueller Indikator der Informationsvollständigkeit (0–100%)
-- **Aktionsmenü** — Archivieren, Löschen und Genehmigungsaktionen
+- **Aktionsmenü** — Archivieren, Löschen und Genehmigungsaktionen. Enthält außerdem eine Ein-Klick-Aktion **Diese Karte beobachten** (sofern der Kartentyp eine Beobachter-Rolle definiert), mit der jeder Benutzer mit Leserechten der Karte folgen kann, ohne den Stakeholder-Tab zu öffnen.
 
 ### Genehmigungsworkflow
 
@@ -57,6 +57,7 @@ Jede Phase verfügt über eine **Datumsauswahl**, damit Sie festhalten können, 
 Abhängig vom Kartentyp werden Sie zusätzliche Abschnitte mit **benutzerdefinierten Feldern** sehen, die im Metamodell konfiguriert sind. Feldtypen umfassen:
 
 - **Text** — Freitexteingabe
+- **Mehrzeiliger Text** — Freitexteingabe, die Zeilenumbrüche beibehält und als automatisch wachsendes Textfeld dargestellt wird
 - **Zahl** — Numerischer Wert
 - **Kosten** — Numerischer Wert, angezeigt mit der konfigurierten Währung der Plattform
 - **Boolean** — Ein/Aus-Umschalter

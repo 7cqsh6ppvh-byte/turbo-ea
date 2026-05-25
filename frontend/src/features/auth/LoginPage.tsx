@@ -37,10 +37,6 @@ export default function LoginPage({ onLogin, onRegister }: Props) {
     auth.ssoConfig().then(setSsoConfig).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    document.title = appTitle;
-  }, [appTitle]);
-
   const ssoEnabled = ssoConfig?.enabled === true;
   const registrationAllowed =
     !ssoEnabled && ssoConfig?.registration_enabled !== false;

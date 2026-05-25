@@ -1,22 +1,28 @@
-"""LeanIX migration apply pipeline.
+"""Source-neutral migration apply pipeline.
 
-Phase 2 covers **cards + relations + tags**. Once the user has
-reviewed the staged records produced by :mod:`leanix_migration_service`
-the apply pipeline walks them in dependency order:
+Walks the :class:`StagedRecord` rows produced by
+:mod:`app.services.migration.staging` in dependency order:
 
-1. Cards in topological parent-first order — populates the identity
+1. Custom metamodel types / fields / relation types — must exist
+   before any card or relation referencing them lands.
+2. Users — referenced by subscriptions in pass 10.
+3. Cards in topological parent-first order — populates the identity
    map so relation endpoints can resolve.
-2. Tag groups, then tags — must come before card_tag joins.
-3. Card-tag join rows.
-4. Relations — endpoints resolved against the now-fresh identity map.
+4. Tag groups, then tags — must come before card_tag joins.
+5. Card-tag join rows.
+6. Relations — endpoints resolved against the now-fresh identity map.
+7. Subscriptions — Stakeholder rows that reference users + cards from
+   earlier passes.
+8. Documents and comments.
 
 Each pass runs inside its own ``SAVEPOINT``: one failing entity does
 not poison the rest of the import. Errors are captured back onto the
-``leanix_staged_records.error_message`` column so the admin can see
-exactly what failed without reading server logs.
+``staged_records.error_message`` column so the admin can see exactly
+what failed without reading server logs.
 
-Later phases will plug additional passes for metamodel extensions,
-user auto-creation, subscriptions, documents, and comments.
+The pipeline is source-agnostic — it walks rows by ``entity_kind`` and
+``action`` and never touches the adapter (mappings were already
+applied at staging time).
 """
 
 from __future__ import annotations
@@ -34,7 +40,7 @@ from app.models.card import Card
 from app.models.card_type import CardType
 from app.models.comment import Comment
 from app.models.document import Document
-from app.models.leanix import LeanixIdentityMap, LeanixMigration, LeanixStagedRecord
+from app.models.migration import IdentityMap, Migration, StagedRecord
 from app.models.relation import Relation
 from app.models.relation_type import RelationType
 from app.models.stakeholder import Stakeholder
@@ -51,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 async def apply_migration(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     """Execute every applicable pass for ``migration``.
@@ -93,7 +99,7 @@ async def apply_migration(
 
 async def _apply_card_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -101,9 +107,9 @@ async def _apply_card_pass(
     rows = list(
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "card",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "card",
                 )
             )
         )
@@ -111,7 +117,7 @@ async def _apply_card_pass(
         .all()
     )
 
-    # Topo sort: parents (no parent_leanix_id, or parent already
+    # Topo sort: parents (no parent_source_id, or parent already
     # resolved earlier in the list) come first. Detect cycles by
     # tracking unresolved IDs across iterations — if a pass makes no
     # progress, the remaining rows are part of a cycle and apply
@@ -120,9 +126,9 @@ async def _apply_card_pass(
 
     for staged in ordered:
         if staged.action == "skip":
-            # Existing card with no diff. We still need to refresh the
-            # identity-map row so later passes (relations, card_tag,
-            # subscription, …) can resolve the LeanIX uuid → Turbo EA
+            # Existing card with no diff. The identity-map row is still
+            # refreshed so later passes (relations, card_tag,
+            # subscription, …) can resolve the native id → Turbo EA
             # card uuid. Without this, a re-import after an identity
             # map wipe leaves every downstream pass with dangling
             # endpoints.
@@ -131,8 +137,8 @@ async def _apply_card_pass(
                     await _upsert_identity_map(db, staged)
                 except Exception:  # noqa: BLE001
                     logger.exception(
-                        "LeanIX apply: identity_map refresh for skipped card %s failed",
-                        staged.leanix_id,
+                        "migration apply: identity_map refresh for skipped card %s failed",
+                        staged.source_id,
                     )
             counts["skipped"] += 1
             staged.status = "applied"
@@ -147,7 +153,7 @@ async def _apply_card_pass(
             counts["created" if staged.action == "create" else "updated"] += 1
             staged.status = "applied"
         except Exception as exc:  # noqa: BLE001 — collect, don't crash the pass
-            logger.exception("LeanIX apply: card %s failed", staged.leanix_id)
+            logger.exception("migration apply: card %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -158,10 +164,10 @@ async def _apply_card_pass(
 
 async def _apply_single_card(
     db: AsyncSession,
-    staged: LeanixStagedRecord,
+    staged: StagedRecord,
     user: User,
 ) -> None:
-    payload = (staged.leanix_data or {}).get("payload") or {}
+    payload = (staged.source_data or {}).get("payload") or {}
     parent_id = await _resolve_parent_card_id(db, staged)
 
     if staged.action == "create":
@@ -193,9 +199,9 @@ async def _apply_single_card(
         if existing_card is None:
             raise ValueError(f"target card {staged.target_id} no longer exists")
         card = existing_card
-        # Apply diff'd fields back onto the existing card. We intentionally
-        # **do not** wipe attributes the import doesn't know about —
-        # merge instead of replace.
+        # Apply diff'd fields back onto the existing card. Attributes
+        # the import doesn't know about are intentionally **not** wiped
+        # — merge instead of replace.
         if payload.get("name"):
             card.name = payload["name"]
         if "description" in payload:
@@ -220,16 +226,16 @@ async def _apply_single_card(
 
 async def _resolve_parent_card_id(
     db: AsyncSession,
-    staged: LeanixStagedRecord,
+    staged: StagedRecord,
 ) -> uuid.UUID | None:
-    if not staged.parent_leanix_id:
+    if not staged.parent_source_id:
         return None
     parent_staged = (
         await db.execute(
-            select(LeanixStagedRecord).where(
-                LeanixStagedRecord.migration_id == staged.migration_id,
-                LeanixStagedRecord.entity_kind == "card",
-                LeanixStagedRecord.leanix_id == staged.parent_leanix_id,
+            select(StagedRecord).where(
+                StagedRecord.migration_id == staged.migration_id,
+                StagedRecord.entity_kind == "card",
+                StagedRecord.source_id == staged.parent_source_id,
             )
         )
     ).scalar_one_or_none()
@@ -238,9 +244,10 @@ async def _resolve_parent_card_id(
     # Parent not staged in this migration — look it up via the persistent identity map.
     im = (
         await db.execute(
-            select(LeanixIdentityMap).where(
-                LeanixIdentityMap.leanix_id == staged.parent_leanix_id,
-                LeanixIdentityMap.entity_kind == "card",
+            select(IdentityMap).where(
+                IdentityMap.source_id == staged.parent_source_id,
+                IdentityMap.entity_kind == "card",
+                IdentityMap.source_type == staged.source_type,
             )
         )
     ).scalar_one_or_none()
@@ -249,24 +256,26 @@ async def _resolve_parent_card_id(
 
 async def _upsert_identity_map(
     db: AsyncSession,
-    staged: LeanixStagedRecord,
+    staged: StagedRecord,
 ) -> None:
     if staged.target_id is None:
         return
     existing = (
         await db.execute(
-            select(LeanixIdentityMap).where(
-                LeanixIdentityMap.leanix_id == staged.leanix_id,
-                LeanixIdentityMap.entity_kind == "card",
+            select(IdentityMap).where(
+                IdentityMap.source_id == staged.source_id,
+                IdentityMap.entity_kind == "card",
+                IdentityMap.source_type == staged.source_type,
             )
         )
     ).scalar_one_or_none()
     now = datetime.now(timezone.utc)
     if existing is None:
         db.add(
-            LeanixIdentityMap(
+            IdentityMap(
                 id=uuid.uuid4(),
-                leanix_id=staged.leanix_id,
+                source_id=staged.source_id,
+                source_type=staged.source_type,
                 entity_kind="card",
                 target_id=staged.target_id,
                 migration_id=staged.migration_id,
@@ -284,7 +293,7 @@ async def _upsert_identity_map(
 # ---------------------------------------------------------------------------
 
 
-def _topo_sort(rows: list[LeanixStagedRecord]) -> list[LeanixStagedRecord]:
+def _topo_sort(rows: list[StagedRecord]) -> list[StagedRecord]:
     """Order staged rows so parents come before children.
 
     Returns a new list. Rows whose parent is **not** present in the
@@ -293,33 +302,33 @@ def _topo_sort(rows: list[LeanixStagedRecord]) -> list[LeanixStagedRecord]:
     full pass over the remaining rows makes no progress, the leftover
     rows are appended in arrival order with a warning log.
     """
-    by_id = {r.leanix_id: r for r in rows}
+    by_id = {r.source_id: r for r in rows}
     placed: set[str] = set()
-    out: list[LeanixStagedRecord] = []
+    out: list[StagedRecord] = []
 
     # First scheduling round: rows with no in-snapshot parent.
-    pending: list[LeanixStagedRecord] = []
+    pending: list[StagedRecord] = []
     for r in rows:
-        if not r.parent_leanix_id or r.parent_leanix_id not in by_id:
+        if not r.parent_source_id or r.parent_source_id not in by_id:
             out.append(r)
-            placed.add(r.leanix_id)
+            placed.add(r.source_id)
         else:
             pending.append(r)
 
     # Subsequent rounds: drain until empty or stalled.
     while pending:
-        next_pending: list[LeanixStagedRecord] = []
+        next_pending: list[StagedRecord] = []
         progress = False
         for r in pending:
-            if r.parent_leanix_id in placed:
+            if r.parent_source_id in placed:
                 out.append(r)
-                placed.add(r.leanix_id)
+                placed.add(r.source_id)
                 progress = True
             else:
                 next_pending.append(r)
         if not progress:
             logger.warning(
-                "LeanIX apply: cycle detected in card parent chain, "
+                "migration apply: cycle detected in card parent chain, "
                 "appending %d rows in arrival order",
                 len(next_pending),
             )
@@ -337,16 +346,16 @@ def _topo_sort(rows: list[LeanixStagedRecord]) -> list[LeanixStagedRecord]:
 
 async def _apply_tag_group_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "tag_group",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "tag_group",
                 )
             )
         )
@@ -360,12 +369,12 @@ async def _apply_tag_group_pass(
                 staged.status = "applied"
                 counts["skipped"] += 1
                 continue
-            payload = staged.leanix_data or {}
+            payload = staged.source_data or {}
             group = TagGroup(
                 id=uuid.uuid4(),
                 name=payload["name"],
                 mode=payload.get("mode") or "multi",
-                description="Imported from LeanIX",
+                description=f"Imported from {staged.source_type}",
             )
             db.add(group)
             await db.flush()
@@ -373,7 +382,7 @@ async def _apply_tag_group_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: tag_group %s failed", staged.leanix_id)
+            logger.exception("migration apply: tag_group %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -383,7 +392,7 @@ async def _apply_tag_group_pass(
 
 async def _apply_tag_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -391,9 +400,9 @@ async def _apply_tag_pass(
     group_rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "tag_group",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "tag_group",
                 )
             )
         )
@@ -401,17 +410,18 @@ async def _apply_tag_pass(
         .all()
     )
     group_index: dict[str, uuid.UUID] = {
-        gr.leanix_id: gr.target_id  # type: ignore[misc]
+        gr.source_id: gr.target_id  # type: ignore[misc]
         for gr in group_rows
         if gr.target_id is not None
     }
+    fallback_group_name = f"Imported from {migration.source_type}"
 
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "tag",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "tag",
                 )
             )
         )
@@ -425,12 +435,12 @@ async def _apply_tag_pass(
                 counts["skipped"] += 1
                 await _upsert_identity_map_kind(db, staged, "tag")
                 continue
-            payload = staged.leanix_data or {}
-            group_id = group_index.get(payload.get("group_name") or "Imported from LeanIX")
+            payload = staged.source_data or {}
+            group_id = group_index.get(payload.get("group_name") or fallback_group_name)
             if group_id is None:
                 # Resolve from DB as a fallback (re-imports skip the
                 # group-create step but the group still exists).
-                group_name = payload.get("group_name") or "Imported from LeanIX"
+                group_name = payload.get("group_name") or fallback_group_name
                 existing_group = (
                     await db.execute(select(TagGroup).where(TagGroup.name == group_name))
                 ).scalar_one_or_none()
@@ -450,7 +460,7 @@ async def _apply_tag_pass(
             counts["created"] += 1
             await _upsert_identity_map_kind(db, staged, "tag")
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: tag %s failed", staged.leanix_id)
+            logger.exception("migration apply: tag %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -460,16 +470,16 @@ async def _apply_tag_pass(
 
 async def _apply_card_tag_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "card_tag",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "card_tag",
                 )
             )
         )
@@ -478,9 +488,11 @@ async def _apply_card_tag_pass(
     )
     for staged in rows:
         try:
-            payload = staged.leanix_data or {}
-            card_uuid = await _identity_lookup(db, payload.get("fact_sheet_id"), "card")
-            tag_uuid = await _identity_lookup(db, payload.get("tag_id"), "tag")
+            payload = staged.source_data or {}
+            card_uuid = await _identity_lookup(
+                db, payload.get("entity_id"), "card", staged.source_type
+            )
+            tag_uuid = await _identity_lookup(db, payload.get("tag_id"), "tag", staged.source_type)
             if card_uuid is None or tag_uuid is None:
                 counts["skipped"] += 1
                 staged.status = "applied"
@@ -503,7 +515,7 @@ async def _apply_card_tag_pass(
             counts["created"] += 1
             staged.status = "applied"
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: card_tag %s failed", staged.leanix_id)
+            logger.exception("migration apply: card_tag %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -518,16 +530,16 @@ async def _apply_card_tag_pass(
 
 async def _apply_relation_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "relation",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "relation",
                 )
             )
         )
@@ -540,12 +552,16 @@ async def _apply_relation_pass(
             staged.status = "applied"
             continue
         try:
-            payload = staged.leanix_data or {}
+            payload = staged.source_data or {}
             # Endpoint UUIDs were cached on the staged row at staging
             # time, but the card pass may have created the cards just
             # now — re-resolve unconditionally.
-            src_uuid = await _identity_lookup(db, payload["source_id"], "card")
-            tgt_uuid = await _identity_lookup(db, payload["target_id"], "card")
+            src_uuid = await _identity_lookup(
+                db, payload["from_entity_id"], "card", staged.source_type
+            )
+            tgt_uuid = await _identity_lookup(
+                db, payload["to_entity_id"], "card", staged.source_type
+            )
             if src_uuid is None or tgt_uuid is None:
                 counts["skipped"] += 1
                 staged.status = "applied"
@@ -579,7 +595,7 @@ async def _apply_relation_pass(
                 counts["skipped"] += 1
             staged.status = "applied"
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: relation %s failed", staged.leanix_id)
+            logger.exception("migration apply: relation %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -594,16 +610,18 @@ async def _apply_relation_pass(
 
 async def _identity_lookup(
     db: AsyncSession,
-    leanix_id: str | None,
+    source_id: str | None,
     entity_kind: str,
+    source_type: str,
 ) -> uuid.UUID | None:
-    if not leanix_id:
+    if not source_id:
         return None
     row = (
         await db.execute(
-            select(LeanixIdentityMap).where(
-                LeanixIdentityMap.leanix_id == leanix_id,
-                LeanixIdentityMap.entity_kind == entity_kind,
+            select(IdentityMap).where(
+                IdentityMap.source_id == source_id,
+                IdentityMap.entity_kind == entity_kind,
+                IdentityMap.source_type == source_type,
             )
         )
     ).scalar_one_or_none()
@@ -612,26 +630,28 @@ async def _identity_lookup(
 
 async def _upsert_identity_map_kind(
     db: AsyncSession,
-    staged: LeanixStagedRecord,
+    staged: StagedRecord,
     entity_kind: str,
 ) -> None:
-    """Write a (leanix_id, entity_kind) → target_id mapping for a non-card kind."""
+    """Write a (source_id, entity_kind, source_type) → target_id mapping for a non-card kind."""
     if staged.target_id is None:
         return
     existing = (
         await db.execute(
-            select(LeanixIdentityMap).where(
-                LeanixIdentityMap.leanix_id == staged.leanix_id,
-                LeanixIdentityMap.entity_kind == entity_kind,
+            select(IdentityMap).where(
+                IdentityMap.source_id == staged.source_id,
+                IdentityMap.entity_kind == entity_kind,
+                IdentityMap.source_type == staged.source_type,
             )
         )
     ).scalar_one_or_none()
     now = datetime.now(timezone.utc)
     if existing is None:
         db.add(
-            LeanixIdentityMap(
+            IdentityMap(
                 id=uuid.uuid4(),
-                leanix_id=staged.leanix_id,
+                source_id=staged.source_id,
+                source_type=staged.source_type,
                 entity_kind=entity_kind,
                 target_id=staged.target_id,
                 migration_id=staged.migration_id,
@@ -651,17 +671,17 @@ async def _upsert_identity_map_kind(
 
 async def _apply_metamodel_type_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
-    """Create new (non-builtin) card types for custom LeanIX FS types."""
+    """Create new (non-builtin) card types for custom native entity types."""
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "metamodel_type",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "metamodel_type",
                 )
             )
         )
@@ -674,8 +694,8 @@ async def _apply_metamodel_type_pass(
                 counts["skipped"] += 1
                 staged.status = "applied"
                 continue
-            payload = staged.leanix_data or {}
-            type_key = payload.get("proposed_tea_key") or payload.get("lx_name")
+            payload = staged.source_data or {}
+            type_key = payload.get("proposed_tea_key") or payload.get("native_name")
             if not type_key:
                 raise ValueError("missing proposed_tea_key")
             existing = (
@@ -688,12 +708,12 @@ async def _apply_metamodel_type_pass(
                 continue
             subtypes = payload.get("subtypes") or []
             # Tenant-imported types default to ``has_hierarchy=True`` and
-            # ``has_successors=True``. LeanIX models both natively (every
-            # fact sheet supports ``childParentRelation`` parent/child and
-            # ``successorRelation`` predecessor/successor chains), so the
-            # imported data carries those edges. Without these flags the
-            # frontend's CardDetail hides the hierarchy and lineage
-            # sections — the data is in the DB but invisible.
+            # ``has_successors=True``. Source platforms model both
+            # natively (every entity supports parent/child and
+            # predecessor/successor chains), so the imported data carries
+            # those edges. Without these flags the frontend's CardDetail
+            # hides the hierarchy and lineage sections — the data is in
+            # the DB but invisible.
             new_type = CardType(
                 id=uuid.uuid4(),
                 key=type_key,
@@ -713,7 +733,7 @@ async def _apply_metamodel_type_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: metamodel_type %s failed", staged.leanix_id)
+            logger.exception("migration apply: metamodel_type %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -723,23 +743,24 @@ async def _apply_metamodel_type_pass(
 
 async def _apply_metamodel_field_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
-    """Append custom LeanIX fields to the target card type's fields_schema.
+    """Append custom native fields to the target card type's fields_schema.
 
     Idempotent: fields whose key already exists on the type are
     skipped without raising. New fields are grouped under a synthetic
-    ``Imported from LeanIX`` section so customers can recognise what
+    ``Imported from {source}`` section so customers can recognise what
     came from the migration.
     """
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
+    section_name = f"Imported from {migration.source_type}"
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "metamodel_field",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "metamodel_field",
                 )
             )
         )
@@ -752,7 +773,7 @@ async def _apply_metamodel_field_pass(
                 counts["skipped"] += 1
                 staged.status = "applied"
                 continue
-            payload = staged.leanix_data or {}
+            payload = staged.source_data or {}
             type_key = payload["target_type"]
             ct = (
                 await db.execute(select(CardType).where(CardType.key == type_key))
@@ -763,12 +784,12 @@ async def _apply_metamodel_field_pass(
             # Find or create the synthetic section.
             imported_section: dict | None = None
             for sec in schema:
-                if isinstance(sec, dict) and sec.get("section") == "Imported from LeanIX":
+                if isinstance(sec, dict) and sec.get("section") == section_name:
                     imported_section = sec
                     break
             if imported_section is None:
                 imported_section = {
-                    "section": "Imported from LeanIX",
+                    "section": section_name,
                     "columns": 1,
                     "fields": [],
                 }
@@ -801,7 +822,7 @@ async def _apply_metamodel_field_pass(
             counts["created"] += 1
             staged.status = "applied"
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: metamodel_field %s failed", staged.leanix_id)
+            logger.exception("migration apply: metamodel_field %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -811,17 +832,17 @@ async def _apply_metamodel_field_pass(
 
 async def _apply_metamodel_relation_type_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
-    """Create new (non-builtin) relation types for custom LeanIX relations."""
+    """Create new (non-builtin) relation types for custom native relations."""
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "metamodel_relation_type",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "metamodel_relation_type",
                 )
             )
         )
@@ -834,8 +855,8 @@ async def _apply_metamodel_relation_type_pass(
                 counts["skipped"] += 1
                 staged.status = "applied"
                 continue
-            payload = staged.leanix_data or {}
-            key = payload.get("lx_name")
+            payload = staged.source_data or {}
+            key = payload.get("native_name")
             src = payload.get("from_type")
             tgt = payload.get("to_type")
             if not (key and src and tgt):
@@ -871,7 +892,7 @@ async def _apply_metamodel_relation_type_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: metamodel_relation_type %s failed", staged.leanix_id)
+            logger.exception("migration apply: metamodel_relation_type %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -886,16 +907,16 @@ async def _apply_metamodel_relation_type_pass(
 
 async def _apply_user_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "user",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "user",
                 )
             )
         )
@@ -910,7 +931,7 @@ async def _apply_user_pass(
                 staged.status = "applied"
                 await _upsert_identity_map_kind(db, staged, "user")
                 continue
-            payload = staged.leanix_data or {}
+            payload = staged.source_data or {}
             email = payload["email"]
             new_user = User(
                 id=uuid.uuid4(),
@@ -927,7 +948,7 @@ async def _apply_user_pass(
             counts["created"] += 1
             await _upsert_identity_map_kind(db, staged, "user")
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: user %s failed", staged.leanix_id)
+            logger.exception("migration apply: user %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -942,16 +963,16 @@ async def _apply_user_pass(
 
 async def _apply_subscription_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "subscription",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "subscription",
                 )
             )
         )
@@ -964,9 +985,13 @@ async def _apply_subscription_pass(
             staged.status = "applied"
             continue
         try:
-            payload = staged.leanix_data or {}
-            card_uuid = await _identity_lookup(db, payload.get("fact_sheet_id"), "card")
-            user_uuid = await _identity_lookup(db, payload.get("user_email"), "user")
+            payload = staged.source_data or {}
+            card_uuid = await _identity_lookup(
+                db, payload.get("entity_id"), "card", staged.source_type
+            )
+            user_uuid = await _identity_lookup(
+                db, payload.get("user_email"), "user", staged.source_type
+            )
             if card_uuid is None or user_uuid is None:
                 counts["skipped"] += 1
                 staged.status = "applied"
@@ -999,7 +1024,7 @@ async def _apply_subscription_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: subscription %s failed", staged.leanix_id)
+            logger.exception("migration apply: subscription %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -1014,16 +1039,16 @@ async def _apply_subscription_pass(
 
 async def _apply_document_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "document",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "document",
                 )
             )
         )
@@ -1036,8 +1061,10 @@ async def _apply_document_pass(
             staged.status = "applied"
             continue
         try:
-            payload = staged.leanix_data or {}
-            card_uuid = await _identity_lookup(db, payload.get("fact_sheet_id"), "card")
+            payload = staged.source_data or {}
+            card_uuid = await _identity_lookup(
+                db, payload.get("entity_id"), "card", staged.source_type
+            )
             if card_uuid is None:
                 counts["skipped"] += 1
                 staged.status = "applied"
@@ -1057,7 +1084,7 @@ async def _apply_document_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: document %s failed", staged.leanix_id)
+            logger.exception("migration apply: document %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]
@@ -1072,16 +1099,16 @@ async def _apply_document_pass(
 
 async def _apply_comment_pass(
     db: AsyncSession,
-    migration: LeanixMigration,
+    migration: Migration,
     user: User,
 ) -> dict[str, int]:
     counts = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     rows = (
         (
             await db.execute(
-                select(LeanixStagedRecord).where(
-                    LeanixStagedRecord.migration_id == migration.id,
-                    LeanixStagedRecord.entity_kind == "comment",
+                select(StagedRecord).where(
+                    StagedRecord.migration_id == migration.id,
+                    StagedRecord.entity_kind == "comment",
                 )
             )
         )
@@ -1090,8 +1117,10 @@ async def _apply_comment_pass(
     )
     for staged in rows:
         try:
-            payload = staged.leanix_data or {}
-            card_uuid = await _identity_lookup(db, payload.get("fact_sheet_id"), "card")
+            payload = staged.source_data or {}
+            card_uuid = await _identity_lookup(
+                db, payload.get("entity_id"), "card", staged.source_type
+            )
             if card_uuid is None:
                 counts["skipped"] += 1
                 staged.status = "applied"
@@ -1100,7 +1129,7 @@ async def _apply_comment_pass(
             author_email = payload.get("author_email")
             author_uuid: uuid.UUID | None = None
             if author_email:
-                author_uuid = await _identity_lookup(db, author_email, "user")
+                author_uuid = await _identity_lookup(db, author_email, "user", staged.source_type)
             if author_uuid is None:
                 # Author wasn't in the subscription list — drop the
                 # comment to avoid fabricating attribution. This is
@@ -1122,7 +1151,7 @@ async def _apply_comment_pass(
             staged.status = "applied"
             counts["created"] += 1
         except Exception as exc:  # noqa: BLE001
-            logger.exception("LeanIX apply: comment %s failed", staged.leanix_id)
+            logger.exception("migration apply: comment %s failed", staged.source_id)
             counts["errors"] += 1
             staged.status = "error"
             staged.error_message = str(exc)[:1000]

@@ -27,7 +27,7 @@ import {
   invalidateDateFormat,
   type DateFormatKey,
 } from "@/hooks/useDateFormat";
-import { invalidateAppTitle } from "@/hooks/useAppTitle";
+import { invalidateAppTitle, DEFAULT_APP_TITLE } from "@/hooks/useAppTitle";
 import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
 import { invalidateLoginBranding } from "@/hooks/useLoginBranding";
 import { useMetamodel } from "@/hooks/useMetamodel";
@@ -41,6 +41,7 @@ const ServiceNowAdmin = lazy(() => import("./ServiceNowAdmin"));
 const AiAdmin = lazy(() => import("./AiAdmin"));
 const TurboLensAdmin = lazy(() => import("./TurboLensAdmin"));
 const MigrationAdmin = lazy(() => import("./MigrationAdmin"));
+const AuditLogAdmin = lazy(() => import("./AuditLogAdmin"));
 
 const TAB_KEYS = [
   "general",
@@ -51,6 +52,7 @@ const TAB_KEYS = [
   "servicenow",
   "turbolens",
   "migration",
+  "audit-log",
 ];
 
 function TabLoader() {
@@ -164,7 +166,7 @@ function GeneralTab() {
   const [savingDateFormat, setSavingDateFormat] = useState(false);
 
   // App title state
-  const [appTitle, setAppTitle] = useState("Turbo EA");
+  const [appTitle, setAppTitle] = useState(DEFAULT_APP_TITLE);
   const [savingAppTitle, setSavingAppTitle] = useState(false);
 
   // BPM toggle state
@@ -244,7 +246,7 @@ function GeneralTab() {
         setPpmEnabled(ppmData.enabled);
         setGrcEnabled(grcData.enabled);
         setFiscalYearStart(fiscalData.month);
-        setAppTitle(appTitleData.app_title || "Turbo EA");
+        setAppTitle(appTitleData.app_title || DEFAULT_APP_TITLE);
         const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
           ? (dateFormatData.date_format as DateFormatKey)
           : DEFAULT_DATE_FORMAT;
@@ -579,7 +581,7 @@ function GeneralTab() {
             value={appTitle}
             onChange={(e) => setAppTitle(e.target.value)}
             inputProps={{ maxLength: 64 }}
-            placeholder="Turbo EA"
+            placeholder={DEFAULT_APP_TITLE}
             sx={{ minWidth: 280 }}
           />
           <Button
@@ -1267,6 +1269,7 @@ export default function SettingsAdmin() {
     t("settings.tabs.servicenow"),
     t("settings.tabs.turbolens"),
     t("settings.tabs.migration"),
+    t("settings.tabs.auditLog", "Audit log"),
   ];
 
   const handleTabChange = (_: React.SyntheticEvent, newIndex: number) => {
@@ -1333,6 +1336,11 @@ export default function SettingsAdmin() {
       {tabIndex === 7 && (
         <Suspense fallback={<TabLoader />}>
           <MigrationAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 8 && (
+        <Suspense fallback={<TabLoader />}>
+          <AuditLogAdmin />
         </Suspense>
       )}
     </Box>

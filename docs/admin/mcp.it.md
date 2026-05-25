@@ -1,6 +1,6 @@
 # Integrazione MCP (accesso per strumenti IA)
 
-Turbo EA include un **server MCP** (Model Context Protocol) integrato che consente agli strumenti di IA — come Claude Desktop, GitHub Copilot, Cursor e VS Code — di interrogare i dati EA direttamente. Gli utenti si autenticano tramite il loro provider SSO esistente, e ogni query rispetta i loro permessi individuali.
+Turbo EA include un **server MCP** (Model Context Protocol) integrato che consente agli strumenti di IA — come Claude Desktop, GitHub Copilot, Cursor e VS Code — di interrogare e aggiornare i dati EA direttamente. Gli strumenti di IA possono inoltre caricare artefatti (fogli di calcolo, diagrammi BPMN, diagrammi DrawIO, documenti liberi) e trasformarli in card, relazioni e diagrammi che rispettano il metamodello esistente. Gli utenti si autenticano tramite il loro provider SSO esistente, e ogni azione rispetta i loro permessi individuali.
 
 Questa funzionalità è **opzionale** e **non si avvia automaticamente**. Richiede che l'SSO sia configurato, che il profilo MCP sia attivato in Docker Compose e che un amministratore lo abiliti nell'interfaccia delle impostazioni.
 
@@ -155,11 +155,15 @@ In questa modalità, il server si autentica con email/password e rinnova il toke
 
 ## Funzionalità disponibili
 
-Il server MCP fornisce accesso **in sola lettura** ai dati EA. Non può creare, modificare o eliminare nulla.
+Il server MCP espone **30 strumenti** suddivisi in due gruppi: **25 strumenti di lettura** che interrogano i dati EA e **5 strumenti di scrittura** che trasformano gli artefatti che uno strumento di IA ha nel proprio contesto (fogli di calcolo, BPMN XML, DrawIO XML, documenti, immagini) in card, relazioni e diagrammi.
 
-### Strumenti
+### Sicurezza tramite esecuzione di prova nelle scritture
 
-Il server espone 25 strumenti in sola lettura raggruppati in sei cluster.
+Ogni strumento di scrittura usa per impostazione predefinita **`dry_run=true`**. In questa modalità il backend esegue ogni validatore e risolutore, costruisce il piano completo e poi **annulla la transazione** in modo che nulla venga persistito. Lo strumento di IA restituisce l'anteprima all'utente; solo dopo conferma esplicita deve richiamare lo strumento con `dry_run=false` per confermare. Questo evita che un agente troppo zelante crei silenziosamente centinaia di card a partire da un foglio di calcolo interpretato male.
+
+### Strumenti di lettura
+
+Il server espone 25 strumenti di lettura raggruppati in sei cluster.
 
 **Card & metamodello**
 
@@ -223,6 +227,45 @@ Il server espone 25 strumenti in sola lettura raggruppati in sei cluster.
 
 Tutti gli strumenti rispettano l'RBAC dell'utente autenticato — un visualizzatore riceverà semplicemente una lista vuota (o 403) per ciò che non può vedere; non serve alcuna configurazione per-tool a livello MCP.
 
+### Strumenti di scrittura — caricamento di artefatti
+
+Cinque strumenti permettono a un agente di IA di trasformare gli artefatti in dati EA strutturati. L'agente legge il file sorgente nel proprio contesto (visione multimodale, allegati), estrae righe strutturate e chiama questi strumenti. Il server MCP in sé non analizza mai i file — si aspetta un input già strutturato.
+
+| Strumento | Descrizione |
+|-----------|-------------|
+| `create_cards_bulk` | Crea più card in una sola chiamata (per esempio righe di foglio di calcolo). Supporta riferimenti al genitore per nome all'interno dello stesso batch, con ordinamento topologico lato server. |
+| `resolve_card_refs` | Pre-valida i riferimenti per nome prima di un'importazione di massa — utile per mostrare all'utente genitori ambigui o mancanti. |
+| `upsert_relations_bulk` | Crea o elimina relazioni tra card. Sorgente / destinazione / tipo sono validati contro il metamodello. |
+| `create_diagram` | Crea un diagramma DrawIO libero con collegamenti opzionali a card esistenti. |
+| `import_bpmn` | Salva un diagramma BPMN 2.0 XML su una card Processo di business **esistente**. Se nessuna card corrisponde al nome fornito, lo strumento restituisce un errore `card_not_found` che rimanda l'agente a `create_cards_bulk` — questo forza la creazione esplicita della card con descrizione, sottotipo e attributi prima, invece di una scorciatoia che produce una card scarna. |
+
+Flusso tipico quando un utente condivide un foglio di calcolo con l'agente di IA:
+
+1. L'agente chiama `list_card_types` e `get_relation_types` per comprendere il metamodello.
+2. L'agente analizza il foglio di calcolo (nel proprio contesto, non in MCP) e costruisce dizionari di riga.
+3. L'agente chiama `create_cards_bulk(cards=…, dry_run=True)` e mostra l'anteprima all'utente.
+4. L'utente conferma; l'agente richiama con `dry_run=False` per confermare.
+5. Se sono presenti colonne di relazione, l'agente chiama poi `upsert_relations_bulk` con lo stesso ciclo esecuzione di prova / conferma.
+
+### Salvaguardie degli strumenti di scrittura
+
+Difesa in profondità sopra l'esecuzione di prova, in modo che un errore del LLM non possa causare danni massicci:
+
+- **Limite di dimensione per chiamata.** Gli strumenti di scrittura MCP applicano un limite molto più piccolo rispetto agli endpoint sottostanti dell'importatore Excel: 200 righe per `create_cards_bulk`, 500 operazioni per `upsert_relations_bulk`. Sufficientemente grande per qualsiasi caricamento realistico di un singolo artefatto, sufficientemente piccolo perché un'anteprima di esecuzione di prova rimanga visionabile.
+- **Nessuna eliminazione di relazioni per impostazione predefinita.** `upsert_relations_bulk` rifiuta le operazioni `action: "delete"` — per rimuovere relazioni, utilizzare l'interfaccia web dove l'azione viene registrata sotto l'identità dell'utente. Gli operatori possono abilitarla impostando `MCP_ALLOW_RELATION_DELETE=true`.
+- **Interruttore di spegnimento.** `MCP_WRITES_ENABLED=false` disattiva tutti e cinque gli strumenti di scrittura senza ridistribuire codice. I 25 strumenti di lettura continuano a funzionare.
+- **Etichetta di origine per l'audit.** Ogni richiesta al backend dal server MCP porta un'intestazione `X-Turbo-EA-Origin: mcp`. Gli eventi emessi da queste richieste vengono etichettati con `origin: "mcp"` nel payload del log di audit, in modo che gli amministratori possano filtrare le scritture guidate da MCP fuori dalla timeline, separate dalle azioni dell'interfaccia web.
+- **Nessuno strumento di distruzione di massa.** Il set di strumenti omette deliberatamente l'eliminazione, l'archiviazione e l'aggiornamento di massa delle card. Aggiungere uno di questi strumenti richiederebbe una revisione di progettazione esplicita.
+
+Le quattro variabili di ambiente di salvaguardia sul container MCP:
+
+| Variabile | Predefinito | Effetto |
+|-----------|-------------|---------|
+| `MCP_WRITES_ENABLED` | `true` | Interruttore principale degli strumenti di scrittura. `false` → MCP in sola lettura. |
+| `MCP_MAX_CARDS_PER_CALL` | `200` | Limite massimo di righe `create_cards_bulk` per richiesta. |
+| `MCP_MAX_RELATIONS_PER_CALL` | `500` | Limite massimo di operazioni `upsert_relations_bulk` per richiesta. |
+| `MCP_ALLOW_RELATION_DELETE` | `false` | Quando `true`, `upsert_relations_bulk` accetta operazioni `action: "delete"`. |
+
 ### Risorse
 
 | URI | Descrizione |
@@ -245,12 +288,12 @@ Tutti gli strumenti rispettano l'RBAC dell'utente autenticato — un visualizzat
 
 | Ruolo | Accesso |
 |-------|---------|
-| **Amministratore** | Configurare le impostazioni MCP (permesso `admin.mcp`) |
-| **Tutti gli utenti autenticati** | Interrogare i dati EA tramite il server MCP (rispetta i permessi esistenti a livello di card e applicazione) |
+| **Amministratore** | Configurare le impostazioni MCP (permesso `admin.mcp`). Accesso completo in lettura + scrittura tramite MCP. |
+| **Tutti gli utenti autenticati** | Accesso in lettura governato dal loro RBAC esistente. Gli strumenti di scrittura richiedono i corrispondenti permessi backend — `inventory.create` (card), `relations.manage` (relazioni), `diagrams.manage` (diagrammi), `bpm.edit` (BPMN). |
 
 Il permesso `admin.mcp` controlla chi può gestire le impostazioni MCP. È disponibile solo per il ruolo Amministratore per impostazione predefinita. Ai ruoli personalizzati può essere concesso questo permesso tramite la pagina di amministrazione dei Ruoli.
 
-L'accesso ai dati tramite MCP segue lo stesso modello RBAC dell'interfaccia web — non ci sono permessi dati specifici per MCP.
+L'accesso ai dati tramite MCP — in lettura o in scrittura — segue lo stesso modello RBAC dell'interfaccia web. Se un utente non può creare card nell'interfaccia di inventario, non può crearle nemmeno tramite MCP; non ci sono permessi dati specifici per MCP.
 
 ---
 
@@ -258,8 +301,9 @@ L'accesso ai dati tramite MCP segue lo stesso modello RBAC dell'interfaccia web 
 
 - **Autenticazione delegata tramite SSO**: Gli utenti si autenticano tramite il provider SSO aziendale. Il server MCP non vede né memorizza mai le password.
 - **OAuth 2.1 con PKCE**: Il flusso di autenticazione utilizza Proof Key for Code Exchange (S256) per prevenire l'intercettazione dei codici di autorizzazione.
-- **RBAC per utente**: Ogni query MCP viene eseguita con i permessi dell'utente autenticato. Nessun account di servizio condiviso.
-- **Accesso in sola lettura**: Il server MCP può solo leggere i dati. Non può creare, aggiornare o eliminare card, relazioni o altre risorse.
+- **RBAC per utente**: Ogni azione MCP — in lettura o in scrittura — viene eseguita con i permessi dell'utente autenticato. Nessun account di servizio condiviso.
+- **Esecuzione di prova predefinita sulle scritture**: Gli strumenti di scrittura propongono per impostazione predefinita un'anteprima valida-e-annulla. Lo strumento di IA deve richiamare esplicitamente con `dry_run=false` prima che qualunque dato venga persistito, e ogni modifica è registrata sotto l'identità dell'utente.
+- **Nessuna analisi di file in MCP**: Il server MCP in sé non accetta PDF, file Excel, immagini o altri artefatti binari. Lo strumento di IA chiamante li analizza nel proprio contesto e invia righe strutturate. Questo mantiene la superficie di attacco ridotta ed evita di esporre il server a input binari malformati.
 - **Rotazione dei token**: I token di accesso scadono dopo 1 ora. I token di rinnovo durano 30 giorni. I codici di autorizzazione sono monouso e scadono dopo 10 minuti.
 - **Porta solo interna**: Il container MCP espone la porta 8001 solo sulla rete Docker interna. Tutto l'accesso esterno passa attraverso il reverse proxy Nginx.
 
