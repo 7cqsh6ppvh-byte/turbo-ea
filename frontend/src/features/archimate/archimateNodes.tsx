@@ -2,17 +2,17 @@ import type { ComponentType } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import type { ArchiMateDiagramNodeData } from "./types";
+import type { ArchiMateDiagramNode } from "./types";
 import { ARCHIMATE_ELEMENT_META } from "./archimateShapes";
 
 const ASPECT_MARK: Record<string, string> = {
-  ActiveStructure: "▪",  // filled square corner
-  Behavior: "◦",          // circle
-  PassiveStructure: "◿",  // angle
+  ActiveStructure: "▪",
+  Behavior: "◦",
+  PassiveStructure: "◿",
   Other: "",
 };
 
-export function ArchimateElementNode({ data, selected }: NodeProps<ArchiMateDiagramNodeData>) {
+export function ArchimateElementNode({ data, selected }: NodeProps<ArchiMateDiagramNode>) {
   const meta = ARCHIMATE_ELEMENT_META[data.elementTypeKey];
   const bgColor = data.color || meta?.defaultColor || "#e0e0e0";
   const aspectMark = ASPECT_MARK[data.aspect] || "";
@@ -73,7 +73,7 @@ export function ArchimateElementNode({ data, selected }: NodeProps<ArchiMateDiag
   );
 }
 
-export function ArchimateGroupingNode({ data, selected }: NodeProps<ArchiMateDiagramNodeData>) {
+export function ArchimateGroupingNode({ data, selected }: NodeProps<ArchiMateDiagramNode>) {
   const bgColor = data.color || "#ffffff";
   return (
     <Box
@@ -105,7 +105,7 @@ export function ArchimateGroupingNode({ data, selected }: NodeProps<ArchiMateDia
   );
 }
 
-export function ArchimateJunctionNode({ data, selected }: NodeProps<ArchiMateDiagramNodeData>) {
+export function ArchimateJunctionNode({ selected }: NodeProps<ArchiMateDiagramNode>) {
   return (
     <Box
       sx={{
@@ -128,11 +128,15 @@ export function ArchimateJunctionNode({ data, selected }: NodeProps<ArchiMateDia
   );
 }
 
-const _elementNode = ArchimateElementNode as ComponentType<NodeProps>;
-const _groupingNode = ArchimateGroupingNode as ComponentType<NodeProps>;
-const _junctionNode = ArchimateJunctionNode as ComponentType<NodeProps>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _elementNode = ArchimateElementNode as ComponentType<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _groupingNode = ArchimateGroupingNode as ComponentType<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _junctionNode = ArchimateJunctionNode as ComponentType<any>;
 
-export const NODE_TYPES: Record<string, ComponentType<NodeProps>> = Object.fromEntries(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const NODE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries(
   Object.keys(ARCHIMATE_ELEMENT_META).map((key) => {
     if (key === "arch_Grouping" || key === "arch_Location") return [key, _groupingNode];
     if (key === "arch_Junction") return [key, _junctionNode];

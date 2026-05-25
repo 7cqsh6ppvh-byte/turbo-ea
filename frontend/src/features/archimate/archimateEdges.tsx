@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { BaseEdge, EdgeLabelRenderer, getStraightPath, type EdgeProps } from "@xyflow/react";
-import type { ArchiMateDiagramEdgeData } from "./types";
+import type { ArchiMateDiagramEdge } from "./types";
 import { ARCHIMATE_RELATION_STYLES, type ArchiMateRelationStyle } from "./archimateShapes";
 
 export function getEdgeStyle(relationType: string): ArchiMateRelationStyle | undefined {
@@ -93,8 +93,8 @@ function ArchimateEdge({
   targetY,
   data,
   selected,
-}: EdgeProps<ArchiMateDiagramEdgeData>) {
-  const relationType = data?.relationType ?? "arch_rel_Association";
+}: EdgeProps<ArchiMateDiagramEdge>) {
+  const relationType = (data?.relationType as string | undefined) ?? "arch_rel_Association";
   const style = getEdgeStyle(relationType) ?? {};
   const strokeColor = selected ? "#1976d2" : "#555";
   const strokeWidth = style.strokeWidth ?? 1;
@@ -127,7 +127,7 @@ function ArchimateEdge({
           markerEnd: style.targetMarker ? `url(#${targetMarkerId})` : undefined,
         }}
       />
-      {data?.label && (
+      {(data?.label as string | undefined) && (
         <EdgeLabelRenderer>
           <div
             style={{
@@ -142,7 +142,7 @@ function ArchimateEdge({
             }}
             className="nodrag nopan"
           >
-            {data.label}
+            {data?.label as string}
           </div>
         </EdgeLabelRenderer>
       )}
@@ -150,8 +150,10 @@ function ArchimateEdge({
   );
 }
 
-const _archimateEdge = ArchimateEdge as ComponentType<EdgeProps>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _archimateEdge = ArchimateEdge as ComponentType<any>;
 
-export const EDGE_TYPES: Record<string, ComponentType<EdgeProps>> = Object.fromEntries(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const EDGE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries(
   Object.keys(ARCHIMATE_RELATION_STYLES).map((key) => [key, _archimateEdge]),
 );
