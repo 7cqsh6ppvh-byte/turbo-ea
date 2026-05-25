@@ -5,6 +5,11 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.29.1] - 2026-05-25
+
+### Security
+- **Pinned the `frontend` and `nginx` (edge) images past CVE-2026-42945 ("NGINX Rift").** The previously-unpinned `FROM nginx:alpine` lines in `Dockerfile` resolved to whatever the moving tag pointed at, which today is still nginx 1.30.0 — vulnerable to a critical heap buffer overflow in `ngx_http_rewrite_module` disclosed and actively exploited in May 2026. Both stages now pin to `nginx:1.30.1-alpine`, the upstream stable-branch fix. Turbo EA's stock nginx configs (`nginx/default.conf`, `frontend/nginx.conf`) don't use the `rewrite` / `if` / `set` directives that trigger the bug, so a deployed stock install was not directly exposed — but the vulnerable binary was still shipped, and one config edit away from being reachable. Patch-only, no behavioural change.
+
 ## [1.29.0] - 2026-05-23
 
 ### Added
