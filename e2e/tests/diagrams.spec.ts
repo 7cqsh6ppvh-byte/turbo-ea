@@ -39,7 +39,7 @@ test.describe("Diagrams gallery", () => {
     await page.waitForLoadState("load");
 
     // The new diagram card should appear in the gallery
-    await expect(page.getByText("E2E Test Diagram")).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText("E2E Test Diagram").first()).toBeVisible({ timeout: 8000 });
 
     // Cleanup
     await context.request.delete(`${BASE_URL}/api/v1/diagrams/${diagram.id}`, {

@@ -24,9 +24,12 @@ test.describe("Reports — Portfolio", () => {
   });
 
   test("axis selector dropdowns are present", async ({ page }) => {
-    const selects = page.getByRole("combobox");
-    const count = await selects.count();
-    expect(count).toBeGreaterThan(0);
+    // Wait for the page to finish rendering (wait for comboboxes to appear)
+    // Network "load" fires before React hydration completes
+    await expect(async () => {
+      const count = await page.getByRole("combobox").count();
+      expect(count).toBeGreaterThan(0);
+    }).toPass({ timeout: 10000 });
   });
 });
 

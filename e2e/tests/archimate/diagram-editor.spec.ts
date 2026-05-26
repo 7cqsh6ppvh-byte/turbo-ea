@@ -77,9 +77,9 @@ test.describe("ArchiMate diagram editor", () => {
     await page.waitForLoadState("load");
 
     // Palette should show at least Business, Application, Technology layers
-    await expect(page.getByText("Business")).toBeVisible();
-    await expect(page.getByText("Application")).toBeVisible();
-    await expect(page.getByText("Technology")).toBeVisible();
+    await expect(page.getByText("Business").first()).toBeVisible();
+    await expect(page.getByText("Application").first()).toBeVisible();
+    await expect(page.getByText("Technology").first()).toBeVisible();
 
     // Cleanup
     await page.request.delete(`${BASE_URL}/api/v1/diagrams/${testDiagramId}`, {

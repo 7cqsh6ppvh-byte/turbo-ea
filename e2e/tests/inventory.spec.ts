@@ -24,14 +24,20 @@ test.describe("Inventory", () => {
 
   test("shows card names in the grid (demo: SAP S/4HANA)", async ({ page }) => {
     // SAP S/4HANA is in the demo seed as an Application card
-    const cell = page.getByRole("gridcell", { name: /SAP S\/4HANA/i }).first();
-    await expect(cell).toBeVisible({ timeout: 10000 });
+    // Use link locator instead of gridcell — AG Grid virtual scrolling may not render
+    // all cells, but links within visible rows are always in the DOM.
+    const link = page.getByRole("link", { name: "SAP S/4HANA" });
+    await expect(link).toBeVisible({ timeout: 10000 });
   });
 
   test("filter sidebar: typing in search reduces visible rows", async ({ page }) => {
+    // Wait for the grid to be populated with data before counting initial rows
+    await expect(page.getByText(/items$/).first()).toBeVisible({ timeout: 10000 });
+
     // Count initial rows
     const rows = page.locator("[role='row']").filter({ hasNot: page.locator("[role='columnheader']") });
     const initialCount = await rows.count();
+    expect(initialCount).toBeGreaterThan(0);
 
     // Type in search / quick-filter input
     const searchInput = page
@@ -104,9 +110,9 @@ test.describe("Inventory", () => {
   });
 
   test("Create card dialog opens and accepts a name", async ({ page }) => {
-    // Button text is "Create" (nav:create translation key)
+    // Button text is "add Create" (icon + nav:create translation key)
     const createBtn = page
-      .getByRole("button", { name: /^create$|create card|new card|\+ create/i })
+      .getByRole("button", { name: /^create$|create card|new card|\+ create|add.*create/i })
       .first();
     await expect(createBtn).toBeVisible();
     await createBtn.click();

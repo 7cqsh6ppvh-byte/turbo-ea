@@ -87,3 +87,5 @@ archive/
 
 #Local Claude
 .claude/
+e2e/testresults.txt
+e2e/testresults2.txt

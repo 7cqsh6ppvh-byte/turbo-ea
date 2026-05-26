@@ -18,8 +18,8 @@ test.describe("Dashboard", () => {
     const kpiArea = page.locator("main, [role='main'], .MuiBox-root").first();
     await expect(kpiArea).toBeVisible();
 
-    // At least one numeric count should appear on the page
-    const numbers = page.getByText(/^\d+$/).first();
+    // At least one numeric count should appear on the page (KPI card headings, not hidden badges)
+    const numbers = page.getByRole("heading", { name: /^\d+$/ }).first();
     await expect(numbers).toBeVisible({ timeout: 8000 });
   });
 
@@ -77,9 +77,9 @@ test.describe("Dashboard", () => {
   });
 
   test("create button is accessible from dashboard", async ({ page }) => {
-    // Button text is "Create" (nav:create translation key)
+    // Button text is "add Create" (icon + nav:create translation key)
     const createBtn = page
-      .getByRole("button", { name: /^create$|create card|new card|\+ create/i })
+      .getByRole("button", { name: /^create$|create card|new card|\+ create|add.*create/i })
       .or(page.locator("button").filter({ hasText: /^\+$/ }))
       .first();
     await expect(createBtn).toBeVisible();

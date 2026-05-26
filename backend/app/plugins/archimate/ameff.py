@@ -303,11 +303,11 @@ async def export_model_to_ameff(
 
     rel_list: list[dict] = []
     for rel in relations:
-        ameff_type = _REL_KEY_TO_TYPE.get(rel.relation_type_key)
+        ameff_type = _REL_KEY_TO_TYPE.get(rel.type)
         if not ameff_type:
             continue
-        source_ameff = card_ameff_id.get(str(rel.source_card_id))
-        target_ameff = card_ameff_id.get(str(rel.target_card_id))
+        source_ameff = card_ameff_id.get(str(rel.source_id))
+        target_ameff = card_ameff_id.get(str(rel.target_id))
         if not source_ameff or not target_ameff:
             continue
         rel_ameff_id = (rel.attributes or {}).get("ameff_identifier") or f"id-{rel.id}"

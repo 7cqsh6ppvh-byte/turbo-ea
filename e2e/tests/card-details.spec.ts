@@ -75,7 +75,8 @@ test.describe("Card detail — Application card (SAP S/4HANA)", () => {
   });
 
   test("lifecycle section shows phase timeline", async ({ page }) => {
-    const lifecycleSection = page.getByText(/lifecycle/i).first();
+    // The Lifecycle section heading is rendered as a button (expandable section)
+    const lifecycleSection = page.getByRole("button", { name: /lifecycle/i }).first();
     await expect(lifecycleSection).toBeVisible();
   });
 
