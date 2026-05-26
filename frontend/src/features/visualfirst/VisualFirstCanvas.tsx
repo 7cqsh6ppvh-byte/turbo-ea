@@ -41,9 +41,10 @@ interface Props {
   initialData: VisualFirstDiagramData;
   onSave?: (data: VisualFirstDiagramData) => void;
   onNodeCardIdsChange?: (ids: Set<string>) => void;
+  onCardSelect?: (cardId: string | null) => void;
 }
 
-export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardIdsChange }: Props) {
+export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardIdsChange, onCardSelect }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<VisualFirstDiagramNode>(
     initialData.nodes,
   );
@@ -280,22 +281,32 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
 
       try {
         const card = (await api.post("/cards", {
-          type_key: typeKey,
+          type: typeKey,
           name: label,
         })) as { id: string; name: string };
 
-        setNodes((nds) =>
-          nds.map((n) =>
+        setNodes((nds) => {
+          const next = nds.map((n) =>
             n.id === tempId
               ? { ...n, id: card.id, data: { ...n.data, cardId: card.id, label: card.name } }
               : n,
-          ),
-        );
+          );
+          scheduleSave(next, edges);
+          return next;
+        });
       } catch {
         // keep optimistic node even if API call fails
       }
     },
     [nodes, edges, setNodes, scheduleSave, screenToFlowPosition, nodeTypes, getType, rml],
+  );
+
+  const handleNodeClick = useCallback(
+    (_: React.MouseEvent, node: VisualFirstDiagramNode) => {
+      const cardId = (node.data.cardId as string | undefined) ?? node.id;
+      onCardSelect?.(cardId);
+    },
+    [onCardSelect],
   );
 
   const handleAutoLayout = useCallback(async () => {
@@ -344,6 +355,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onNodeClick={handleNodeClick}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         nodeTypes={nodeTypes as any}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
