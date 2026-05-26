@@ -660,17 +660,26 @@ async def migrate_archimate_unique(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Admin endpoint — delete all non-ArchiMate data from the instance.
+    """Admin endpoint — migrate instance to ArchiMate-only and seed demo data.
 
-    Removes standard Turbo EA card types, relation types, cards, and
-    relations, leaving only ArchiMate elements visible. Requires
-    archimate.manage permission.
+    First runs migrate_archimate_unique (strips all non-ArchiMate card types,
+    relation types, cards, and relations), then seeds the ArchiMate demo
+    dataset (NexaTech Industries mapped to ArchiMate 3.2).
+
+    Requires archimate.manage permission.
     """
     await PermissionService.require_permission(db, user, "archimate.manage")
 
     from app.plugins.archimate.migrate_unique import migrate_archimate_unique as _run_migration
 
     counts = await _run_migration(db)
+
+    from app.plugins.archimate.seed_demo import seed_archimate_demo
+
+    demo_result = await seed_archimate_demo(db)
+    counts["demo_cards_created"] = demo_result["cards_created"]
+    counts["demo_relations_created"] = demo_result["relations_created"]
+
     return counts
 
 

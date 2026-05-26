@@ -17,7 +17,6 @@ import deliveryEn from "./locales/en/delivery.json";
 import grcEn from "./locales/en/grc.json";
 import notificationsEn from "./locales/en/notifications.json";
 import validationEn from "./locales/en/validation.json";
-import archimateEn from "./locales/en/archimate.json";
 import visualfirstEn from "./locales/en/visualfirst.json";
 
 // French
@@ -35,7 +34,6 @@ import deliveryFr from "./locales/fr/delivery.json";
 import grcFr from "./locales/fr/grc.json";
 import notificationsFr from "./locales/fr/notifications.json";
 import validationFr from "./locales/fr/validation.json";
-import archimateFr from "./locales/fr/archimate.json";
 import visualfirstFr from "./locales/fr/visualfirst.json";
 
 // Spanish
@@ -53,7 +51,6 @@ import deliveryEs from "./locales/es/delivery.json";
 import grcEs from "./locales/es/grc.json";
 import notificationsEs from "./locales/es/notifications.json";
 import validationEs from "./locales/es/validation.json";
-import archimateEs from "./locales/es/archimate.json";
 import visualfirstEs from "./locales/es/visualfirst.json";
 
 // Italian
@@ -71,7 +68,6 @@ import deliveryIt from "./locales/it/delivery.json";
 import grcIt from "./locales/it/grc.json";
 import notificationsIt from "./locales/it/notifications.json";
 import validationIt from "./locales/it/validation.json";
-import archimateIt from "./locales/it/archimate.json";
 import visualfirstIt from "./locales/it/visualfirst.json";
 
 // Portuguese
@@ -89,7 +85,6 @@ import deliveryPt from "./locales/pt/delivery.json";
 import grcPt from "./locales/pt/grc.json";
 import notificationsPt from "./locales/pt/notifications.json";
 import validationPt from "./locales/pt/validation.json";
-import archimatePt from "./locales/pt/archimate.json";
 import visualfirstPt from "./locales/pt/visualfirst.json";
 
 // Chinese
@@ -107,7 +102,6 @@ import deliveryZh from "./locales/zh/delivery.json";
 import grcZh from "./locales/zh/grc.json";
 import notificationsZh from "./locales/zh/notifications.json";
 import validationZh from "./locales/zh/validation.json";
-import archimateZh from "./locales/zh/archimate.json";
 import visualfirstZh from "./locales/zh/visualfirst.json";
 
 // German
@@ -125,7 +119,6 @@ import deliveryDe from "./locales/de/delivery.json";
 import grcDe from "./locales/de/grc.json";
 import notificationsDe from "./locales/de/notifications.json";
 import validationDe from "./locales/de/validation.json";
-import archimateDe from "./locales/de/archimate.json";
 import visualfirstDe from "./locales/de/visualfirst.json";
 
 // Russian
@@ -143,7 +136,6 @@ import deliveryRu from "./locales/ru/delivery.json";
 import grcRu from "./locales/ru/grc.json";
 import notificationsRu from "./locales/ru/notifications.json";
 import validationRu from "./locales/ru/validation.json";
-import archimateRu from "./locales/ru/archimate.json";
 import visualfirstRu from "./locales/ru/visualfirst.json";
 
 export const SUPPORTED_LOCALES = ["en", "de", "fr", "es", "it", "pt", "zh", "ru"] as const;
@@ -179,9 +171,7 @@ i18n
         delivery: deliveryEn,
         grc: grcEn,
         notifications: notificationsEn,
-        validation: validationEn,
-        archimate: archimateEn,
-        visualfirst: visualfirstEn,
+        validation: validationEn,        visualfirst: visualfirstEn,
       },
       fr: {
         common: commonFr,
@@ -197,9 +187,7 @@ i18n
         delivery: deliveryFr,
         grc: grcFr,
         notifications: notificationsFr,
-        validation: validationFr,
-        archimate: archimateFr,
-        visualfirst: visualfirstFr,
+        validation: validationFr,        visualfirst: visualfirstFr,
       },
       es: {
         common: commonEs,
@@ -215,9 +203,7 @@ i18n
         delivery: deliveryEs,
         grc: grcEs,
         notifications: notificationsEs,
-        validation: validationEs,
-        archimate: archimateEs,
-        visualfirst: visualfirstEs,
+        validation: validationEs,        visualfirst: visualfirstEs,
       },
       it: {
         common: commonIt,
@@ -233,9 +219,7 @@ i18n
         delivery: deliveryIt,
         grc: grcIt,
         notifications: notificationsIt,
-        validation: validationIt,
-        archimate: archimateIt,
-        visualfirst: visualfirstIt,
+        validation: validationIt,        visualfirst: visualfirstIt,
       },
       pt: {
         common: commonPt,
@@ -251,9 +235,7 @@ i18n
         delivery: deliveryPt,
         grc: grcPt,
         notifications: notificationsPt,
-        validation: validationPt,
-        archimate: archimatePt,
-        visualfirst: visualfirstPt,
+        validation: validationPt,        visualfirst: visualfirstPt,
       },
       zh: {
         common: commonZh,
@@ -269,9 +251,7 @@ i18n
         delivery: deliveryZh,
         grc: grcZh,
         notifications: notificationsZh,
-        validation: validationZh,
-        archimate: archimateZh,
-        visualfirst: visualfirstZh,
+        validation: validationZh,        visualfirst: visualfirstZh,
       },
       de: {
         common: commonDe,
@@ -287,9 +267,7 @@ i18n
         delivery: deliveryDe,
         grc: grcDe,
         notifications: notificationsDe,
-        validation: validationDe,
-        archimate: archimateDe,
-        visualfirst: visualfirstDe,
+        validation: validationDe,        visualfirst: visualfirstDe,
       },
       ru: {
         common: commonRu,
@@ -305,9 +283,7 @@ i18n
         delivery: deliveryRu,
         grc: grcRu,
         notifications: notificationsRu,
-        validation: validationRu,
-        archimate: archimateRu,
-        visualfirst: visualfirstRu,
+        validation: validationRu,        visualfirst: visualfirstRu,
       },
     },
     fallbackLng: "en",

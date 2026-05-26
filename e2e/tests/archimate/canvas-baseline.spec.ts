@@ -1,10 +1,8 @@
 /**
  * Canvas baseline — documents behavior of the VisualFirst diagram editor.
  *
- * Phase 6 update: routes changed to /visualfirst/:id/edit (Phase 2);
- * backward-compat redirects from /archimate/:id/edit remain in place.
- * Nav link is now "VisualFirst Canvas". The ArchiMate redirect is also tested
- * to ensure continuity for any bookmarked URLs.
+ * Routes are at /visualfirst and /visualfirst/:id/edit.
+ * Nav link is "VisualFirst Canvas".
  */
 import { test, expect } from "@playwright/test";
 import {
@@ -59,17 +57,6 @@ test.describe("VisualFirst canvas editor", () => {
     await expect(page.getByRole("tab", { name: /elements/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /views/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /palette/i })).toBeVisible();
-  });
-
-  test("/archimate/:id/edit redirects to /visualfirst/:id/edit", async ({ context, page, request }) => {
-    await loginAsAdmin(context, BASE_URL);
-    const id = await createDiagram(request, "Redirect Test");
-
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
-    await page.waitForLoadState("load");
-
-    // Should have been redirected to the new route
-    await expect(page).toHaveURL(new RegExp(`/visualfirst/${id}/edit`));
   });
 
   test("palette tab shows ArchiMate layer groups", async ({ context, page, request }) => {
@@ -177,12 +164,5 @@ test.describe("VisualFirst canvas editor", () => {
     await expect(page.getByRole("link", { name: /visualfirst canvas/i })).toBeVisible();
   });
 
-  test("/archimate gallery redirects to /visualfirst", async ({ context, page }) => {
-    await loginAsAdmin(context, BASE_URL);
 
-    await page.goto(`${BASE_URL}/archimate`);
-    await page.waitForLoadState("load");
-
-    await expect(page).toHaveURL(/\/visualfirst\/?$/);
-  });
 });

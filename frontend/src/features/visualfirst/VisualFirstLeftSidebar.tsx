@@ -19,7 +19,7 @@ interface Props {
 }
 
 export function VisualFirstLeftSidebar({ currentDiagramId, nodeCardIds }: Props) {
-  const { t } = useTranslation("archimate");
+  const { t } = useTranslation("visualfirst");
   const { types } = useMetamodel();
   const [tab, setTab] = useState<SidebarTab>("elements");
   const [search, setSearch] = useState("");

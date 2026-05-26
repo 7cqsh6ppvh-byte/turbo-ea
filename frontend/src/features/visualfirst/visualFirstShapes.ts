@@ -1,15 +1,15 @@
-import type { ArchiMateAspect, ArchiMateLayer, ArchiMateRelationType } from "./types";
+import type { VisualFirstAspect, VisualFirstLayer, VisualFirstRelationType } from "./visualFirstTypes";
 
-export interface ArchiMateElementMeta {
-  layer: ArchiMateLayer;
-  aspect: ArchiMateAspect;
+export interface VisualFirstElementMeta {
+  layer: VisualFirstLayer;
+  aspect: VisualFirstAspect;
   icon: string;
   defaultColor: string;
   defaultWidth: number;
   defaultHeight: number;
 }
 
-export interface ArchiMateRelationStyle {
+export interface VisualFirstRelationStyle {
   strokeDasharray?: string;
   strokeWidth?: number;
   sourceMarker?: "diamond-filled" | "diamond-hollow" | "circle-filled" | "arrow-hollow";
@@ -17,7 +17,7 @@ export interface ArchiMateRelationStyle {
   animated?: boolean;
 }
 
-export const ARCHIMATE_LAYER_COLORS: Record<ArchiMateLayer, string> = {
+export const VISUAL_FIRST_LAYER_COLORS: Record<VisualFirstLayer, string> = {
   Business: "#f5e27a",
   Application: "#b3d9ff",
   Technology: "#aae6aa",
@@ -28,7 +28,7 @@ export const ARCHIMATE_LAYER_COLORS: Record<ArchiMateLayer, string> = {
   Composite: "#ffffff",
 };
 
-export const ARCHIMATE_ELEMENT_META: Record<string, ArchiMateElementMeta> = {
+export const VISUAL_FIRST_ELEMENT_META: Record<string, VisualFirstElementMeta> = {
   // Business Layer — Active Structure
   BusinessActor: { layer: "Business", aspect: "ActiveStructure", icon: "person", defaultColor: "#f5e27a", defaultWidth: 160, defaultHeight: 60 },
   BusinessRole: { layer: "Business", aspect: "ActiveStructure", icon: "badge", defaultColor: "#f5e27a", defaultWidth: 160, defaultHeight: 60 },
@@ -106,7 +106,7 @@ export const ARCHIMATE_ELEMENT_META: Record<string, ArchiMateElementMeta> = {
   Junction: { layer: "Composite", aspect: "Other", icon: "merge_type", defaultColor: "#ffffff", defaultWidth: 40, defaultHeight: 40 },
 };
 
-export const ARCHIMATE_RELATION_STYLES: Record<ArchiMateRelationType, ArchiMateRelationStyle> = {
+export const VISUAL_FIRST_RELATION_STYLES: Record<VisualFirstRelationType, VisualFirstRelationStyle> = {
   Association: {
     strokeWidth: 1,
   },
@@ -159,10 +159,10 @@ export const ARCHIMATE_RELATION_STYLES: Record<ArchiMateRelationType, ArchiMateR
   },
 };
 
-export function getElementMeta(key: string): ArchiMateElementMeta | undefined {
-  return ARCHIMATE_ELEMENT_META[key];
+export function getElementMeta(key: string): VisualFirstElementMeta | undefined {
+  return VISUAL_FIRST_ELEMENT_META[key];
 }
 
-export function getRelationStyle(key: string): ArchiMateRelationStyle | undefined {
-  return ARCHIMATE_RELATION_STYLES[key as ArchiMateRelationType];
+export function getRelationStyle(key: string): VisualFirstRelationStyle | undefined {
+  return VISUAL_FIRST_RELATION_STYLES[key as VisualFirstRelationType];
 }

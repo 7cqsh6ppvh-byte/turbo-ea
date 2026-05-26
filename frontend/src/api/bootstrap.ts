@@ -23,7 +23,6 @@ import {
 import { invalidateAppTitle } from "@/hooks/useAppTitle";
 import { invalidateCurrency } from "@/hooks/useCurrency";
 import { invalidateBpmEnabled } from "@/hooks/useBpmEnabled";
-import { invalidateArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
 import { invalidateVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 import { invalidateComplianceRegulations } from "@/hooks/useComplianceRegulations";
 import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
@@ -39,7 +38,6 @@ type BootstrapResponse = {
   app_title: string;
   bpm_enabled: boolean;
   ppm_enabled: boolean;
-  archimate_enabled: boolean;
   visualfirst_enabled: boolean;
   turbolens_enabled: boolean;
   grc_enabled: boolean;
@@ -81,7 +79,6 @@ export function primeBootstrap(): Promise<void> {
 
       invalidateBpmEnabled(r.bpm_enabled);
       invalidatePpmEnabled(r.ppm_enabled);
-      invalidateArchiMateEnabled(r.archimate_enabled);
       invalidateVisualFirstEnabled(r.visualfirst_enabled);
       invalidateGrcEnabled(r.grc_enabled);
 

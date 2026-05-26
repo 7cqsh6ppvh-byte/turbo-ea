@@ -11,13 +11,13 @@ import { api } from "@/api/client";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { VisualFirstLeftSidebar } from "./VisualFirstLeftSidebar";
 import { VisualFirstCanvas } from "./VisualFirstCanvas";
-import type { ArchiMateDiagramData } from "../archimate/types";
+import type { VisualFirstDiagramData } from "./visualFirstTypes";
 
 export function VisualFirstDiagramEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [diagramName, setDiagramName] = useState("VisualFirst Diagram");
-  const [initialData, setInitialData] = useState<ArchiMateDiagramData | null>(null);
+  const [initialData, setInitialData] = useState<VisualFirstDiagramData | null>(null);
   const [loading, setLoading] = useState(true);
   const [nodeCardIds, setNodeCardIds] = useState<Set<string>>(new Set());
 
@@ -31,7 +31,7 @@ export function VisualFirstDiagramEditor() {
         const raw = d.data ?? {};
         setInitialData(
           raw.nodes
-            ? (raw as unknown as ArchiMateDiagramData)
+            ? (raw as unknown as VisualFirstDiagramData)
             : { nodes: [], edges: [], version: "1" as const },
         );
       })
@@ -41,7 +41,7 @@ export function VisualFirstDiagramEditor() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSave = useCallback((_data: ArchiMateDiagramData) => {}, []);
+  const handleSave = useCallback((_data: VisualFirstDiagramData) => {}, []);
 
   if (loading || !initialData) {
     return (

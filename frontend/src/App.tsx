@@ -60,12 +60,6 @@ const PpmHome = lazy(() => import("@/features/ppm/PpmHome"));
 const PpmProjectDetail = lazy(() => import("@/features/ppm/PpmProjectDetail"));
 const TurboLensPage = lazy(() => import("@/features/turbolens/TurboLensPage"));
 const AssessmentViewer = lazy(() => import("@/features/turbolens/AssessmentViewer"));
-const ArchimateDiagramsPage = lazy(
-  () => import("@/features/archimate/ArchimateDiagramsPage").then((m) => ({ default: m.ArchimateDiagramsPage })),
-);
-const ArchimateDiagramEditor = lazy(
-  () => import("@/features/archimate/ArchimateDiagramEditor").then((m) => ({ default: m.ArchimateDiagramEditor })),
-);
 const VisualFirstDiagramsPage = lazy(
   () => import("@/features/visualfirst/VisualFirstDiagramsPage").then((m) => ({ default: m.VisualFirstDiagramsPage })),
 );
@@ -209,12 +203,9 @@ function AppRoutes() {
                 <Route path="/admin/surveys/:id" element={<SurveyBuilder />} />
                 <Route path="/turbolens" element={<ModuleGate module="turbolens"><TurboLensPage /></ModuleGate>} />
                 <Route path="/turbolens/assessments/:id" element={<ModuleGate module="turbolens"><AssessmentViewer /></ModuleGate>} />
-                <Route path="/archimate" element={<ModuleGate module="archimate"><ArchimateDiagramsPage /></ModuleGate>} />
-                <Route path="/archimate/:id/edit" element={<ModuleGate module="archimate"><ArchimateDiagramEditor /></ModuleGate>} />
                 <Route path="/visualfirst" element={<ModuleGate module="visualfirst"><VisualFirstDiagramsPage /></ModuleGate>} />
                 <Route path="/visualfirst/:id/edit" element={<ModuleGate module="visualfirst"><VisualFirstDiagramEditor /></ModuleGate>} />
                 <Route path="/admin/turbolens" element={<Navigate to="/admin/settings?tab=turbolens" />} />
-                <Route path="/admin/archimate" element={<Navigate to="/admin/settings?tab=archimate" />} />
                 <Route path="/capability-catalogue" element={<CapabilityCataloguePage />} />
                 <Route path="/process-catalogue" element={<ProcessCataloguePage />} />
                 <Route path="/value-stream-catalogue" element={<ValueStreamCataloguePage />} />

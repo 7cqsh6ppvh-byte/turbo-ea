@@ -17,7 +17,6 @@ import DialogActions from "@mui/material/DialogActions";
 import Alert from "@mui/material/Alert";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { api, ApiError } from "@/api/client";
-import { invalidateArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
 
 function fmtApiError(err: unknown): string {
   if (err instanceof ApiError) {
@@ -39,10 +38,12 @@ interface MigrationResult {
   relations_deleted: number;
   card_types_deleted: number;
   relation_types_deleted: number;
+  demo_cards_created: number;
+  demo_relations_created: number;
 }
 
 export default function ArchiMateAdmin() {
-  const { t } = useTranslation("archimate");
+  const { t } = useTranslation("visualfirst");
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,7 +64,6 @@ export default function ArchiMateAdmin() {
     try {
       await api.patch("/settings/archimate-enabled", { enabled: value });
       setEnabled(value);
-      invalidateArchiMateEnabled(value);
       setSnack(value ? t("admin.enabled") : t("admin.disabled"));
     } catch (err) {
       const detail = fmtApiError(err);
@@ -85,6 +85,8 @@ export default function ArchiMateAdmin() {
           relations: result.relations_deleted,
           types: result.card_types_deleted,
           rt: result.relation_types_deleted,
+          demoCards: result.demo_cards_created,
+          demoRels: result.demo_relations_created,
         })
       );
     } catch (err) {
@@ -123,8 +125,8 @@ export default function ArchiMateAdmin() {
         </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          ArchiMate 3.2 visual-first diagram editor with 61 element types across 8 layers,
-          11 relation types, ELK auto-layout, and AMEFF model exchange format support.
+          ArchiMate 3.2 migration plugin with 61 element types across 8 layers,
+          11 relation types, and AMEFF model exchange format support.
         </Typography>
 
         <FormControlLabel

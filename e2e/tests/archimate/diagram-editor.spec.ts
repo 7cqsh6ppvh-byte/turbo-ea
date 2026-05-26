@@ -3,7 +3,7 @@ import { loginAsAdmin, enableArchiMate, disableArchiMate } from "../../helpers/a
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8920";
 
-test.describe("ArchiMate diagram editor", () => {
+test.describe("VisualFirst diagram editor", () => {
   let token: string;
   let diagramId: string;
 
@@ -25,21 +25,21 @@ test.describe("ArchiMate diagram editor", () => {
     await disableArchiMate(request, BASE_URL, token);
   });
 
-  test("ArchiMate gallery page loads and shows new diagram button", async ({ context, page }) => {
+  test("VisualFirst gallery page loads and shows new diagram button", async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
-    await page.goto(`${BASE_URL}/archimate`);
+    await page.goto(`${BASE_URL}/visualfirst`);
     await page.waitForLoadState("load");
 
-    await expect(page.getByRole("button", { name: /new.*archimate.*diagram/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /new.*diagram/i })).toBeVisible();
   });
 
-  test("Can create a new ArchiMate diagram from gallery", async ({ context, page, request }) => {
+  test("Can create a new diagram from gallery", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
-    await page.goto(`${BASE_URL}/archimate`);
+    await page.goto(`${BASE_URL}/visualfirst`);
     await page.waitForLoadState("load");
 
     // Click new diagram button
-    await page.getByRole("button", { name: /new.*archimate.*diagram/i }).click();
+    await page.getByRole("button", { name: /new.*diagram/i }).click();
 
     // Dialog should appear with name input
     const dialog = page.getByRole("dialog");
@@ -49,11 +49,11 @@ test.describe("ArchiMate diagram editor", () => {
     await dialog.getByRole("button", { name: /create/i }).click();
 
     // Should navigate to the editor
-    await page.waitForURL(/\/archimate\/.+\/edit/);
+    await page.waitForURL(/\/visualfirst\/.+\/edit/);
 
     // Capture diagram ID from URL
     const url = page.url();
-    const match = url.match(/\/archimate\/([^/]+)\/edit/);
+    const match = url.match(/\/visualfirst\/([^/]+)\/edit/);
     if (match) {
       diagramId = match[1];
     }
@@ -73,7 +73,7 @@ test.describe("ArchiMate diagram editor", () => {
     const diagram = await resp.json();
     const testDiagramId = diagram.id;
 
-    await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${testDiagramId}/edit`);
     await page.waitForLoadState("load");
 
     // Palette should show at least Business, Application, Technology layers
@@ -97,7 +97,7 @@ test.describe("ArchiMate diagram editor", () => {
     const diagram = await resp.json();
     const testDiagramId = diagram.id;
 
-    await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${testDiagramId}/edit`);
     await page.waitForLoadState("load");
 
     await expect(page.getByRole("button", { name: /auto.?layout/i })).toBeVisible();
@@ -118,14 +118,14 @@ test.describe("ArchiMate diagram editor", () => {
     const diagram = await resp.json();
     const testDiagramId = diagram.id;
 
-    await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${testDiagramId}/edit`);
     await page.waitForLoadState("load");
 
     // Should have a back button
     const backButton = page.getByRole("button", { name: /back|diagrams/i });
     if (await backButton.isVisible()) {
       await backButton.click();
-      await expect(page).toHaveURL(/\/archimate$/);
+      await expect(page).toHaveURL(/\/visualfirst$/);
     }
 
     // Cleanup

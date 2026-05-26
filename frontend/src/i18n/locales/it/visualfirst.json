@@ -8,11 +8,94 @@
     "cancel": "Annulla",
     "create": "Crea",
     "admin": {
-        "title": "VisualFirst Canvas",
-        "enable": "Abilita VisualFirst Canvas",
-        "disable": "Disabilita VisualFirst Canvas",
-        "enabled": "VisualFirst Canvas è abilitato",
-        "disabled": "VisualFirst Canvas è disabilitato",
-        "description": "VisualFirst Canvas è l'editor di diagrammi basato su ReactFlow. Funziona con qualsiasi metamodello, incluso ArchiMate."
+        "title": "ArchiMate",
+        "enable": "Abilita ArchiMate",
+        "disable": "Disabilita ArchiMate",
+        "enabled": "ArchiMate è abilitato",
+        "disabled": "ArchiMate è disabilitato",
+        "description": "VisualFirst Canvas è l'editor di diagrammi basato su ReactFlow. Funziona con qualsiasi metamodello, incluso ArchiMate.",
+        "dangerZone": "Zona pericolosa",
+        "hideAll": "Disabilita e nascondi tutti i tipi ArchiMate",
+        "migrateUnique": {
+            "title": "Migra a ArchiMate-Only",
+            "description": "Rimuove tutti i tipi di scheda, schede e relazioni Turbo EA standard, mantenendo solo gli elementi ArchiMate. Quindi carica il set di dati demo ArchiMate.",
+            "button": "Esegui migrazione",
+            "confirm": "Questo eliminerà definitivamente tutti i dati non-ArchiMate, inclusi tipi di scheda, schede e relazioni, e poi caricherà i dati demo ArchiMate. Questa azione non può essere annullata. Sei sicuro?",
+            "success": "Migrazione completata: {{cards}} schede, {{relations}} relazioni, {{types}} tipi di scheda, {{rt}} tipi di relazione rimossi. Demo caricata: {{demoCards}} schede, {{demoRels}} relazioni create.",
+            "disabled": "I tipi standard sono nascosti. Riabilita ArchiMate e aggiorna la pagina."
+        }
+    },
+    "autoLayout": "Layout automatico",
+    "duplicateCard": "Questa scheda è già nel diagramma",
+    "mixedMetamodel": "Non è possibile combinare tipi ArchiMate e standard sulla stessa area di lavoro",
+    "sidebar": {
+        "elementsTab": "Elementi",
+        "viewsTab": "Viste",
+        "paletteTab": "Tavolozza",
+        "modeEa": "Schede EA",
+        "modeArchimate": "ArchiMate",
+        "searchPlaceholder": "Cerca schede…",
+        "showingOf": "Mostrando {{loaded}} di {{total}}",
+        "cardsCount_one": "{{count}} scheda",
+        "cardsCount_other": "{{count}} schede",
+        "alreadyInDiagram": "Già nel diagramma",
+        "noCardsFound": "Nessuna scheda trovata",
+        "noCardsMatch": "Nessuna scheda corrisponde alla ricerca",
+        "noTypesAvailable": "Nessun tipo disponibile",
+        "loadingMore": "Caricamento…",
+        "diagramsHeader": "Diagrammi",
+        "newDiagram": "Nuovo diagramma",
+        "noDiagrams": "Nessun diagramma ancora",
+        "duplicateCard": "Questa scheda è già nel diagramma",
+        "mixedMetamodel": "Non è possibile combinare tipi ArchiMate e standard sulla stessa area di lavoro"
+    },
+    "selectRelationType": "Seleziona il tipo di relazione",
+    "layer": {
+        "Business": "Business",
+        "Application": "Applicazione",
+        "Technology": "Tecnologia",
+        "Motivation": "Motivazione",
+        "Strategy": "Strategia",
+        "Implementation": "Implementazione",
+        "Physical": "Fisico",
+        "Composite": "Composito"
+    },
+    "relation": {
+        "Association": "Associazione",
+        "Composition": "Composizione",
+        "Aggregation": "Aggregazione",
+        "Realization": "Realizzazione",
+        "Assignment": "Assegnazione",
+        "Serving": "Servizio",
+        "Access": "Accesso",
+        "Influence": "Influenza",
+        "Triggering": "Attivazione",
+        "Flow": "Flusso",
+        "Specialization": "Specializzazione"
+    },
+    "export": {
+        "title": "Esporta modello ArchiMate",
+        "button": "Esporta AMEFF",
+        "success": "Modello esportato con successo"
+    },
+    "import": {
+        "title": "Importa modello ArchiMate",
+        "button": "Importa AMEFF",
+        "success": "Modello importato: {{created}} creati, {{skipped}} ignorati",
+        "error": "Importazione fallita"
+    },
+    "relationSelector": {
+        "title": "Seleziona tipo di relazione",
+        "direction": "Da: <strong>{{source}}</strong> → A: <strong>{{target}}</strong>",
+        "available": "Disponibile nell'area di lavoro",
+        "missing": "Valido in ArchiMate (non ancora creato)",
+        "createPrompt": "Clicca per creare questo tipo di relazione",
+        "noValidTitle": "Nessuna relazione ArchiMate consentita",
+        "noValidDescription": "Questi tipi di elemento non possono essere collegati tramite relazioni ArchiMate.",
+        "created": "La relazione {{relation}} è stata creata. Per favore, disegna il collegamento nuovamente."
+    },
+    "missingRelation": {
+        "title": "Crea tipo di relazione mancante",
+        "description": "La relazione {{relation}} è valida in ArchiMate tra {{source}} e {{target}}, ma non è ancora abilitata in questo spazio di lavoro. Crearla?"
     }
 }

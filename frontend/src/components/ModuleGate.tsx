@@ -13,14 +13,13 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
-import { useArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 import { useVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 
-type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst";
+type ModuleKey = "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst";
 
 interface Props {
   module: ModuleKey;
@@ -28,7 +27,6 @@ interface Props {
 }
 
 const SETTINGS_TAB: Record<ModuleKey, string> = {
-  archimate: "/admin/settings?tab=archimate",
   bpm: "/admin/settings?tab=bpm",
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
@@ -37,7 +35,6 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
-  archimate: "schema",
   bpm: "schema",
   ppm: "rocket_launch",
   turbolens: "psychology",
@@ -48,7 +45,6 @@ const MODULE_ICON: Record<ModuleKey, string> = {
 export default function ModuleGate({ module, children }: Props) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
-  const { archiMateEnabled, archiMateLoaded } = useArchiMateEnabled();
   const { bpmEnabled, bpmLoaded } = useBpmEnabled();
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
@@ -56,29 +52,25 @@ export default function ModuleGate({ module, children }: Props) {
   const { visualFirstEnabled, visualFirstLoaded } = useVisualFirstEnabled();
 
   const enabled =
-    module === "archimate"
-      ? archiMateEnabled
-      : module === "bpm"
-        ? bpmEnabled
-        : module === "ppm"
-          ? ppmEnabled
-          : module === "grc"
-            ? grcEnabled
-            : module === "visualfirst"
-              ? visualFirstEnabled
-              : turboLensEnabled;
+    module === "bpm"
+      ? bpmEnabled
+      : module === "ppm"
+        ? ppmEnabled
+        : module === "grc"
+          ? grcEnabled
+          : module === "visualfirst"
+            ? visualFirstEnabled
+            : turboLensEnabled;
   const loaded =
-    module === "archimate"
-      ? archiMateLoaded
-      : module === "bpm"
-        ? bpmLoaded
-        : module === "ppm"
-          ? ppmLoaded
-          : module === "grc"
-            ? grcLoaded
-            : module === "visualfirst"
-              ? visualFirstLoaded
-              : turboLensLoaded;
+    module === "bpm"
+      ? bpmLoaded
+      : module === "ppm"
+        ? ppmLoaded
+        : module === "grc"
+          ? grcLoaded
+          : module === "visualfirst"
+            ? visualFirstLoaded
+            : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.

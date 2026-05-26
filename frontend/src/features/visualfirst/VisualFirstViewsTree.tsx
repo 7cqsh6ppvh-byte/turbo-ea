@@ -25,7 +25,7 @@ interface Props {
 }
 
 export function VisualFirstViewsTree({ currentDiagramId }: Props) {
-  const { t } = useTranslation("archimate");
+  const { t } = useTranslation("visualfirst");
   const navigate = useNavigate();
   const [diagrams, setDiagrams] = useState<DiagramSummary[]>([]);
   const [loading, setLoading] = useState(true);

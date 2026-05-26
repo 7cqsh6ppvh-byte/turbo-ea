@@ -1,6 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
 
-export type ArchiMateLayer =
+export type VisualFirstLayer =
   | "Business"
   | "Application"
   | "Technology"
@@ -10,7 +10,7 @@ export type ArchiMateLayer =
   | "Physical"
   | "Composite";
 
-export type ArchiMateRelationType =
+export type VisualFirstRelationType =
   | "Association"
   | "Composition"
   | "Aggregation"
@@ -23,10 +23,10 @@ export type ArchiMateRelationType =
   | "Flow"
   | "Specialization";
 
-export type ArchiMateAspect = "ActiveStructure" | "Behavior" | "PassiveStructure" | "Other";
+export type VisualFirstAspect = "ActiveStructure" | "Behavior" | "PassiveStructure" | "Other";
 
 // Labels for ArchiMate relation types
-export const RELATION_LABELS: Record<ArchiMateRelationType, string> = {
+export const RELATION_LABELS: Record<VisualFirstRelationType, string> = {
   Association: "Association",
   Composition: "Composition",
   Aggregation: "Aggregation",
@@ -40,12 +40,12 @@ export const RELATION_LABELS: Record<ArchiMateRelationType, string> = {
   Specialization: "Specialization",
 };
 
-export interface ArchiMateDiagramNodeData extends Record<string, unknown> {
+export interface VisualFirstDiagramNodeData extends Record<string, unknown> {
   label: string;
   elementTypeKey: string;
   cardId?: string;
-  layer: ArchiMateLayer | string;
-  aspect: ArchiMateAspect | string;
+  layer: VisualFirstLayer | string;
+  aspect: VisualFirstAspect | string;
   color: string;
   width: number;
   height: number;
@@ -58,31 +58,31 @@ export interface ExistingCardDrop {
   name: string;
 }
 
-export interface ArchiMateDiagramEdgeData extends Record<string, unknown> {
-  relationType: ArchiMateRelationType;
+export interface VisualFirstDiagramEdgeData extends Record<string, unknown> {
+  relationType: VisualFirstRelationType;
   relationId?: string;
   label?: string;
 }
 
-export type ArchiMateDiagramNode = Node<ArchiMateDiagramNodeData, string>;
-export type ArchiMateDiagramEdge = Edge<ArchiMateDiagramEdgeData>;
+export type VisualFirstDiagramNode = Node<VisualFirstDiagramNodeData, string>;
+export type VisualFirstDiagramEdge = Edge<VisualFirstDiagramEdgeData>;
 
-export interface ArchiMateDiagramData {
-  nodes: ArchiMateDiagramNode[];
-  edges: ArchiMateDiagramEdge[];
+export interface VisualFirstDiagramData {
+  nodes: VisualFirstDiagramNode[];
+  edges: VisualFirstDiagramEdge[];
   viewpoint?: string;
   version: "1";
 }
 
-export interface ArchiMateViewpoint {
+export interface VisualFirstViewpoint {
   id: string;
   name: string;
   description: string;
-  layers: ArchiMateLayer[];
-  aspects: ArchiMateAspect[];
+  layers: VisualFirstLayer[];
+  aspects: VisualFirstAspect[];
 }
 
-export const ARCHIMATE_VIEWPOINTS: ArchiMateViewpoint[] = [
+export const VISUAL_FIRST_VIEWPOINTS: VisualFirstViewpoint[] = [
   {
     id: "organization",
     name: "Organization",

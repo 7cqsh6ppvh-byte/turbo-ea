@@ -23,36 +23,36 @@ import { api } from "@/api/client";
 import { useMetamodel } from "@/hooks/useMetamodel";
 import { useResolveMetaLabel } from "@/hooks/useResolveLabel";
 import { VISUAL_FIRST_NODE_TYPES } from "./visualFirstNodes";
-import { EDGE_TYPES } from "../archimate/archimateEdges";
-import { ARCHIMATE_ELEMENT_META } from "../archimate/archimateShapes";
+import { EDGE_TYPES } from "./visualFirstEdges";
+import { VISUAL_FIRST_ELEMENT_META } from "./visualFirstShapes";
 import { computeVisualFirstLayout } from "./visualFirstElkLayout";
 import type {
-  ArchiMateRelationType,
-  ArchiMateDiagramData,
-  ArchiMateDiagramNode,
-  ArchiMateDiagramEdge,
+  VisualFirstRelationType,
+  VisualFirstDiagramData,
+  VisualFirstDiagramNode,
+  VisualFirstDiagramEdge,
   ExistingCardDrop,
-} from "../archimate/types";
-import { ArchimateRelationSelector } from "../archimate/ArchimateRelationSelector";
-import { ArchimateMissingRelationDialog } from "../archimate/ArchimateMissingRelationDialog";
+} from "./visualFirstTypes";
+import { VisualFirstRelationSelector } from "./VisualFirstRelationSelector";
+import { VisualFirstMissingRelationDialog } from "./VisualFirstMissingRelationDialog";
 
 interface Props {
   diagramId: string;
-  initialData: ArchiMateDiagramData;
-  onSave?: (data: ArchiMateDiagramData) => void;
+  initialData: VisualFirstDiagramData;
+  onSave?: (data: VisualFirstDiagramData) => void;
   onNodeCardIdsChange?: (ids: Set<string>) => void;
 }
 
 export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardIdsChange }: Props) {
-  const [nodes, setNodes, onNodesChange] = useNodesState<ArchiMateDiagramNode>(
+  const [nodes, setNodes, onNodesChange] = useNodesState<VisualFirstDiagramNode>(
     initialData.nodes,
   );
-  const [edges, setEdges, onEdgesChange] = useEdgesState<ArchiMateDiagramEdge>(
+  const [edges, setEdges, onEdgesChange] = useEdgesState<VisualFirstDiagramEdge>(
     initialData.edges,
   );
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
-  const { t } = useTranslation("archimate");
+  const { t } = useTranslation("visualfirst");
   const { screenToFlowPosition } = useReactFlow();
   const { types, getType } = useMetamodel();
   const rml = useResolveMetaLabel();
@@ -71,7 +71,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   const [missingRelDialogOpen, setMissingRelDialogOpen] = useState(false);
   const [missingRelSource, setMissingRelSource] = useState<string>("");
   const [missingRelTarget, setMissingRelTarget] = useState<string>("");
-  const [missingRelType, setMissingRelType] = useState<ArchiMateRelationType | null>(null);
+  const [missingRelType, setMissingRelType] = useState<VisualFirstRelationType | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes = useMemo<Record<string, ComponentType<any>>>(() => {
@@ -101,10 +101,10 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   }, [nodes, onNodeCardIdsChange]);
 
   const scheduleSave = useCallback(
-    (nextNodes: ArchiMateDiagramNode[], nextEdges: ArchiMateDiagramEdge[]) => {
+    (nextNodes: VisualFirstDiagramNode[], nextEdges: VisualFirstDiagramEdge[]) => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(async () => {
-        const data: ArchiMateDiagramData = { nodes: nextNodes, edges: nextEdges, version: "1" };
+        const data: VisualFirstDiagramData = { nodes: nextNodes, edges: nextEdges, version: "1" };
         try {
           await api.patch(`/diagrams/${diagramId}`, { data });
           onSave?.(data);
@@ -117,7 +117,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   );
 
   const handleNodesChange = useCallback(
-    (changes: NodeChange<ArchiMateDiagramNode>[]) => {
+    (changes: NodeChange<VisualFirstDiagramNode>[]) => {
       onNodesChange(changes);
       setNodes((nds) => {
         scheduleSave(nds, edges);
@@ -128,7 +128,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   );
 
   const handleEdgesChange = useCallback(
-    (changes: EdgeChange<ArchiMateDiagramEdge>[]) => {
+    (changes: EdgeChange<VisualFirstDiagramEdge>[]) => {
       onEdgesChange(changes);
       setEdges((eds) => {
         scheduleSave(nodes, eds);
@@ -154,14 +154,14 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   );
 
   const handleRelationSelect = useCallback(
-    (relationType: ArchiMateRelationType) => {
+    (relationType: VisualFirstRelationType) => {
       if (!pendingConnection) return;
-      const newEdge: ArchiMateDiagramEdge = {
+      const newEdge: VisualFirstDiagramEdge = {
         ...pendingConnection,
         id: `e-${Date.now()}`,
         type: relationType,
         data: { relationType },
-      } as ArchiMateDiagramEdge;
+      } as VisualFirstDiagramEdge;
       setEdges((eds) => {
         const next = addEdge(newEdge, eds);
         scheduleSave(nodes, next);
@@ -174,7 +174,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
   );
 
   const handleRequestCreateMissing = useCallback(
-    (source: string, target: string, relation: ArchiMateRelationType) => {
+    (source: string, target: string, relation: VisualFirstRelationType) => {
       setMissingRelSource(source);
       setMissingRelTarget(target);
       setMissingRelType(relation);
@@ -223,9 +223,9 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
           return;
         }
 
-        const archMeta = ARCHIMATE_ELEMENT_META[typeKey];
+        const archMeta = VISUAL_FIRST_ELEMENT_META[typeKey];
         const ct = getType(typeKey);
-        const newNode: ArchiMateDiagramNode = {
+        const newNode: VisualFirstDiagramNode = {
           id: cardId,
           type: nodeTypes[typeKey] ? typeKey : "ApplicationComponent",
           position,
@@ -253,14 +253,14 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
       const typeKey = event.dataTransfer.getData("archimate/element-type");
       if (!typeKey) return;
 
-      const archMeta = ARCHIMATE_ELEMENT_META[typeKey];
+      const archMeta = VISUAL_FIRST_ELEMENT_META[typeKey];
       const ct = getType(typeKey);
       const label =
         rml(typeKey, ct?.translations, "label") ||
         typeKey.replace(/([A-Z])/g, " $1").trim();
 
       const tempId = `temp-${Date.now()}`;
-      const newNode: ArchiMateDiagramNode = {
+      const newNode: VisualFirstDiagramNode = {
         id: tempId,
         type: nodeTypes[typeKey] ? typeKey : "ApplicationComponent",
         position,
@@ -360,7 +360,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
         )}
       </ReactFlow>
 
-      <ArchimateRelationSelector
+      <VisualFirstRelationSelector
         open={relSelectorOpen}
         sourceTypeKey={pendingSourceType}
         targetTypeKey={pendingTargetType}
@@ -372,7 +372,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
         onRequestCreateMissing={handleRequestCreateMissing}
       />
 
-      <ArchimateMissingRelationDialog
+      <VisualFirstMissingRelationDialog
         open={missingRelDialogOpen}
         sourceTypeKey={missingRelSource}
         targetTypeKey={missingRelTarget}

@@ -9,11 +9,11 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { ARCHIMATE_RELATION_STYLES } from "./archimateShapes";
-import { RELATION_LABELS, type ArchiMateRelationType } from "./types";
-import { getValidRelationKeys } from "./AllowedArchiMateRelations";
+import { VISUAL_FIRST_RELATION_STYLES } from "./visualFirstShapes";
+import { RELATION_LABELS, type VisualFirstRelationType } from "./visualFirstTypes";
+import { getValidRelationKeys } from "./AllowedVisualFirstRelations";
 
-const RELATION_DESCRIPTIONS: Record<ArchiMateRelationType, string> = {
+const RELATION_DESCRIPTIONS: Record<VisualFirstRelationType, string> = {
   Association: "Unspecified relationship between elements",
   Composition: "Element is composed of other elements",
   Aggregation: "Element aggregates other elements",
@@ -31,9 +31,9 @@ interface Props {
   open: boolean;
   sourceTypeKey: string;
   targetTypeKey: string;
-  onSelect: (relationType: ArchiMateRelationType) => void;
+  onSelect: (relationType: VisualFirstRelationType) => void;
   onClose: () => void;
-  onRequestCreateMissing?: (source: string, target: string, relation: ArchiMateRelationType) => void;
+  onRequestCreateMissing?: (source: string, target: string, relation: VisualFirstRelationType) => void;
 }
 
 /**
@@ -42,7 +42,7 @@ interface Props {
  * Shows a "Create missing relation" option when valid relations exist but aren't
  * registered in the Turbo EA metamodel.
  */
-export function ArchimateRelationSelector({
+export function VisualFirstRelationSelector({
   open,
   sourceTypeKey,
   targetTypeKey,
@@ -50,22 +50,22 @@ export function ArchimateRelationSelector({
   onClose,
   onRequestCreateMissing,
 }: Props) {
-  const { t } = useTranslation("archimate");
+  const { t } = useTranslation("visualfirst");
 
-  // All possible ArchiMate relation types (from ARCHIMATE_RELATION_STYLES)
-  const allRelationTypes = Object.keys(ARCHIMATE_RELATION_STYLES) as ArchiMateRelationType[];
+  // All possible ArchiMate relation types (from VISUAL_FIRST_RELATION_STYLES)
+  const allRelationTypes = Object.keys(VISUAL_FIRST_RELATION_STYLES) as VisualFirstRelationType[];
 
   // Filter to only valid relations between these element types (returns  prefixed keys)
   const validRelations = getValidRelationKeys(sourceTypeKey, targetTypeKey);
 
   // Relations that exist in metamodel (have styling support)
   const registeredValid = validRelations.filter((r) =>
-    allRelationTypes.includes(r as ArchiMateRelationType),
+    allRelationTypes.includes(r as VisualFirstRelationType),
   );
 
   // Relations that are valid per ArchiMate spec but NOT registered (no styling support yet)
   const missingValid = validRelations.filter(
-    (r) => !allRelationTypes.includes(r as ArchiMateRelationType),
+    (r) => !allRelationTypes.includes(r as VisualFirstRelationType),
   );
 
   // If no valid relations at all, show error state
@@ -102,7 +102,7 @@ export function ArchimateRelationSelector({
             </Typography>
             <List dense disablePadding sx={{ mb: missingValid.length > 0 ? 2 : 0 }}>
               {registeredValid.map((key) => {
-                const relationKey = key as ArchiMateRelationType;
+                const relationKey = key as VisualFirstRelationType;
                 return (
                   <ListItemButton
                     key={key}
@@ -136,7 +136,7 @@ export function ArchimateRelationSelector({
             </Typography>
             <List dense disablePadding>
               {missingValid.map((key) => {
-                const relationKey = key as ArchiMateRelationType;
+                const relationKey = key as VisualFirstRelationType;
                 return (
                   <ListItemButton
                     key={key}

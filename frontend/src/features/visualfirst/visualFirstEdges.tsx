@@ -1,10 +1,10 @@
 import type { ComponentType } from "react";
 import { BaseEdge, EdgeLabelRenderer, getStraightPath, type EdgeProps } from "@xyflow/react";
-import type { ArchiMateDiagramEdge } from "./types";
-import { ARCHIMATE_RELATION_STYLES, type ArchiMateRelationStyle } from "./archimateShapes";
+import type { VisualFirstDiagramEdge } from "./visualFirstTypes";
+import { VISUAL_FIRST_RELATION_STYLES, type VisualFirstRelationStyle } from "./visualFirstShapes";
 
-export function getEdgeStyle(relationType: string): ArchiMateRelationStyle | undefined {
-  return ARCHIMATE_RELATION_STYLES[relationType as keyof typeof ARCHIMATE_RELATION_STYLES];
+export function getEdgeStyle(relationType: string): VisualFirstRelationStyle | undefined {
+  return VISUAL_FIRST_RELATION_STYLES[relationType as keyof typeof VISUAL_FIRST_RELATION_STYLES];
 }
 
 const MARKER_SIZE = 10;
@@ -93,7 +93,7 @@ function ArchimateEdge({
   targetY,
   data,
   selected,
-}: EdgeProps<ArchiMateDiagramEdge>) {
+}: EdgeProps<VisualFirstDiagramEdge>) {
   const relationType = (data?.relationType as string | undefined) ?? "arch_rel_Association";
   const style = getEdgeStyle(relationType) ?? {};
   const strokeColor = selected ? "#1976d2" : "#555";
@@ -155,5 +155,5 @@ const _archimateEdge = ArchimateEdge as ComponentType<any>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const EDGE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries(
-  Object.keys(ARCHIMATE_RELATION_STYLES).map((key) => [key, _archimateEdge]),
+  Object.keys(VISUAL_FIRST_RELATION_STYLES).map((key) => [key, _archimateEdge]),
 );

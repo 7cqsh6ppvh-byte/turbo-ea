@@ -7,12 +7,95 @@
     "diagramNameLabel": "Diagrammname",
     "cancel": "Abbrechen",
     "create": "Erstellen",
+    "backToDiagrams": "Zurück zu den Diagrammen",
+    "sidebar": {
+        "elementsTab": "Elemente",
+        "viewsTab": "Ansichten",
+        "paletteTab": "Palette",
+        "modeEa": "EA-Karten",
+        "modeArchimate": "ArchiMate",
+        "searchPlaceholder": "Karten suchen…",
+        "showingOf": "{{loaded}} von {{total}} angezeigt",
+        "cardsCount_one": "{{count}} Karte",
+        "cardsCount_other": "{{count}} Karten",
+        "alreadyInDiagram": "Bereits im Diagramm",
+        "noCardsFound": "Keine Karten gefunden",
+        "noCardsMatch": "Keine Karten entsprechen Ihrer Suche",
+        "noTypesAvailable": "Keine Typen verfügbar",
+        "loadingMore": "Wird geladen…",
+        "diagramsHeader": "Diagramme",
+        "newDiagram": "Neues Diagramm",
+        "noDiagrams": "Noch keine Diagramme",
+        "duplicateCard": "Diese Karte ist bereits im Diagramm",
+        "mixedMetamodel": "ArchiMate- und Standard-Kartentypen können nicht im selben Canvas gemischt werden"
+    },
+    "autoLayout": "Auto-Layout",
+    "duplicateCard": "Diese Karte ist bereits im Diagramm",
+    "mixedMetamodel": "ArchiMate- und Standard-Kartentypen können nicht im selben Canvas gemischt werden",
+    "selectRelationType": "Beziehungstyp auswählen",
+    "layer": {
+        "Business": "Business",
+        "Application": "Anwendung",
+        "Technology": "Technologie",
+        "Motivation": "Motivation",
+        "Strategy": "Strategie",
+        "Implementation": "Implementierung",
+        "Physical": "Physisch",
+        "Composite": "Zusammengesetzt"
+    },
+    "relation": {
+        "Association": "Assoziation",
+        "Composition": "Komposition",
+        "Aggregation": "Aggregation",
+        "Realization": "Realisierung",
+        "Assignment": "Zuweisung",
+        "Serving": "Bedienung",
+        "Access": "Zugriff",
+        "Influence": "Einfluss",
+        "Triggering": "Auslösung",
+        "Flow": "Fluss",
+        "Specialization": "Spezialisierung"
+    },
+    "export": {
+        "title": "ArchiMate-Modell exportieren",
+        "button": "AMEFF exportieren",
+        "success": "Modell erfolgreich exportiert"
+    },
+    "import": {
+        "title": "ArchiMate-Modell importieren",
+        "button": "AMEFF importieren",
+        "success": "Modell importiert: {{created}} erstellt, {{skipped}} übersprungen",
+        "error": "Import fehlgeschlagen"
+    },
     "admin": {
-        "title": "VisualFirst Canvas",
-        "enable": "VisualFirst Canvas aktivieren",
-        "disable": "VisualFirst Canvas deaktivieren",
-        "enabled": "VisualFirst Canvas ist aktiviert",
-        "disabled": "VisualFirst Canvas ist deaktiviert",
-        "description": "Der VisualFirst Canvas ist der ReactFlow-basierte Diagrammeditor. Er funktioniert mit jedem Metamodell, einschließlich ArchiMate."
+        "title": "ArchiMate",
+        "enable": "ArchiMate aktivieren",
+        "disable": "ArchiMate deaktivieren",
+        "enabled": "ArchiMate ist aktiviert",
+        "disabled": "ArchiMate ist deaktiviert",
+        "dangerZone": "Gefahrenzone",
+        "hideAll": "Alle ArchiMate-Typen deaktivieren und ausblenden",
+        "migrateUnique": {
+            "title": "Zu ArchiMate-Only migrieren",
+            "description": "Entfernt alle standard Turbo-EA-Kartentypen, -Karten und -Beziehungen und behält nur ArchiMate-Elemente. Anschließend werden die ArchiMate-Demodaten eingespielt.",
+            "button": "Migration ausführen",
+            "confirm": "Dies löscht dauerhaft alle nicht-ArchiMate-Daten einschließlich Kartentypen, Karten und Beziehungen und spielt dann die ArchiMate-Demodaten ein. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?",
+            "success": "Migration abgeschlossen: {{cards}} Karten, {{relations}} Beziehungen, {{types}} Kartentypen, {{rt}} Beziehungstypen entfernt. Demo eingespielt: {{demoCards}} Karten, {{demoRels}} Beziehungen erstellt.",
+            "disabled": "Standard-Typen sind ausgeblendet. Aktivieren Sie ArchiMate erneut und aktualisieren Sie die Seite."
+        }
+    },
+    "relationSelector": {
+        "title": "Beziehungstyp auswählen",
+        "direction": "Von: <strong>{{source}}</strong> → Zu: <strong>{{target}}</strong>",
+        "available": "Verfügbar im Workspace",
+        "missing": "Gültig in ArchiMate (nicht erstellt)",
+        "createPrompt": "Klicken zum Erstellen",
+        "noValidTitle": "Keine ArchiMate-Beziehungen erlaubt",
+        "noValidDescription": "Diese Elementtypen können nicht über ArchiMate-Beziehungen verbunden werden.",
+        "created": "Die {{relation}}-Beziehung wurde erstellt. Bitte zeichnen Sie die Kante erneut."
+    },
+    "missingRelation": {
+        "title": "Fehlenden Beziehungstyp erstellen",
+        "description": "Die {{relation}}-Beziehung ist in ArchiMate zwischen {{source}} und {{target}} gültig, ist aber noch nicht im Workspace aktiviert. Erstellen?"
     }
 }

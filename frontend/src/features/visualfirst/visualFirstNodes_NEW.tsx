@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import type { ArchiMateDiagramNode } from "./types";
-import { ARCHIMATE_ELEMENT_META } from "./archimateShapes";
+import type { VisualFirstDiagramNode } from "./visualFirstTypes";
+import { VISUAL_FIRST_ELEMENT_META } from "./visualFirstShapes";
 
 const ASPECT_MARK: Record<string, string> = {
   ActiveStructure: "▪",
@@ -12,8 +12,8 @@ const ASPECT_MARK: Record<string, string> = {
   Other: "",
 };
 
-export function ArchimateElementNode({ data, selected }: NodeProps<ArchiMateDiagramNode>) {
-  const meta = ARCHIMATE_ELEMENT_META[data.elementTypeKey];
+export function VisualFirstElementNode({ data, selected }: NodeProps<VisualFirstDiagramNode>) {
+  const meta = VISUAL_FIRST_ELEMENT_META[data.elementTypeKey];
   const bgColor = data.color || meta?.defaultColor || "#e0e0e0";
   const aspectMark = ASPECT_MARK[data.aspect] || "";
 
@@ -73,7 +73,7 @@ export function ArchimateElementNode({ data, selected }: NodeProps<ArchiMateDiag
   );
 }
 
-export function ArchimateGroupingNode({ data, selected }: NodeProps<ArchiMateDiagramNode>) {
+export function VisualFirstGroupingNode({ data, selected }: NodeProps<VisualFirstDiagramNode>) {
   const bgColor = data.color || "#ffffff";
   return (
     <Box
@@ -105,7 +105,7 @@ export function ArchimateGroupingNode({ data, selected }: NodeProps<ArchiMateDia
   );
 }
 
-export function ArchimateJunctionNode({ selected }: NodeProps<ArchiMateDiagramNode>) {
+export function VisualFirstJunctionNode({ selected }: NodeProps<VisualFirstDiagramNode>) {
   return (
     <Box
       sx={{
@@ -129,15 +129,15 @@ export function ArchimateJunctionNode({ selected }: NodeProps<ArchiMateDiagramNo
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _elementNode = ArchimateElementNode as ComponentType<any>;
+const _elementNode = VisualFirstElementNode as ComponentType<any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _groupingNode = ArchimateGroupingNode as ComponentType<any>;
+const _groupingNode = VisualFirstGroupingNode as ComponentType<any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _junctionNode = ArchimateJunctionNode as ComponentType<any>;
+const _junctionNode = VisualFirstJunctionNode as ComponentType<any>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NODE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries(
-  Object.keys(ARCHIMATE_ELEMENT_META).map((key) => {
+  Object.keys(VISUAL_FIRST_ELEMENT_META).map((key) => {
     if (key === "Grouping" || key === "Location") return [key, _groupingNode];
     if (key === "Junction") return [key, _junctionNode];
     return [key, _elementNode];
@@ -145,6 +145,6 @@ export const NODE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries
 );
 
 // Stable base map used by ArchimateCanvas to build the full nodeTypes map dynamically.
-export const ARCH_NODE_TYPES: Record<string, ComponentType<any>> = {
+export const VISUAL_FIRST_NODE_TYPES: Record<string, ComponentType<any>> = {
   ...NODE_TYPES,
 };

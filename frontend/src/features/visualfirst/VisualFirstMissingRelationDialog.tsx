@@ -8,14 +8,14 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
-import { type ArchiMateRelationType, RELATION_LABELS } from "./types";
+import { type VisualFirstRelationType, RELATION_LABELS } from "./visualFirstTypes";
 import { api } from "@/api/client";
 
 interface Props {
   open: boolean;
   sourceTypeKey: string;
   targetTypeKey: string;
-  relationType: ArchiMateRelationType | null;
+  relationType: VisualFirstRelationType | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -24,7 +24,7 @@ interface Props {
  * Dialog shown when user wants to create a missing ArchiMate relation type
  * that is valid per ArchiMate spec but not yet registered in Turbo EA metamodel.
  */
-export function ArchimateMissingRelationDialog({
+export function VisualFirstMissingRelationDialog({
   open,
   sourceTypeKey,
   targetTypeKey,

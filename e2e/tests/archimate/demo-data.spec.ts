@@ -11,7 +11,7 @@ test.describe("ArchiMate demo data", () => {
     const token = await loginAsAdmin(context, BASE_URL);
 
     // Query cards API for arch_* type cards
-    const resp = await page.request.get(`${BASE_URL}/api/v1/cards?type=arch_ApplicationComponent`, {
+    const resp = await page.request.get(`${BASE_URL}/api/v1/cards?type=ApplicationComponent`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -44,13 +44,15 @@ test.describe("ArchiMate demo data", () => {
     const typeKeys = types.map((t: { key: string }) => t.key);
 
     // Should have ArchiMate element types registered
-    const archTypes = typeKeys.filter((k: string) => k.startsWith("arch_"));
-    expect(archTypes.length).toBeGreaterThan(0);
+    const archTypes = typeKeys.filter((k: string) => !k.startsWith("arch_") === false || [
+      "BusinessActor", "ApplicationComponent", "Node", "BusinessProcess",
+    ].includes(k));
+    expect(archTypes.length > 0 || typeKeys.some((k: string) => k === "ApplicationComponent" || k === "BusinessActor")).toBe(true);
 
-    // Should cover main categories
-    expect(typeKeys).toContain("arch_ApplicationComponent");
-    expect(typeKeys).toContain("arch_BusinessActor");
-    expect(typeKeys).toContain("arch_Node");
+    // Should cover main categories (ArchiMate types use plain keys, not prefixed)
+    expect(typeKeys).toContain("ApplicationComponent");
+    expect(typeKeys).toContain("BusinessActor");
+    expect(typeKeys).toContain("Node");
 
     // Cleanup
     await disableArchiMate(context.request, BASE_URL, token);
@@ -68,13 +70,10 @@ test.describe("ArchiMate demo data", () => {
     const relTypes = await resp.json();
     const relKeys = relTypes.map((r: { key: string }) => r.key);
 
-    const archRels = relKeys.filter((k: string) => k.startsWith("arch_rel_"));
-    expect(archRels.length).toBeGreaterThan(0);
-
-    // Core ArchiMate relations should be present
-    expect(relKeys).toContain("arch_rel_Serving");
-    expect(relKeys).toContain("arch_rel_Realization");
-    expect(relKeys).toContain("arch_rel_Composition");
+    // Core ArchiMate relations should be present (plain keys, no prefix)
+    expect(relKeys).toContain("Serving");
+    expect(relKeys).toContain("Realization");
+    expect(relKeys).toContain("Composition");
 
     // Cleanup
     await disableArchiMate(context.request, BASE_URL, token);
@@ -113,7 +112,8 @@ test.describe("ArchiMate demo data", () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     const beforeTypes = await beforeResp.json();
-    const beforeStandard = beforeTypes.filter((t: { key: string }) => !t.key.startsWith("arch_"));
+    const archimateKeys = new Set(["BusinessActor","BusinessRole","BusinessCollaboration","BusinessInterface","BusinessProcess","BusinessFunction","BusinessInteraction","BusinessEvent","BusinessService","BusinessObject","Contract","Representation","Product","ApplicationComponent","ApplicationCollaboration","ApplicationInterface","ApplicationProcess","ApplicationFunction","ApplicationInteraction","ApplicationEvent","ApplicationService","DataObject","Node","Device","SystemSoftware","TechnologyCollaboration","TechnologyInterface","TechnologyProcess","TechnologyFunction","TechnologyInteraction","TechnologyEvent","TechnologyService","Path","CommunicationNetwork","Artifact","Stakeholder","Driver","Assessment","Goal","Outcome","Principle","Requirement","Constraint","Meaning","Value","Resource","Capability","ValueStream","CourseOfAction","WorkPackage","ImplementationEvent","Deliverable","Gap","Plateau","Equipment","Facility","DistributionNetwork","Material","Grouping","Location","Junction","Association","Composition","Aggregation","Realization","Assignment","Serving","Access","Influence","Triggering","Flow","Specialization"]);
+    const beforeStandard = beforeTypes.filter((t: { key: string }) => !archimateKeys.has(t.key));
 
     // Determine if migration already ran at startup
     const alreadyMigrated = beforeStandard.length === 0;
@@ -130,6 +130,8 @@ test.describe("ArchiMate demo data", () => {
       // Should be idempotent — nothing left to delete
       expect(result.cards_deleted).toBe(0);
       expect(result.card_types_deleted).toBe(0);
+      // Demo seed should report cards created (or 0 if already seeded)
+      expect(result.demo_cards_created).toBeGreaterThanOrEqual(0);
     } else {
       // Standard types exist — trigger migration and verify
       const migrateResp = await page.request.post(
@@ -148,11 +150,11 @@ test.describe("ArchiMate demo data", () => {
       headers: { Authorization: `Bearer ${token}` },
     });
     const afterTypes = await afterResp.json();
-    const afterStandard = afterTypes.filter((t: { key: string }) => !t.key.startsWith("arch_"));
+    const afterStandard = afterTypes.filter((t: { key: string }) => !archimateKeys.has(t.key));
     expect(afterStandard.length).toBe(0);
 
     // Verify ArchiMate types are still present
-    const archTypes = afterTypes.filter((t: { key: string }) => t.key.startsWith("arch_"));
+    const archTypes = afterTypes.filter((t: { key: string }) => archimateKeys.has(t.key));
     expect(archTypes.length).toBeGreaterThan(0);
   });
 });
