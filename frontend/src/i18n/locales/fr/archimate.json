@@ -83,5 +83,19 @@
             "success": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed.",
             "disabled": "Standard types are hidden. Re-enable ArchiMate and refresh to make the migration available."
         }
+    },
+    "relationSelector": {
+        "title": "Sélectionner le type de relation",
+        "direction": "De: <strong>{{source}}</strong> → À: <strong>{{target}}</strong>",
+        "available": "Disponible dans l'espace de travail",
+        "missing": "Valide dans ArchiMate (pas encore créé)",
+        "createPrompt": "Cliquez pour créer ce type de relation",
+        "noValidTitle": "Aucune relation ArchiMate autorisée",
+        "noValidDescription": "Ces types d'éléments ne peuvent pas être connectés via des relations ArchiMate.",
+        "created": "Le type de relation {{relation}} a été créé. Veuillez redessiner le lien."
+    },
+    "missingRelation": {
+        "title": "Créer le type de relation manquant",
+        "description": "Le type de relation {{relation}} est valide dans ArchiMate entre {{source}} et {{target}}, mais n'est pas encore activé dans cet espace de travail. Le créer?"
     }
 }

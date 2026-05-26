@@ -83,5 +83,19 @@
             "success": "Migration abgeschlossen: {{cards}} Karten, {{relations}} Beziehungen, {{types}} Kartentypen, {{rt}} Beziehungstypen entfernt.",
             "disabled": "Standard-Typen sind ausgeblendet. Aktivieren Sie ArchiMate erneut und aktualisieren Sie die Seite."
         }
+    },
+    "relationSelector": {
+        "title": "Beziehungstyp auswählen",
+        "direction": "Von: <strong>{{source}}</strong> → Zu: <strong>{{target}}</strong>",
+        "available": "Verfügbar im Workspace",
+        "missing": "Gültig in ArchiMate (nicht erstellt)",
+        "createPrompt": "Klicken zum Erstellen",
+        "noValidTitle": "Keine ArchiMate-Beziehungen erlaubt",
+        "noValidDescription": "Diese Elementtypen können nicht über ArchiMate-Beziehungen verbunden werden.",
+        "created": "Die {{relation}}-Beziehung wurde erstellt. Bitte zeichnen Sie die Kante erneut."
+    },
+    "missingRelation": {
+        "title": "Fehlenden Beziehungstyp erstellen",
+        "description": "Die {{relation}}-Beziehung ist in ArchiMate zwischen {{source}} und {{target}} gültig, ist aber noch nicht im Workspace aktiviert. Erstellen?"
     }
 }

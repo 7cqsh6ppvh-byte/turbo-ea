@@ -83,5 +83,19 @@
             "success": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed.",
             "disabled": "Standard types are hidden. Re-enable ArchiMate and refresh to make the migration available."
         }
+    },
+    "relationSelector": {
+        "title": "选择关系类型",
+        "direction": "从: <strong>{{source}}</strong> → 到: <strong>{{target}}</strong>",
+        "available": "工作区中可用",
+        "missing": "在 ArchiMate 中有效（尚未创建）",
+        "createPrompt": "点击创建此关系类型",
+        "noValidTitle": "不允许 ArchiMate 关系",
+        "noValidDescription": "这些元素类型无法通过 ArchiMate 关系进行连接。",
+        "created": "{{relation}} 关系已创建。请重新绘制边。"
+    },
+    "missingRelation": {
+        "title": "创建缺失的关系类型",
+        "description": "{{relation}} 关系在 ArchiMate 中有效（{{source}} 到 {{target}}），但尚未在此工作区启用。创建它吗？"
     }
 }

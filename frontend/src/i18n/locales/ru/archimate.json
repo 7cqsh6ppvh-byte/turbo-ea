@@ -83,5 +83,19 @@
             "success": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed.",
             "disabled": "Standard types are hidden. Re-enable ArchiMate and refresh to make the migration available."
         }
+    },
+    "relationSelector": {
+        "title": "Выбрать тип связи",
+        "direction": "От: <strong>{{source}}</strong> → К: <strong>{{target}}</strong>",
+        "available": "Доступно в рабочей области",
+        "missing": "Допустимо в ArchiMate (еще не создано)",
+        "createPrompt": "Нажмите, чтобы создать этот тип связи",
+        "noValidTitle": "Связи ArchiMate не разрешены",
+        "noValidDescription": "Эти типы элементов не могут быть соединены через связи ArchiMate.",
+        "created": "Связь {{relation}} была создана. Пожалуйста, нарисуйте ребро снова."
+    },
+    "missingRelation": {
+        "title": "Создать недостающий тип связи",
+        "description": "Связь {{relation}} допустима в ArchiMate между {{source}} и {{target}}, но еще не включена в эту рабочую область. Создать?"
     }
 }

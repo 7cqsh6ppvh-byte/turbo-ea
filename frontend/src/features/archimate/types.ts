@@ -25,6 +25,21 @@ export type ArchiMateRelationType =
 
 export type ArchiMateAspect = "ActiveStructure" | "Behavior" | "PassiveStructure" | "Other";
 
+// Labels for ArchiMate relation types
+export const RELATION_LABELS: Record<ArchiMateRelationType, string> = {
+  arch_rel_Association: "Association",
+  arch_rel_Composition: "Composition",
+  arch_rel_Aggregation: "Aggregation",
+  arch_rel_Realization: "Realization",
+  arch_rel_Assignment: "Assignment",
+  arch_rel_Serving: "Serving",
+  arch_rel_Access: "Access",
+  arch_rel_Influence: "Influence",
+  arch_rel_Triggering: "Triggering",
+  arch_rel_Flow: "Flow",
+  arch_rel_Specialization: "Specialization",
+};
+
 export interface ArchiMateDiagramNodeData extends Record<string, unknown> {
   label: string;
   elementTypeKey: string;

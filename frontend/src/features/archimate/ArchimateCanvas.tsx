@@ -27,11 +27,14 @@ import { EDGE_TYPES } from "./archimateEdges";
 import { ARCHIMATE_ELEMENT_META } from "./archimateShapes";
 import { computeArchiMateLayout } from "./archimateElkLayout";
 import type {
+  ArchiMateRelationType,
   ArchiMateDiagramData,
   ArchiMateDiagramNode,
   ArchiMateDiagramEdge,
   ExistingCardDrop,
 } from "./types";
+import { ArchimateRelationSelector } from "./ArchimateRelationSelector";
+import { ArchimateMissingRelationDialog } from "./ArchimateMissingRelationDialog";
 
 interface Props {
   diagramId: string;
@@ -55,6 +58,20 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
   const rml = useResolveMetaLabel();
   const [duplicateToast, setDuplicateToast] = useState(false);
   const [mismatchToast, setMismatchToast] = useState(false);
+  const [createdToast, setCreatedToast] = useState(false);
+  const [createdRelationName, setCreatedRelationName] = useState<string>("");
+
+  // Relation selector state
+  const [relSelectorOpen, setRelSelectorOpen] = useState(false);
+  const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
+  const [pendingSourceType, setPendingSourceType] = useState<string>("");
+  const [pendingTargetType, setPendingTargetType] = useState<string>("");
+
+  // Missing relation dialog state
+  const [missingRelDialogOpen, setMissingRelDialogOpen] = useState(false);
+  const [missingRelSource, setMissingRelSource] = useState<string>("");
+  const [missingRelTarget, setMissingRelTarget] = useState<string>("");
+  const [missingRelType, setMissingRelType] = useState<ArchiMateRelationType | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes = useMemo<Record<string, ComponentType<any>>>(() => {
@@ -121,22 +138,74 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
     [onEdgesChange, setEdges, nodes, scheduleSave],
   );
 
+  /**
+   * Called when user connects two nodes. Intercepts the connection to show
+   * the relation selector dialog, filtering valid options based on element types.
+   */
   const onConnect = useCallback(
     (connection: Connection) => {
+      // Find source and target node types
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      const sourceType = sourceNode?.data.elementTypeKey as string;
+      const targetType = targetNode?.data.elementTypeKey as string;
+
+      // Store connection and open selector
+      setPendingConnection(connection);
+      setPendingSourceType(sourceType);
+      setPendingTargetType(targetType);
+      setRelSelectorOpen(true);
+    },
+    [nodes],
+  );
+
+  /**
+   * Called when user selects a relation type from the selector.
+   * Creates the edge with the chosen relation type.
+   */
+  const handleRelationSelect = useCallback(
+    (relationType: ArchiMateRelationType) => {
+      if (!pendingConnection) return;
       const newEdge: ArchiMateDiagramEdge = {
-        ...connection,
+        ...pendingConnection,
         id: `e-${Date.now()}`,
-        type: "arch_rel_Association",
-        data: { relationType: "arch_rel_Association" },
+        type: relationType,
+        data: { relationType },
       } as ArchiMateDiagramEdge;
       setEdges((eds) => {
         const next = addEdge(newEdge, eds);
         scheduleSave(nodes, next);
         return next;
       });
+      setRelSelectorOpen(false);
+      setPendingConnection(null);
     },
-    [setEdges, nodes, scheduleSave],
+    [pendingConnection, setEdges, nodes, scheduleSave],
   );
+
+  /**
+   * Called when user clicks "Create" for a missing relation type.
+   */
+  const handleRequestCreateMissing = useCallback(
+    (source: string, target: string, relation: ArchiMateRelationType) => {
+      setMissingRelSource(source);
+      setMissingRelTarget(target);
+      setMissingRelType(relation);
+      setMissingRelDialogOpen(true);
+    },
+    [],
+  );
+
+  /**
+   * Called after successfully creating a missing relation type.
+   */
+  const handleMissingRelationCreated = useCallback(() => {
+    setMissingRelDialogOpen(false);
+    setCreatedRelationName(missingRelType ?? "");
+    setCreatedToast(true);
+    setRelSelectorOpen(false);
+    setPendingConnection(null);
+  }, [missingRelType]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -307,6 +376,29 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
         )}
       </ReactFlow>
 
+      {/* Relation type selector dialog */}
+      <ArchimateRelationSelector
+        open={relSelectorOpen}
+        sourceTypeKey={pendingSourceType}
+        targetTypeKey={pendingTargetType}
+        onSelect={handleRelationSelect}
+        onClose={() => {
+          setRelSelectorOpen(false);
+          setPendingConnection(null);
+        }}
+        onRequestCreateMissing={handleRequestCreateMissing}
+      />
+
+      {/* Missing relation creation dialog */}
+      <ArchimateMissingRelationDialog
+        open={missingRelDialogOpen}
+        sourceTypeKey={missingRelSource}
+        targetTypeKey={missingRelTarget}
+        relationType={missingRelType}
+        onClose={() => setMissingRelDialogOpen(false)}
+        onSuccess={handleMissingRelationCreated}
+      />
+
       <Snackbar
         open={duplicateToast}
         autoHideDuration={3000}
@@ -325,6 +417,16 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
       >
         <Alert severity="error" onClose={() => setMismatchToast(false)} sx={{ fontSize: "12px" }}>
           {t("sidebar.mixedMetamodel")}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={createdToast}
+        autoHideDuration={4000}
+        onClose={() => setCreatedToast(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success" onClose={() => setCreatedToast(false)} sx={{ fontSize: "12px" }}>
+          {t("relationSelector.created", { relation: createdRelationName.replace("arch_rel_", "") })}
         </Alert>
       </Snackbar>
     </Box>

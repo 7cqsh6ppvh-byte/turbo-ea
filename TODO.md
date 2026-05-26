@@ -1,39 +1,56 @@
 # TODO
 
 ## Goal
-Deploy everything in Docker from local source, recreating from scratch with demo data (including ArchiMate) on port 8920 in development mode, without MCP or Ollama profiles.
+
+Implement ArchiMate relationship validation in the ArchiMate diagram editor (ReactFlow-based). When users connect elements, show only valid relationship types per ArchiMate 3.2 spec, and prompt to create missing valid relation types.
 
 ## Tasks
 
-### 0. Pull latest source from Git
-- [x] Fetch origin, rebase to get 8 latest ArchiMate commits
-- [x] Verify on-disk files match origin/claude/archimate-turbo-plugin-nThe2
+### 1. Update ArchimateRelationSelector to filter valid relations
+- [x] Read current `ArchimateRelationSelector.tsx` - shows all 11 relations without filtering
+- [ ] Import `isValidArchimateRelation` and `getValidRelationKeys` from `AllowedArchiMateRelations.ts`
+- [ ] Filter relation types based on source/target element type keys
+- [ ] Show "No valid relations" message when none match ArchiMate spec
+- [ ] Add create-missing-relation button when valid relations exist but none registered in metamodel
 
-### 1. Clean up `.env` file
-- [x] Remove duplicate `HOST_PORT` lines (keep `8920`)
-- [x] Remove duplicate `ENVIRONMENT` lines (keep `development`)
-- [x] Set `RESET_DB=true` to force a fresh database on startup
-- [x] Set `SEED_DEMO=true`, `SEED_BPM=true`, `SEED_PPM=true` (clean, non-duplicate)
-- [x] Keep `MIGRATE_ARCHIMATE_UNIQUE=true` as requested
-- [x] Clean up orphaned/bogus comment lines that shadowed actual values
+### 2. Add "Create Missing Relation" dialog for ArchiMate
+- [ ] Create `ArchimateMissingRelationDialog.tsx`:
+  - User draws edge between ArchiMate elements
+  - Relation is valid per ArchiMate spec but NOT registered in Turbo EA metamodel
+  - Dialog: "The [relation name] relationship is valid in ArchiMate between [source] and [target] but is not yet enabled in this workspace. Create it?"
+  - On confirm: call `POST /api/v1/archimate/relation-types`
+  - On success: toast "The [relation name] relationship has been created. Please draw the edge again."
+  - Non-admin users: show toast "This ArchiMate relation is valid but requires admin permission to enable."
 
-### 2. Tear down existing Docker stack
-- [x] Run `docker compose -p turboea down -v` to remove containers and the `postgres_data` volume
-- [x] Run `docker compose build --no-cache` to force-fresh images (not cached layers)
-- [x] Optionally prune dangling images to reclaim space
+### 3. Create backend API endpoint for ad-hoc ArchiMate relation type creation
+- [ ] New route: `POST /api/v1/archimate/relation-types` (in archimate.py)
+- [ ] Request body: `{ source_type_key, target_type_key, relation_name }`
+- [ ] Validates: admin permission, both types exist, relation is valid per ArchiMate spec
+- [ ] Creates `RelationType` with:
+  - `key=arch_rel_{source}_{target}_{relation}` or simpler format
+  - `plugin_id="archimate"`, `built_in=False`
+  - Injects `reverse_label` automatically
+- [ ] Returns created `RelationType`
 
-### 3. Build and start everything from source
-- [x] Run `docker compose -f docker-compose.yml -f dev/docker-compose.dev.yml up -d` (no `--profile` flags)
-- [x] Wait for all services (db, backend, frontend, nginx) to become healthy
-- [x] Verify fresh image SHAs (frontend: `0130cdc0ed92`, backend: `e2eb50a4a913`)
+### 4. Update ArchimateCanvas to integrate relation selector
+- [x] Read current `onConnect` callback - defaults to Association without selection
+- [ ] When edge is drawn, show `ArchimateRelationSelector` dialog
+- [ ] Pass source/target element type keys to the selector
+- [ ] On selection, update edge with chosen relation type
+- [ ] Handle "missing relation" case: show `ArchimateMissingRelationDialog`
 
-### 4. Verify the deployment
-- [x] Smoke-test `GET http://localhost:8920/api/health` returns version `1.25.0`
-- [x] Smoke-test `GET http://localhost:8920` returns the Turbo EA frontend (login page)
-- [x] Confirm demo data was seeded (first registered user gets admin role)
+### 5. Add translations for new UI strings
+- [ ] Add translation keys for ArchiMate relation selector and missing relation dialog
+- [ ] Update all 8 locale files (en, de, fr, es, it, pt, zh, ru)
+
+### 6. Create tests
+- [ ] Unit tests for `AllowedArchiMateRelations.ts`
+- [ ] Tests for `ArchimateRelationSelector` filtering logic
+- [ ] Tests for backend relation creation endpoint
 
 ## Notes
-- Fresh database: `RESET_DB=true` will drop all tables and re-seed on first startup.
-- ArchiMate unique mode: after seeding, non-ArchiMate data (standard card types, cards, relations) will be stripped, leaving only ArchiMate elements visible.
-- Builder will use the root `Dockerfile` with multi-stage targets (`db`, `backend`, `frontend`, `nginx`).
-- No MCP or AI/Ollama profiles will be started — they remain available via `--profile mcp` or `--profile ai` later.
+- **Archimate editor uses ReactFlow** (not DrawIO) - the `onConnect` callback in `ArchimateCanvas.tsx` handles edge creation
+- The `archimateShapes.ts` already defines all 11 ArchiMate relation types with their visual styles
+- The `AllowedArchiMateRelations.ts` file contains the full ArchiMate 3.2 relationship matrix
+- The seed data has representative pairs but we validate dynamically and can create missing relations
+- ArchiMate elements use `arch_` prefix (e.g., `arch_ApplicationComponent`)
