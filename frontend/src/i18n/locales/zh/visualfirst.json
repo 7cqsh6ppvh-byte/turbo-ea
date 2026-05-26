@@ -1,0 +1,15 @@
+{
+    "pageTitle": "VisualFirst 画布",
+    "navLabel": "VisualFirst 画布",
+    "newDiagram": "新建图表",
+    "noDiagrams": "暂无图表",
+    "noDiagramsHint": "创建您的第一个图表以开始使用。",
+    "admin": {
+        "title": "VisualFirst 画布",
+        "enable": "启用 VisualFirst 画布",
+        "disable": "禁用 VisualFirst 画布",
+        "enabled": "VisualFirst 画布已启用",
+        "disabled": "VisualFirst 画布已禁用",
+        "description": "VisualFirst 画布是基于 ReactFlow 的图表编辑器，支持任何元模型，包括 ArchiMate。"
+    }
+}

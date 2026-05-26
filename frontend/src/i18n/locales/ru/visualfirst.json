@@ -1,0 +1,15 @@
+{
+    "pageTitle": "VisualFirst Canvas",
+    "navLabel": "VisualFirst Canvas",
+    "newDiagram": "Новая диаграмма",
+    "noDiagrams": "Диаграмм пока нет",
+    "noDiagramsHint": "Создайте первую диаграмму для начала работы.",
+    "admin": {
+        "title": "VisualFirst Canvas",
+        "enable": "Включить VisualFirst Canvas",
+        "disable": "Отключить VisualFirst Canvas",
+        "enabled": "VisualFirst Canvas включён",
+        "disabled": "VisualFirst Canvas отключён",
+        "description": "VisualFirst Canvas — это редактор диаграмм на основе ReactFlow. Работает с любой метамоделью, включая ArchiMate."
+    }
+}

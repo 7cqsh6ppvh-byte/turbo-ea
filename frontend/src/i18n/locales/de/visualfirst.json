@@ -1,0 +1,15 @@
+{
+    "pageTitle": "VisualFirst Canvas",
+    "navLabel": "VisualFirst Canvas",
+    "newDiagram": "Neues Diagramm",
+    "noDiagrams": "Noch keine Diagramme",
+    "noDiagramsHint": "Erstellen Sie Ihr erstes Diagramm, um loszulegen.",
+    "admin": {
+        "title": "VisualFirst Canvas",
+        "enable": "VisualFirst Canvas aktivieren",
+        "disable": "VisualFirst Canvas deaktivieren",
+        "enabled": "VisualFirst Canvas ist aktiviert",
+        "disabled": "VisualFirst Canvas ist deaktiviert",
+        "description": "Der VisualFirst Canvas ist der ReactFlow-basierte Diagrammeditor. Er funktioniert mit jedem Metamodell, einschließlich ArchiMate."
+    }
+}

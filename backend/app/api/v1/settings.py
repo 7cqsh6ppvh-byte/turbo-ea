@@ -169,6 +169,7 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "bpm_enabled": general.get("bpmEnabled", True),
         "ppm_enabled": general.get("ppmEnabled", False),
         "archimate_enabled": general.get("archiMateEnabled", False),
+        "visualfirst_enabled": general.get("visualFirstEnabled", True),
         "turbolens_enabled": general.get("turboLensEnabled", True),
         "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
@@ -611,6 +612,42 @@ async def update_archimate_enabled(
     )
     for rt in arch_rt_result.scalars().all():
         rt.is_hidden = hide
+
+    await db.commit()
+    return {"ok": True}
+
+
+class VisualFirstEnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/visualfirst-enabled")
+async def get_visualfirst_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the VisualFirst Canvas module is enabled."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {"enabled": general.get("visualFirstEnabled", True)}
+
+
+@router.patch("/visualfirst-enabled")
+async def update_visualfirst_enabled(
+    body: VisualFirstEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — enable or disable the VisualFirst Canvas module.
+
+    The VisualFirst Canvas is the ReactFlow diagram editor. Disabling it hides
+    the nav item and blocks access to /visualfirst routes. It does not affect
+    the ArchiMate metamodel types.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["visualFirstEnabled"] = body.enabled
+    row.general_settings = general
 
     await db.commit()
     return {"ok": True}
