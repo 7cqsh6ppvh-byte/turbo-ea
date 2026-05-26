@@ -10,7 +10,7 @@ const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8920";
 test.describe("Login page", () => {
   test("shows login form when unauthenticated", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await expect(page.getByRole("heading", { name: /sign in|log in|turbo/i }).first()).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
@@ -20,7 +20,7 @@ test.describe("Login page", () => {
 
   test("redirects protected routes to login when unauthenticated", async ({ page }) => {
     await page.goto(`${BASE_URL}/inventory`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Should end up on login page (either by redirect or by rendering login form)
     await expect(page.getByLabel(/email/i)).toBeVisible();
@@ -28,7 +28,7 @@ test.describe("Login page", () => {
 
   test("shows validation error for empty submission", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await page.getByRole("button", { name: /sign in|log in|login/i }).click();
 
@@ -42,7 +42,7 @@ test.describe("Login page", () => {
 
   test("shows error for wrong credentials", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await page.getByLabel(/email/i).fill("wrong@example.com");
     await page.getByLabel(/password/i).fill("wrongpassword");
@@ -55,7 +55,7 @@ test.describe("Login page", () => {
 
   test("logs in successfully with valid credentials", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await page.getByLabel(/email/i).fill(ADMIN_EMAIL);
     await page.getByLabel(/password/i).fill(ADMIN_PASSWORD);
@@ -63,7 +63,7 @@ test.describe("Login page", () => {
 
     // Should navigate away from login and show the dashboard
     await page.waitForURL((url) => !url.toString().includes("login"), { timeout: 10000 });
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Dashboard should be visible — logo, nav or main content
     await expect(page).not.toHaveURL(/login/);
@@ -81,7 +81,7 @@ test.describe("Authenticated session", () => {
       sessionStorage.setItem("token", token);
     }, { token: access_token });
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("shows user menu / profile after login", async ({ page }) => {
@@ -105,7 +105,7 @@ test.describe("Authenticated session", () => {
     await page.getByRole("menuitem", { name: /log out|sign out|logout/i }).click();
 
     // Should be back on login
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 8000 });
   });
 
@@ -116,7 +116,7 @@ test.describe("Authenticated session", () => {
       .first();
     await profileTrigger.click();
     await page.getByRole("menuitem", { name: /log out|sign out|logout/i }).click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     const token = await page.evaluate(() => sessionStorage.getItem("token"));
     expect(token).toBeNull();

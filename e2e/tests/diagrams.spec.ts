@@ -10,7 +10,7 @@ test.describe("Diagrams gallery", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/diagrams`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders diagrams gallery page", async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe("Diagrams gallery", () => {
     const diagram = await resp.json();
 
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // The new diagram card should appear in the gallery
     await expect(page.getByText("E2E Test Diagram")).toBeVisible({ timeout: 8000 });
@@ -86,7 +86,7 @@ test.describe("Diagram editor", () => {
     if (!diagramId) test.skip();
     await page.goto(`${BASE_URL}/diagrams/${diagramId}/edit`);
     // DrawIO iframe loads — give it time
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
     await page.waitForTimeout(2000);
   });
 

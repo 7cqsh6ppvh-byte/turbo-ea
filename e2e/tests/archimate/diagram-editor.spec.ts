@@ -28,7 +28,7 @@ test.describe("ArchiMate diagram editor", () => {
   test("ArchiMate gallery page loads and shows new diagram button", async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/archimate`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await expect(page.getByRole("button", { name: /new.*archimate.*diagram/i })).toBeVisible();
   });
@@ -36,7 +36,7 @@ test.describe("ArchiMate diagram editor", () => {
   test("Can create a new ArchiMate diagram from gallery", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/archimate`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Click new diagram button
     await page.getByRole("button", { name: /new.*archimate.*diagram/i }).click();
@@ -74,7 +74,7 @@ test.describe("ArchiMate diagram editor", () => {
     const testDiagramId = diagram.id;
 
     await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Palette should show at least Business, Application, Technology layers
     await expect(page.getByText("Business")).toBeVisible();
@@ -98,7 +98,7 @@ test.describe("ArchiMate diagram editor", () => {
     const testDiagramId = diagram.id;
 
     await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     await expect(page.getByRole("button", { name: /auto.?layout/i })).toBeVisible();
 
@@ -119,7 +119,7 @@ test.describe("ArchiMate diagram editor", () => {
     const testDiagramId = diagram.id;
 
     await page.goto(`${BASE_URL}/archimate/${testDiagramId}/edit`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Should have a back button
     const backButton = page.getByRole("button", { name: /back|diagrams/i });

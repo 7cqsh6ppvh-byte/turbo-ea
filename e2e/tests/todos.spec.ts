@@ -10,7 +10,7 @@ test.describe("Todos page", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/todos`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders My Todos tab", async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe("Todos page", () => {
     const todo = await resp.json();
 
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Find the todo row
     const todoRow = page.getByText("E2E Toggle Test Todo").first();

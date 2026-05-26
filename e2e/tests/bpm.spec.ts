@@ -11,7 +11,7 @@ test.describe("BPM — Dashboard and Navigator", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/bpm`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders BPM dashboard with KPI tiles", async ({ page }) => {
@@ -52,7 +52,7 @@ test.describe("BPM — Reports", () => {
   test("maturity report renders at /bpm (reports tab)", async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/bpm`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     const reportsTab = page.getByRole("tab", { name: /report/i });
     if (await reportsTab.isVisible()) {

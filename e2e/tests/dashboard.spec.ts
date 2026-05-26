@@ -10,7 +10,7 @@ test.describe("Dashboard", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders KPI summary cards with card counts", async ({ page }) => {

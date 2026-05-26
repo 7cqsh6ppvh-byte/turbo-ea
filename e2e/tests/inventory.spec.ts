@@ -11,7 +11,7 @@ test.describe("Inventory", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/inventory`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders the inventory grid with rows", async ({ page }) => {

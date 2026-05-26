@@ -9,7 +9,7 @@ test.describe("ArchiMate feature flag", () => {
     await disableArchiMate(context.request, BASE_URL, token);
 
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Nav item should not be visible when disabled
     const navLink = page.getByRole("link", { name: /archimate/i });
@@ -21,7 +21,7 @@ test.describe("ArchiMate feature flag", () => {
     await enableArchiMate(context.request, BASE_URL, token);
 
     await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     const navLink = page.getByRole("link", { name: /archimate/i });
     await expect(navLink).toBeVisible();
@@ -35,7 +35,7 @@ test.describe("ArchiMate feature flag", () => {
     await disableArchiMate(context.request, BASE_URL, token);
 
     await page.goto(`${BASE_URL}/archimate`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // ModuleGate renders a "not enabled" message or redirects
     // The page should not show the ArchiMate diagrams gallery
@@ -47,7 +47,7 @@ test.describe("ArchiMate feature flag", () => {
     await loginAsAdmin(context, BASE_URL);
 
     await page.goto(`${BASE_URL}/admin/settings?tab=archimate`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Admin tab should always be accessible regardless of feature flag
     await expect(page.getByText(/archimate/i).first()).toBeVisible();

@@ -10,7 +10,7 @@ test.describe("GRC — Governance tab", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/grc?tab=governance`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders Governance tab with Principles and Decisions sub-tabs", async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("GRC — Risk Register tab", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/grc?tab=risk`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders risk register with grid and KPI cards", async ({ page }) => {
@@ -104,7 +104,7 @@ test.describe("GRC — Risk Register tab", () => {
     const risk = await resp.json();
 
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Risk should appear in the grid
     await expect(page.getByText("E2E Test Risk")).toBeVisible({ timeout: 8000 });
@@ -125,7 +125,7 @@ test.describe("GRC — Compliance tab", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/grc?tab=compliance`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders compliance page with regulation heatmap or grid", async ({ page }) => {

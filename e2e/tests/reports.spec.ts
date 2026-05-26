@@ -11,7 +11,7 @@ test.describe("Reports — Portfolio", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/portfolio`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders portfolio page with a chart area", async ({ page }) => {
@@ -34,7 +34,7 @@ test.describe("Reports — Capability Map", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/capability-map`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders heatmap with capability cells", async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("Reports — Lifecycle", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/lifecycle`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders lifecycle timeline", async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe("Reports — Dependencies", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/dependencies`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders dependency network graph or layered view", async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe("Reports — Cost", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/cost`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders cost treemap or bar chart", async ({ page }) => {
@@ -108,7 +108,7 @@ test.describe("Reports — Matrix", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/matrix`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders matrix page with row/column type selectors", async ({ page }) => {
@@ -121,7 +121,7 @@ test.describe("Reports — Data Quality", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/data-quality`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders data quality report with overall score", async ({ page }) => {
@@ -146,7 +146,7 @@ test.describe("Reports — EOL", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/eol`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders EOL report page", async ({ page }) => {
@@ -162,7 +162,7 @@ test.describe("Reports — Saved Reports gallery", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/reports/saved`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders saved reports page with tabs", async ({ page }) => {

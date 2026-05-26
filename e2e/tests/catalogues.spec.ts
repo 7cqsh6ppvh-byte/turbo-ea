@@ -11,7 +11,7 @@ test.describe("Capability Catalogue", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/capability-catalogue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders capability catalogue with L1 capabilities", async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe("Principles Catalogue", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/principles-catalogue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders principles catalogue page", async ({ page }) => {
@@ -68,7 +68,7 @@ test.describe("Process Catalogue", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/process-catalogue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders process catalogue page", async ({ page }) => {
@@ -82,7 +82,7 @@ test.describe("Value Stream Catalogue", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/value-stream-catalogue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders value stream catalogue page", async ({ page }) => {

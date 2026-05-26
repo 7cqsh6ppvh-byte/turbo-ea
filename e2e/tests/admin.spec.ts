@@ -11,7 +11,7 @@ test.describe("Admin — Metamodel", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/admin/metamodel`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders card type list", async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe("Admin — Users", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/admin/users`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders user list with at least the admin user", async ({ page }) => {
@@ -71,7 +71,7 @@ test.describe("Admin — Settings", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/admin/settings`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders settings page with tabs", async ({ page }) => {
@@ -136,7 +136,7 @@ test.describe("Admin — Surveys", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/admin/surveys`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders surveys admin page", async ({ page }) => {

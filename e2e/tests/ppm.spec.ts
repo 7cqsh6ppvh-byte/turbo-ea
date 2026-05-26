@@ -12,7 +12,7 @@ test.describe("PPM — Portfolio Dashboard", () => {
   test.beforeEach(async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/ppm`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders PPM portfolio dashboard with KPI cards", async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe("PPM — Initiative Detail", () => {
     await loginAsAdmin(context, BASE_URL);
     if (!initiativeId) test.skip();
     await page.goto(`${BASE_URL}/ppm/${initiativeId}`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("renders initiative detail with overview tab", async ({ page }) => {

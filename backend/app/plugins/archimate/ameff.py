@@ -264,7 +264,7 @@ async def export_model_to_ameff(
     from app.models.card import Card
     from app.models.relation import Relation
 
-    query = select(Card).where(Card.card_type_key.like("arch_%"))
+    query = select(Card).where(Card.type.like("arch_%"))
     if card_ids:
         query = query.where(Card.id.in_(card_ids))
     result = await db.execute(query)
@@ -273,16 +273,16 @@ async def export_model_to_ameff(
     card_id_set = {str(c.id) for c in cards}
 
     rel_query = select(Relation).where(
-        Relation.source_card_id.in_(card_id_set),
-        Relation.target_card_id.in_(card_id_set),
-        Relation.relation_type_key.like("arch_rel_%"),
+        Relation.source_id.in_(card_id_set),
+        Relation.target_id.in_(card_id_set),
+        Relation.type.like("arch_rel_%"),
     )
     rel_result = await db.execute(rel_query)
     relations = rel_result.scalars().all()
 
     elements: list[dict] = []
     for card in cards:
-        ameff_type = _KEY_TO_TYPE.get(card.card_type_key)
+        ameff_type = _KEY_TO_TYPE.get(card.type)
         if not ameff_type:
             continue
         ameff_id = (card.attributes or {}).get("ameff_identifier") or f"id-{card.id}"
@@ -317,7 +317,7 @@ async def export_model_to_ameff(
                 "type": ameff_type,
                 "source": source_ameff,
                 "target": target_ameff,
-                "name": rel.label or "",
+                "name": rel.description or "",
             }
         )
 
@@ -374,7 +374,7 @@ async def import_model_from_ameff(
             continue
 
         card = Card(
-            card_type_key=card_type_key,
+            type=card_type_key,
             name=e["name"] or "Unnamed",
             description=e.get("description"),
             attributes={"ameff_identifier": ameff_id},
@@ -404,10 +404,10 @@ async def import_model_from_ameff(
             continue
 
         rel = Relation(
-            relation_type_key=rel_type_key,
-            source_card_id=source_id,
-            target_card_id=target_id,
-            label=r.get("name"),
+            type=rel_type_key,
+            source_id=source_id,
+            target_id=target_id,
+            description=r.get("name"),
             attributes={"ameff_identifier": r["identifier"]},
         )
         db.add(rel)

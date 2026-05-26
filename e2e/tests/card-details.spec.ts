@@ -44,7 +44,7 @@ test.describe("Card detail — Application card (SAP S/4HANA)", () => {
     await loginAsAdmin(context, BASE_URL);
     if (!cardId) test.skip();
     await page.goto(`${BASE_URL}/cards/${cardId}`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
   });
 
   test("shows card name in the header", async ({ page }) => {
@@ -190,7 +190,7 @@ test.describe("Card detail — edit name inline", () => {
     if (!cardId) test.skip();
     await loginAsAdmin(context, BASE_URL);
     await page.goto(`${BASE_URL}/cards/${cardId}`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Click on the card name to start editing
     const nameEl = page.getByText("E2E Edit Test Card").first();
