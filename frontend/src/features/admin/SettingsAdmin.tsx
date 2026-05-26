@@ -41,6 +41,7 @@ const ServiceNowAdmin = lazy(() => import("./ServiceNowAdmin"));
 const AiAdmin = lazy(() => import("./AiAdmin"));
 const TurboLensAdmin = lazy(() => import("./TurboLensAdmin"));
 const MigrationAdmin = lazy(() => import("./MigrationAdmin"));
+const ArchiMateAdmin = lazy(() => import("./ArchiMateAdmin"));
 
 const TAB_KEYS = [
   "general",
@@ -50,6 +51,7 @@ const TAB_KEYS = [
   "web-portals",
   "servicenow",
   "turbolens",
+  "archimate",
   "migration",
 ];
 
@@ -1266,6 +1268,7 @@ export default function SettingsAdmin() {
     t("settings.tabs.webPortals"),
     t("settings.tabs.servicenow"),
     t("settings.tabs.turbolens"),
+    "ArchiMate",
     t("settings.tabs.migration"),
   ];
 
@@ -1331,6 +1334,11 @@ export default function SettingsAdmin() {
         </Suspense>
       )}
       {tabIndex === 7 && (
+        <Suspense fallback={<TabLoader />}>
+          <ArchiMateAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 8 && (
         <Suspense fallback={<TabLoader />}>
           <MigrationAdmin />
         </Suspense>
