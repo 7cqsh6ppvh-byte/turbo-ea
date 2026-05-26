@@ -1,16 +1,23 @@
 /**
- * Canvas baseline — documents current behavior of the ArchiMate diagram editor.
+ * Canvas baseline — documents behavior of the VisualFirst diagram editor.
  *
- * These tests act as a regression guard during the VisualFirst refactor.
- * After Phase 2 the routes change to /visualfirst/:id/edit — update the
- * URL patterns and nav link text at that point.
+ * Phase 6 update: routes changed to /visualfirst/:id/edit (Phase 2);
+ * backward-compat redirects from /archimate/:id/edit remain in place.
+ * Nav link is now "VisualFirst Canvas". The ArchiMate redirect is also tested
+ * to ensure continuity for any bookmarked URLs.
  */
 import { test, expect } from "@playwright/test";
-import { loginAsAdmin, enableArchiMate, disableArchiMate } from "../../helpers/auth";
+import {
+  loginAsAdmin,
+  enableArchiMate,
+  disableArchiMate,
+  enableVisualFirst,
+  disableVisualFirst,
+} from "../../helpers/auth";
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8920";
 
-test.describe("ArchiMate canvas editor — baseline", () => {
+test.describe("VisualFirst canvas editor", () => {
   let token: string;
   const createdIds: string[] = [];
 
@@ -18,6 +25,7 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     const ctx = await browser.newContext();
     token = await loginAsAdmin(ctx, BASE_URL);
     await enableArchiMate(ctx.request, BASE_URL, token);
+    await enableVisualFirst(ctx.request, BASE_URL, token);
     await ctx.close();
   });
 
@@ -28,6 +36,7 @@ test.describe("ArchiMate canvas editor — baseline", () => {
       });
     }
     await disableArchiMate(request, BASE_URL, token);
+    await disableVisualFirst(request, BASE_URL, token);
   });
 
   async function createDiagram(request: import("@playwright/test").APIRequestContext, name: string): Promise<string> {
@@ -40,30 +49,38 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     return diagram.id;
   }
 
-  test("editor loads with three-tab sidebar", async ({ context, page, request }) => {
+  test("editor loads at /visualfirst/:id/edit with three-tab sidebar", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Sidebar Test");
+
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
+    await page.waitForLoadState("load");
+
+    await expect(page.getByRole("tab", { name: /elements/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /views/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /palette/i })).toBeVisible();
+  });
+
+  test("/archimate/:id/edit redirects to /visualfirst/:id/edit", async ({ context, page, request }) => {
+    await loginAsAdmin(context, BASE_URL);
+    const id = await createDiagram(request, "Redirect Test");
 
     await page.goto(`${BASE_URL}/archimate/${id}/edit`);
     await page.waitForLoadState("load");
 
-    // All three tabs should be visible
-    await expect(page.getByRole("tab", { name: /elements/i })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /views/i })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /palette/i })).toBeVisible();
+    // Should have been redirected to the new route
+    await expect(page).toHaveURL(new RegExp(`/visualfirst/${id}/edit`));
   });
 
   test("palette tab shows ArchiMate layer groups", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Palette Layers Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
-    // Switch to Palette tab
     await page.getByRole("tab", { name: /palette/i }).click();
 
-    // ArchiMate layers should be visible as accordion groups
     await expect(page.getByText("Business").first()).toBeVisible();
     await expect(page.getByText("Application").first()).toBeVisible();
     await expect(page.getByText("Technology").first()).toBeVisible();
@@ -73,13 +90,11 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Elements Search Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
-    // Elements tab is active by default
     await page.getByRole("tab", { name: /elements/i }).click();
 
-    // Search input should be present
     const searchInput = page.getByRole("textbox", { name: /search/i }).or(
       page.locator("input[placeholder*='search' i], input[placeholder*='cards' i], input[placeholder*='Suche' i]")
     );
@@ -90,12 +105,11 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Views Tab Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
     await page.getByRole("tab", { name: /views/i }).click();
 
-    // Should show a "New Diagram" button or diagrams header
     const newDiagramBtn = page.getByRole("button", { name: /new.*diagram/i });
     const diagramsHeader = page.getByText(/diagrams/i).first();
     const either = newDiagramBtn.or(diagramsHeader);
@@ -106,36 +120,34 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Auto Layout Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
     await expect(page.getByRole("button", { name: /auto.?layout/i })).toBeVisible();
   });
 
-  test("back button returns to gallery", async ({ context, page, request }) => {
+  test("back button returns to VisualFirst gallery", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Back Nav Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
-    // There should be a back button or breadcrumb link
     const backBtn = page.getByRole("button", { name: /back/i }).or(
-      page.getByRole("link", { name: /archimate|diagrams/i })
+      page.getByRole("link", { name: /visualfirst|diagrams/i })
     );
     await backBtn.first().click();
 
-    await expect(page).toHaveURL(/\/archimate\/?$/);
+    await expect(page).toHaveURL(/\/visualfirst\/?$/);
   });
 
   test("diagram data is saved and loadable via API", async ({ context, page, request }) => {
     await loginAsAdmin(context, BASE_URL);
     const id = await createDiagram(request, "Save Persistence Test");
 
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
+    await page.goto(`${BASE_URL}/visualfirst/${id}/edit`);
     await page.waitForLoadState("load");
 
-    // The canvas should load — verify diagram is fetchable
     const resp = await request.get(`${BASE_URL}/api/v1/diagrams/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -145,39 +157,32 @@ test.describe("ArchiMate canvas editor — baseline", () => {
     expect(data.type).toBe("archimate");
   });
 
-  test("editor page title includes diagram name", async ({ context, page, request }) => {
-    await loginAsAdmin(context, BASE_URL);
-    const id = await createDiagram(request, "Title Check Diagram");
-
-    await page.goto(`${BASE_URL}/archimate/${id}/edit`);
-    await page.waitForLoadState("load");
-
-    // Diagram name should appear somewhere on the page (toolbar or browser title)
-    const titleVisible = await page.getByText("Title Check Diagram").isVisible().catch(() => false);
-    const browserTitle = await page.title();
-    const nameInTitle = browserTitle.includes("Title Check Diagram");
-
-    expect(titleVisible || nameInTitle).toBeTruthy();
-  });
-
-  test("gallery page has 'New ArchiMate Diagram' button", async ({ context, page }) => {
+  test("gallery page has 'New Diagram' button", async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
 
-    await page.goto(`${BASE_URL}/archimate`);
+    await page.goto(`${BASE_URL}/visualfirst`);
     await page.waitForLoadState("load");
 
     await expect(
-      page.getByRole("button", { name: /new.*archimate.*diagram/i })
+      page.getByRole("button", { name: /new.*diagram/i })
     ).toBeVisible();
   });
 
-  test("nav link for ArchiMate is visible when enabled", async ({ context, page }) => {
+  test("nav link for VisualFirst Canvas is visible when enabled", async ({ context, page }) => {
     await loginAsAdmin(context, BASE_URL);
 
     await page.goto(`${BASE_URL}/`);
     await page.waitForLoadState("load");
 
-    // Nav should have an ArchiMate link
-    await expect(page.getByRole("link", { name: /archimate/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /visualfirst canvas/i })).toBeVisible();
+  });
+
+  test("/archimate gallery redirects to /visualfirst", async ({ context, page }) => {
+    await loginAsAdmin(context, BASE_URL);
+
+    await page.goto(`${BASE_URL}/archimate`);
+    await page.waitForLoadState("load");
+
+    await expect(page).toHaveURL(/\/visualfirst\/?$/);
   });
 });

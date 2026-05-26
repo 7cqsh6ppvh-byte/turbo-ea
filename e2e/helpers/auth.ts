@@ -70,3 +70,31 @@ export async function disableArchiMate(
     throw new Error(`Failed to disable ArchiMate: ${resp.status()}`);
   }
 }
+
+export async function enableVisualFirst(
+  request: APIRequestContext,
+  baseURL: string,
+  token: string,
+): Promise<void> {
+  const resp = await request.patch(`${baseURL}/api/v1/settings/visualfirst-enabled`, {
+    data: { enabled: true },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok()) {
+    throw new Error(`Failed to enable VisualFirst: ${resp.status()}`);
+  }
+}
+
+export async function disableVisualFirst(
+  request: APIRequestContext,
+  baseURL: string,
+  token: string,
+): Promise<void> {
+  const resp = await request.patch(`${baseURL}/api/v1/settings/visualfirst-enabled`, {
+    data: { enabled: false },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok()) {
+    throw new Error(`Failed to disable VisualFirst: ${resp.status()}`);
+  }
+}
