@@ -50,8 +50,10 @@ export default function ArchiMateAdmin() {
       setEnabled(value);
       invalidateArchiMateEnabled(value);
       setSnack(value ? t("admin.enabled") : t("admin.disabled"));
-    } catch {
-      setSnack("Error updating ArchiMate settings");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      setSnack(`Error updating ArchiMate settings: ${detail}`);
+      console.error("[ArchiMateAdmin] toggle failed:", err);
     } finally {
       setSaving(false);
     }
@@ -70,8 +72,10 @@ export default function ArchiMateAdmin() {
           rt: result.relation_types_deleted,
         })
       );
-    } catch {
-      setSnack("Migration failed");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      setSnack(`Migration failed: ${detail}`);
+      console.error("[ArchiMateAdmin] migration failed:", err);
     } finally {
       setMigrating(false);
     }
@@ -183,7 +187,7 @@ export default function ArchiMateAdmin() {
 
       <Snackbar
         open={!!snack}
-        autoHideDuration={6000}
+        autoHideDuration={15000}
         onClose={() => setSnack(null)}
         message={snack}
       />
