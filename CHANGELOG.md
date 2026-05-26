@@ -5,6 +5,16 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.29.4] - 2026-05-26
+
+### Fixed
+- **ArchiMate diagram editor shows cards again in ArchiMate-only databases.**
+  When the database contains only ArchiMate card types (no standard Turbo EA
+  types), the sidebar defaulted to "EA" mode and the mode toggle was hidden,
+  filtering out all `arch_*` types and leaving the elements tree empty. The
+  mode now auto-detects: if only ArchiMate types exist, it defaults to
+  "ArchiMate" mode so all cards appear in the sidebar.
+
 ## [1.29.3] - 2026-05-26
 
 ### Fixed

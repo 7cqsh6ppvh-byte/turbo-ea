@@ -14,15 +14,13 @@ ON DELETE CASCADE foreign keys on the database side.
 
 from __future__ import annotations
 
-from sqlalchemy import delete, or_, select, text
+from sqlalchemy import delete, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def migrate_archimate_unique(db: AsyncSession) -> dict[str, int]:
     """Strip all non-ArchiMate data, returning counts of deleted rows."""
-    from app.models.card import Card
     from app.models.card_type import CardType
-    from app.models.relation import Relation
     from app.models.relation_type import RelationType
 
     # ── 0. Seed ArchiMate metamodel if not already present ───────────────
@@ -38,9 +36,7 @@ async def migrate_archimate_unique(db: AsyncSession) -> dict[str, int]:
     # Built-in types have plugin_id=NULL; in PostgreSQL, NULL != 'archimate'
     # evaluates to NULL (falsy), so we must explicitly check for NULL too.
     ct_result = await db.execute(
-        delete(CardType).where(
-            or_(CardType.plugin_id == None, CardType.plugin_id != "archimate")
-        )
+        delete(CardType).where(or_(CardType.plugin_id == None, CardType.plugin_id != "archimate"))
     )
     card_types_deleted = ct_result.rowcount
 
@@ -70,9 +66,7 @@ async def migrate_archimate_unique(db: AsyncSession) -> dict[str, int]:
     # ── 4. Delete non-ArchiMate cards ─────────────────────────────────────
     # Use raw SQL for LIKE with escape character — SQLAlchemy's notlike()
     # doesn't handle custom escape chars portably.
-    card_result = await db.execute(
-        text("DELETE FROM cards WHERE type NOT LIKE 'arch\\_%'")
-    )
+    card_result = await db.execute(text("DELETE FROM cards WHERE type NOT LIKE 'arch\\_%'"))
     cards_deleted = card_result.rowcount
 
     # ── 5. Clean up orphaned card_tags rows — handled by CASCADE ──────────

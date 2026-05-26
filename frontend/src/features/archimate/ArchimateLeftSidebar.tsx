@@ -23,7 +23,6 @@ export function ArchimateLeftSidebar({ currentDiagramId, nodeCardIds }: Props) {
   const { types } = useMetamodel();
   const [tab, setTab] = useState<SidebarTab>("elements");
   const [search, setSearch] = useState("");
-  const [mode, setMode] = useState<DiagramMode>("ea");
 
   const hasArch = useMemo(
     () => types.some((t) => t.key.startsWith("arch_") && !t.is_hidden),
@@ -34,6 +33,11 @@ export function ArchimateLeftSidebar({ currentDiagramId, nodeCardIds }: Props) {
     [types],
   );
   const showSwitcher = hasArch && hasStandard;
+
+  // Default to archimate mode when only arch_ types exist in the database.
+  const [mode, setMode] = useState<DiagramMode>(() =>
+    hasArch && !hasStandard ? "archimate" : "ea",
+  );
 
   const activeTypes = useMemo(
     () =>
