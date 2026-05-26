@@ -1345,9 +1345,10 @@ _RELATION_TYPES: list[dict] = [
 
 async def seed_archimate_metamodel(db: AsyncSession) -> dict:
     """Seed all ArchiMate 3.2 card types and relation types. Idempotent."""
-    existing_ct_result = await db.execute(
-        select(CardType.key).where(CardType.plugin_id == PLUGIN_ID)
-    )
+    # Check ALL existing keys (not just archimate ones) to avoid unique-constraint
+    # violations when standard metamodel types share a key with ArchiMate types
+    # (e.g. BusinessProcess, DataObject) after the arch_ prefix was removed.
+    existing_ct_result = await db.execute(select(CardType.key))
     existing_ct_keys = {row[0] for row in existing_ct_result.all()}
 
     for t in _ELEMENT_TYPES:
@@ -1370,9 +1371,7 @@ async def seed_archimate_metamodel(db: AsyncSession) -> dict:
         )
         db.add(ct)
 
-    existing_rt_result = await db.execute(
-        select(RelationType.key).where(RelationType.plugin_id == PLUGIN_ID)
-    )
+    existing_rt_result = await db.execute(select(RelationType.key))
     existing_rt_keys = {row[0] for row in existing_rt_result.all()}
 
     for r in _RELATION_TYPES:
