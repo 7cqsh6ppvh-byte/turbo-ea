@@ -11,33 +11,33 @@ export type ArchiMateLayer =
   | "Composite";
 
 export type ArchiMateRelationType =
-  | "arch_rel_Association"
-  | "arch_rel_Composition"
-  | "arch_rel_Aggregation"
-  | "arch_rel_Realization"
-  | "arch_rel_Assignment"
-  | "arch_rel_Serving"
-  | "arch_rel_Access"
-  | "arch_rel_Influence"
-  | "arch_rel_Triggering"
-  | "arch_rel_Flow"
-  | "arch_rel_Specialization";
+  | "Association"
+  | "Composition"
+  | "Aggregation"
+  | "Realization"
+  | "Assignment"
+  | "Serving"
+  | "Access"
+  | "Influence"
+  | "Triggering"
+  | "Flow"
+  | "Specialization";
 
 export type ArchiMateAspect = "ActiveStructure" | "Behavior" | "PassiveStructure" | "Other";
 
 // Labels for ArchiMate relation types
 export const RELATION_LABELS: Record<ArchiMateRelationType, string> = {
-  arch_rel_Association: "Association",
-  arch_rel_Composition: "Composition",
-  arch_rel_Aggregation: "Aggregation",
-  arch_rel_Realization: "Realization",
-  arch_rel_Assignment: "Assignment",
-  arch_rel_Serving: "Serving",
-  arch_rel_Access: "Access",
-  arch_rel_Influence: "Influence",
-  arch_rel_Triggering: "Triggering",
-  arch_rel_Flow: "Flow",
-  arch_rel_Specialization: "Specialization",
+  Association: "Association",
+  Composition: "Composition",
+  Aggregation: "Aggregation",
+  Realization: "Realization",
+  Assignment: "Assignment",
+  Serving: "Serving",
+  Access: "Access",
+  Influence: "Influence",
+  Triggering: "Triggering",
+  Flow: "Flow",
+  Specialization: "Specialization",
 };
 
 export interface ArchiMateDiagramNodeData extends Record<string, unknown> {

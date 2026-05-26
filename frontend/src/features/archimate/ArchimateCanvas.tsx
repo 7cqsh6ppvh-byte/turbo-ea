@@ -227,12 +227,12 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
           return;
         }
 
-        const isArchDrop = typeKey.startsWith("arch_");
+        const isArchDrop = getType(typeKey)?.plugin_id === "archimate";
         const canvasHasArch = nodes.some((n) =>
-          String(n.data.elementTypeKey ?? "").startsWith("arch_"),
+          getType(String(n.data.elementTypeKey ?? ""))?.plugin_id === "archimate",
         );
         const canvasHasStd = nodes.some(
-          (n) => !String(n.data.elementTypeKey ?? "").startsWith("arch_"),
+          (n) => getType(String(n.data.elementTypeKey ?? ""))?.plugin_id !== "archimate",
         );
         if ((isArchDrop && canvasHasStd) || (!isArchDrop && canvasHasArch)) {
           setMismatchToast(true);
@@ -243,7 +243,7 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
         const ct = getType(typeKey);
         const newNode: ArchiMateDiagramNode = {
           id: cardId,
-          type: nodeTypes[typeKey] ? typeKey : "arch_ApplicationComponent",
+          type: nodeTypes[typeKey] ? typeKey : "ApplicationComponent",
           position,
           data: {
             label: name,
@@ -273,12 +273,12 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
       const ct = getType(typeKey);
       const label =
         rml(typeKey, ct?.translations, "label") ||
-        typeKey.replace("arch_", "").replace(/([A-Z])/g, " $1").trim();
+        typeKey.replace(/([A-Z])/g, " $1").trim();
 
       const tempId = `temp-${Date.now()}`;
       const newNode: ArchiMateDiagramNode = {
         id: tempId,
-        type: nodeTypes[typeKey] ? typeKey : "arch_ApplicationComponent",
+        type: nodeTypes[typeKey] ? typeKey : "ApplicationComponent",
         position,
         data: {
           label,
@@ -426,7 +426,7 @@ export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsC
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert severity="success" onClose={() => setCreatedToast(false)} sx={{ fontSize: "12px" }}>
-          {t("relationSelector.created", { relation: createdRelationName.replace("arch_rel_", "") })}
+          {t("relationSelector.created", { relation: createdRelationName })}
         </Alert>
       </Snackbar>
     </Box>

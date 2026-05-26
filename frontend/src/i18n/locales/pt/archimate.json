@@ -43,17 +43,17 @@
         "Composite": "Composto"
     },
     "relation": {
-        "arch_rel_Association": "Associação",
-        "arch_rel_Composition": "Composição",
-        "arch_rel_Aggregation": "Agregação",
-        "arch_rel_Realization": "Realização",
-        "arch_rel_Assignment": "Atribuição",
-        "arch_rel_Serving": "Serviço",
-        "arch_rel_Access": "Acesso",
-        "arch_rel_Influence": "Influência",
-        "arch_rel_Triggering": "Ativação",
-        "arch_rel_Flow": "Fluxo",
-        "arch_rel_Specialization": "Especialização"
+        "Association": "Associação",
+        "Composition": "Composição",
+        "Aggregation": "Agregação",
+        "Realization": "Realização",
+        "Assignment": "Atribuição",
+        "Serving": "Serviço",
+        "Access": "Acesso",
+        "Influence": "Influência",
+        "Triggering": "Ativação",
+        "Flow": "Fluxo",
+        "Specialization": "Especialização"
     },
     "export": {
         "title": "Exportar modelo ArchiMate",

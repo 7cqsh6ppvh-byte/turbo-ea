@@ -11,7 +11,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 const baseNodeProps = {
   id: "node-1",
-  type: "arch_ApplicationComponent",
+  type: "ApplicationComponent",
   selected: false,
   zIndex: 1,
   isConnectable: true,
@@ -31,7 +31,7 @@ describe("ArchimateElementNode", () => {
         {...baseNodeProps}
         data={{
           label: "NexaCore ERP",
-          elementTypeKey: "arch_ApplicationComponent",
+          elementTypeKey: "ApplicationComponent",
           layer: "Application",
           aspect: "ActiveStructure",
           color: "#b3d9ff",
@@ -50,7 +50,7 @@ describe("ArchimateElementNode", () => {
         {...baseNodeProps}
         data={{
           label: "Test App",
-          elementTypeKey: "arch_ApplicationComponent",
+          elementTypeKey: "ApplicationComponent",
           layer: "Application",
           aspect: "ActiveStructure",
           color: "#b3d9ff",
@@ -70,7 +70,7 @@ describe("ArchimateElementNode", () => {
         {...baseNodeProps}
         data={{
           label: "Test",
-          elementTypeKey: "arch_BusinessActor",
+          elementTypeKey: "BusinessActor",
           layer: "Business",
           aspect: "ActiveStructure",
           color: "#f5e27a",
@@ -94,10 +94,10 @@ describe("NODE_TYPES", () => {
   });
 
   it("has an entry for arch_Grouping", () => {
-    expect(NODE_TYPES["arch_Grouping"]).toBeDefined();
+    expect(NODE_TYPES["Grouping"]).toBeDefined();
   });
 
   it("has an entry for arch_Junction", () => {
-    expect(NODE_TYPES["arch_Junction"]).toBeDefined();
+    expect(NODE_TYPES["Junction"]).toBeDefined();
   });
 });

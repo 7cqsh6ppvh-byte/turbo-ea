@@ -138,8 +138,8 @@ const _junctionNode = ArchimateJunctionNode as ComponentType<any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NODE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries(
   Object.keys(ARCHIMATE_ELEMENT_META).map((key) => {
-    if (key === "arch_Grouping" || key === "arch_Location") return [key, _groupingNode];
-    if (key === "arch_Junction") return [key, _junctionNode];
+    if (key === "Grouping" || key === "Location") return [key, _groupingNode];
+    if (key === "Junction") return [key, _junctionNode];
     return [key, _elementNode];
   }),
 );

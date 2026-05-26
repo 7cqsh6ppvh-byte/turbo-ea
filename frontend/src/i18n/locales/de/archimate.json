@@ -43,17 +43,17 @@
         "Composite": "Zusammengesetzt"
     },
     "relation": {
-        "arch_rel_Association": "Assoziation",
-        "arch_rel_Composition": "Komposition",
-        "arch_rel_Aggregation": "Aggregation",
-        "arch_rel_Realization": "Realisierung",
-        "arch_rel_Assignment": "Zuweisung",
-        "arch_rel_Serving": "Bedienung",
-        "arch_rel_Access": "Zugriff",
-        "arch_rel_Influence": "Einfluss",
-        "arch_rel_Triggering": "Auslösung",
-        "arch_rel_Flow": "Fluss",
-        "arch_rel_Specialization": "Spezialisierung"
+        "Association": "Assoziation",
+        "Composition": "Komposition",
+        "Aggregation": "Aggregation",
+        "Realization": "Realisierung",
+        "Assignment": "Zuweisung",
+        "Serving": "Bedienung",
+        "Access": "Zugriff",
+        "Influence": "Einfluss",
+        "Triggering": "Auslösung",
+        "Flow": "Fluss",
+        "Specialization": "Spezialisierung"
     },
     "export": {
         "title": "ArchiMate-Modell exportieren",

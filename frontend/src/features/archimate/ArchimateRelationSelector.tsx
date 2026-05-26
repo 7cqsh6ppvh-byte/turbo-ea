@@ -14,17 +14,17 @@ import { RELATION_LABELS, type ArchiMateRelationType } from "./types";
 import { getValidRelationKeys } from "./AllowedArchiMateRelations";
 
 const RELATION_DESCRIPTIONS: Record<ArchiMateRelationType, string> = {
-  arch_rel_Association: "Unspecified relationship between elements",
-  arch_rel_Composition: "Element is composed of other elements",
-  arch_rel_Aggregation: "Element aggregates other elements",
-  arch_rel_Realization: "Element realizes an interface or service",
-  arch_rel_Assignment: "Active element performs a behavior element",
-  arch_rel_Serving: "Element serves another element",
-  arch_rel_Access: "Behavior accesses a passive structure element",
-  arch_rel_Influence: "Element influences another element",
-  arch_rel_Triggering: "Element triggers another behavior element",
-  arch_rel_Flow: "Information or value flows between elements",
-  arch_rel_Specialization: "Element specializes another element",
+  Association: "Unspecified relationship between elements",
+  Composition: "Element is composed of other elements",
+  Aggregation: "Element aggregates other elements",
+  Realization: "Element realizes an interface or service",
+  Assignment: "Active element performs a behavior element",
+  Serving: "Element serves another element",
+  Access: "Behavior accesses a passive structure element",
+  Influence: "Element influences another element",
+  Triggering: "Element triggers another behavior element",
+  Flow: "Information or value flows between elements",
+  Specialization: "Element specializes another element",
 };
 
 interface Props {
@@ -55,7 +55,7 @@ export function ArchimateRelationSelector({
   // All possible ArchiMate relation types (from ARCHIMATE_RELATION_STYLES)
   const allRelationTypes = Object.keys(ARCHIMATE_RELATION_STYLES) as ArchiMateRelationType[];
 
-  // Filter to only valid relations between these element types (returns arch_rel_ prefixed keys)
+  // Filter to only valid relations between these element types (returns  prefixed keys)
   const validRelations = getValidRelationKeys(sourceTypeKey, targetTypeKey);
 
   // Relations that exist in metamodel (have styling support)
@@ -89,8 +89,8 @@ export function ArchimateRelationSelector({
       <DialogContent dividers>
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
           {t("relationSelector.direction", {
-            source: sourceTypeKey.replace("arch_", ""),
-            target: targetTypeKey.replace("arch_", ""),
+            source: sourceTypeKey,
+            target: targetTypeKey,
           })}
         </Typography>
 

@@ -31,9 +31,9 @@ PLUGIN_ID = "archimate"
 _ELEMENT_TYPES: list[dict] = [
     # ── Business Layer (13) ─────────────────────────────────────────────
     {
-        "key": "arch_BusinessActor",
+        "key": "BusinessActor",
         "label": "Business Actor",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "person",
         "color": "#f5e27a",
         "translations": {
@@ -49,9 +49,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessRole",
+        "key": "BusinessRole",
         "label": "Business Role",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "badge",
         "color": "#f5e27a",
         "translations": {
@@ -67,9 +67,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessCollaboration",
+        "key": "BusinessCollaboration",
         "label": "Business Collaboration",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "group",
         "color": "#f5e27a",
         "translations": {
@@ -85,9 +85,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessInterface",
+        "key": "BusinessInterface",
         "label": "Business Interface",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "swap_horiz",
         "color": "#f5e27a",
         "translations": {
@@ -103,9 +103,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessProcess",
+        "key": "BusinessProcess",
         "label": "Business Process",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "route",
         "color": "#f5e27a",
         "translations": {
@@ -121,9 +121,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessFunction",
+        "key": "BusinessFunction",
         "label": "Business Function",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "functions",
         "color": "#f5e27a",
         "translations": {
@@ -139,9 +139,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessInteraction",
+        "key": "BusinessInteraction",
         "label": "Business Interaction",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "handshake",
         "color": "#f5e27a",
         "translations": {
@@ -157,9 +157,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessEvent",
+        "key": "BusinessEvent",
         "label": "Business Event",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "event",
         "color": "#f5e27a",
         "translations": {
@@ -175,9 +175,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessService",
+        "key": "BusinessService",
         "label": "Business Service",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "miscellaneous_services",
         "color": "#f5e27a",
         "translations": {
@@ -193,9 +193,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_BusinessObject",
+        "key": "BusinessObject",
         "label": "Business Object",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "description",
         "color": "#f5e27a",
         "translations": {
@@ -211,9 +211,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Contract",
+        "key": "Contract",
         "label": "Contract",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "gavel",
         "color": "#f5e27a",
         "translations": {
@@ -229,9 +229,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Representation",
+        "key": "Representation",
         "label": "Representation",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "article",
         "color": "#f5e27a",
         "translations": {
@@ -247,9 +247,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Product",
+        "key": "Product",
         "label": "Product",
-        "category": "ArchiMate:Business",
+        "category": "Business",
         "icon": "shopping_bag",
         "color": "#f5e27a",
         "translations": {
@@ -266,9 +266,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Application Layer (9) ───────────────────────────────────────────
     {
-        "key": "arch_ApplicationComponent",
+        "key": "ApplicationComponent",
         "label": "Application Component",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "apps",
         "color": "#b3d9ff",
         "translations": {
@@ -284,9 +284,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationCollaboration",
+        "key": "ApplicationCollaboration",
         "label": "Application Collaboration",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "hub",
         "color": "#b3d9ff",
         "translations": {
@@ -302,9 +302,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationInterface",
+        "key": "ApplicationInterface",
         "label": "Application Interface",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "api",
         "color": "#b3d9ff",
         "translations": {
@@ -320,9 +320,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationProcess",
+        "key": "ApplicationProcess",
         "label": "Application Process",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "account_tree",
         "color": "#b3d9ff",
         "translations": {
@@ -338,9 +338,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationFunction",
+        "key": "ApplicationFunction",
         "label": "Application Function",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "functions",
         "color": "#b3d9ff",
         "translations": {
@@ -356,9 +356,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationInteraction",
+        "key": "ApplicationInteraction",
         "label": "Application Interaction",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "sync_alt",
         "color": "#b3d9ff",
         "translations": {
@@ -374,9 +374,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationEvent",
+        "key": "ApplicationEvent",
         "label": "Application Event",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "notifications",
         "color": "#b3d9ff",
         "translations": {
@@ -392,9 +392,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ApplicationService",
+        "key": "ApplicationService",
         "label": "Application Service",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "miscellaneous_services",
         "color": "#b3d9ff",
         "translations": {
@@ -410,9 +410,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_DataObject",
+        "key": "DataObject",
         "label": "Data Object",
-        "category": "ArchiMate:Application",
+        "category": "Application",
         "icon": "database",
         "color": "#b3d9ff",
         "translations": {
@@ -429,9 +429,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Technology Layer (13) ───────────────────────────────────────────
     {
-        "key": "arch_Node",
+        "key": "Node",
         "label": "Node",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "dns",
         "color": "#aae6aa",
         "translations": {
@@ -447,9 +447,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Device",
+        "key": "Device",
         "label": "Device",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "devices",
         "color": "#aae6aa",
         "translations": {
@@ -465,9 +465,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_SystemSoftware",
+        "key": "SystemSoftware",
         "label": "System Software",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "terminal",
         "color": "#aae6aa",
         "translations": {
@@ -483,9 +483,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyCollaboration",
+        "key": "TechnologyCollaboration",
         "label": "Technology Collaboration",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "group_work",
         "color": "#aae6aa",
         "translations": {
@@ -501,9 +501,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyInterface",
+        "key": "TechnologyInterface",
         "label": "Technology Interface",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "settings_input_component",
         "color": "#aae6aa",
         "translations": {
@@ -519,9 +519,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyProcess",
+        "key": "TechnologyProcess",
         "label": "Technology Process",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "settings",
         "color": "#aae6aa",
         "translations": {
@@ -537,9 +537,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyFunction",
+        "key": "TechnologyFunction",
         "label": "Technology Function",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "build",
         "color": "#aae6aa",
         "translations": {
@@ -555,9 +555,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyInteraction",
+        "key": "TechnologyInteraction",
         "label": "Technology Interaction",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "compare_arrows",
         "color": "#aae6aa",
         "translations": {
@@ -573,9 +573,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyEvent",
+        "key": "TechnologyEvent",
         "label": "Technology Event",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "event_note",
         "color": "#aae6aa",
         "translations": {
@@ -591,9 +591,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_TechnologyService",
+        "key": "TechnologyService",
         "label": "Technology Service",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "cloud",
         "color": "#aae6aa",
         "translations": {
@@ -609,9 +609,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Path",
+        "key": "Path",
         "label": "Path",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "cable",
         "color": "#aae6aa",
         "translations": {
@@ -627,9 +627,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_CommunicationNetwork",
+        "key": "CommunicationNetwork",
         "label": "Communication Network",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "lan",
         "color": "#aae6aa",
         "translations": {
@@ -645,9 +645,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Artifact",
+        "key": "Artifact",
         "label": "Artifact",
-        "category": "ArchiMate:Technology",
+        "category": "Technology",
         "icon": "inventory_2",
         "color": "#aae6aa",
         "translations": {
@@ -664,9 +664,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Motivation Layer (10) ───────────────────────────────────────────
     {
-        "key": "arch_Stakeholder",
+        "key": "Stakeholder",
         "label": "Stakeholder",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "groups",
         "color": "#ffcca8",
         "translations": {
@@ -682,9 +682,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Driver",
+        "key": "Driver",
         "label": "Driver",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "driving_force",
         "color": "#ffcca8",
         "translations": {
@@ -700,9 +700,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Assessment",
+        "key": "Assessment",
         "label": "Assessment",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "assessment",
         "color": "#ffcca8",
         "translations": {
@@ -718,9 +718,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Goal",
+        "key": "Goal",
         "label": "Goal",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "flag",
         "color": "#ffcca8",
         "translations": {
@@ -736,9 +736,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Outcome",
+        "key": "Outcome",
         "label": "Outcome",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "emoji_events",
         "color": "#ffcca8",
         "translations": {
@@ -754,9 +754,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Principle",
+        "key": "Principle",
         "label": "Principle",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "balance",
         "color": "#ffcca8",
         "translations": {
@@ -772,9 +772,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Requirement",
+        "key": "Requirement",
         "label": "Requirement",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "checklist",
         "color": "#ffcca8",
         "translations": {
@@ -790,9 +790,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Constraint",
+        "key": "Constraint",
         "label": "Constraint",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "block",
         "color": "#ffcca8",
         "translations": {
@@ -808,9 +808,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Meaning",
+        "key": "Meaning",
         "label": "Meaning",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "lightbulb",
         "color": "#ffcca8",
         "translations": {
@@ -826,9 +826,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Value",
+        "key": "Value",
         "label": "Value",
-        "category": "ArchiMate:Motivation",
+        "category": "Motivation",
         "icon": "star",
         "color": "#ffcca8",
         "translations": {
@@ -845,9 +845,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Strategy Layer (4) ──────────────────────────────────────────────
     {
-        "key": "arch_Resource",
+        "key": "Resource",
         "label": "Resource",
-        "category": "ArchiMate:Strategy",
+        "category": "Strategy",
         "icon": "inventory",
         "color": "#d9b3ff",
         "translations": {
@@ -863,9 +863,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Capability",
+        "key": "Capability",
         "label": "Capability",
-        "category": "ArchiMate:Strategy",
+        "category": "Strategy",
         "icon": "psychology",
         "color": "#d9b3ff",
         "translations": {
@@ -881,9 +881,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ValueStream",
+        "key": "ValueStream",
         "label": "Value Stream",
-        "category": "ArchiMate:Strategy",
+        "category": "Strategy",
         "icon": "waterfall_chart",
         "color": "#d9b3ff",
         "translations": {
@@ -899,9 +899,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_CourseOfAction",
+        "key": "CourseOfAction",
         "label": "Course of Action",
-        "category": "ArchiMate:Strategy",
+        "category": "Strategy",
         "icon": "map",
         "color": "#d9b3ff",
         "translations": {
@@ -918,9 +918,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Implementation & Migration Layer (5) ───────────────────────────
     {
-        "key": "arch_WorkPackage",
+        "key": "WorkPackage",
         "label": "Work Package",
-        "category": "ArchiMate:Implementation",
+        "category": "Implementation",
         "icon": "work",
         "color": "#e0e0e0",
         "translations": {
@@ -936,9 +936,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_ImplementationEvent",
+        "key": "ImplementationEvent",
         "label": "Implementation Event",
-        "category": "ArchiMate:Implementation",
+        "category": "Implementation",
         "icon": "event_available",
         "color": "#e0e0e0",
         "translations": {
@@ -954,9 +954,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Deliverable",
+        "key": "Deliverable",
         "label": "Deliverable",
-        "category": "ArchiMate:Implementation",
+        "category": "Implementation",
         "icon": "task_alt",
         "color": "#e0e0e0",
         "translations": {
@@ -972,9 +972,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Gap",
+        "key": "Gap",
         "label": "Gap",
-        "category": "ArchiMate:Implementation",
+        "category": "Implementation",
         "icon": "difference",
         "color": "#e0e0e0",
         "translations": {
@@ -990,9 +990,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Plateau",
+        "key": "Plateau",
         "label": "Plateau",
-        "category": "ArchiMate:Implementation",
+        "category": "Implementation",
         "icon": "landscape",
         "color": "#e0e0e0",
         "translations": {
@@ -1009,9 +1009,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Physical Layer (4) ──────────────────────────────────────────────
     {
-        "key": "arch_Equipment",
+        "key": "Equipment",
         "label": "Equipment",
-        "category": "ArchiMate:Physical",
+        "category": "Physical",
         "icon": "precision_manufacturing",
         "color": "#c8e6c9",
         "translations": {
@@ -1027,9 +1027,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Facility",
+        "key": "Facility",
         "label": "Facility",
-        "category": "ArchiMate:Physical",
+        "category": "Physical",
         "icon": "warehouse",
         "color": "#c8e6c9",
         "translations": {
@@ -1045,9 +1045,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_DistributionNetwork",
+        "key": "DistributionNetwork",
         "label": "Distribution Network",
-        "category": "ArchiMate:Physical",
+        "category": "Physical",
         "icon": "share",
         "color": "#c8e6c9",
         "translations": {
@@ -1063,9 +1063,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Material",
+        "key": "Material",
         "label": "Material",
-        "category": "ArchiMate:Physical",
+        "category": "Physical",
         "icon": "category",
         "color": "#c8e6c9",
         "translations": {
@@ -1082,9 +1082,9 @@ _ELEMENT_TYPES: list[dict] = [
     },
     # ── Composite Layer (3) ─────────────────────────────────────────────
     {
-        "key": "arch_Grouping",
+        "key": "Grouping",
         "label": "Grouping",
-        "category": "ArchiMate:Composite",
+        "category": "Composite",
         "icon": "folder_open",
         "color": "#ffffff",
         "translations": {
@@ -1100,9 +1100,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Location",
+        "key": "Location",
         "label": "Location",
-        "category": "ArchiMate:Composite",
+        "category": "Composite",
         "icon": "place",
         "color": "#ffffff",
         "translations": {
@@ -1118,9 +1118,9 @@ _ELEMENT_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_Junction",
+        "key": "Junction",
         "label": "Junction",
-        "category": "ArchiMate:Composite",
+        "category": "Composite",
         "icon": "merge_type",
         "color": "#ffffff",
         "translations": {
@@ -1143,11 +1143,11 @@ _ELEMENT_TYPES: list[dict] = [
 
 _RELATION_TYPES: list[dict] = [
     {
-        "key": "arch_rel_Association",
+        "key": "Association",
         "label": "Association",
         "reverse_label": "Associated with",
-        "source_type_key": "arch_BusinessActor",
-        "target_type_key": "arch_BusinessActor",
+        "source_type_key": "BusinessActor",
+        "target_type_key": "BusinessActor",
         "translations": {
             "label": {
                 "de": "Assoziation",
@@ -1161,11 +1161,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Composition",
+        "key": "Composition",
         "label": "Composition",
         "reverse_label": "Composed by",
-        "source_type_key": "arch_BusinessActor",
-        "target_type_key": "arch_BusinessActor",
+        "source_type_key": "BusinessActor",
+        "target_type_key": "BusinessActor",
         "translations": {
             "label": {
                 "de": "Komposition",
@@ -1179,11 +1179,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Aggregation",
+        "key": "Aggregation",
         "label": "Aggregation",
         "reverse_label": "Aggregated by",
-        "source_type_key": "arch_BusinessActor",
-        "target_type_key": "arch_BusinessActor",
+        "source_type_key": "BusinessActor",
+        "target_type_key": "BusinessActor",
         "translations": {
             "label": {
                 "de": "Aggregation",
@@ -1197,11 +1197,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Realization",
+        "key": "Realization",
         "label": "Realization",
         "reverse_label": "Realized by",
-        "source_type_key": "arch_ApplicationComponent",
-        "target_type_key": "arch_ApplicationService",
+        "source_type_key": "ApplicationComponent",
+        "target_type_key": "ApplicationService",
         "translations": {
             "label": {
                 "de": "Realisierung",
@@ -1215,11 +1215,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Assignment",
+        "key": "Assignment",
         "label": "Assignment",
         "reverse_label": "Assigned to",
-        "source_type_key": "arch_BusinessRole",
-        "target_type_key": "arch_BusinessProcess",
+        "source_type_key": "BusinessRole",
+        "target_type_key": "BusinessProcess",
         "translations": {
             "label": {
                 "de": "Zuweisung",
@@ -1233,11 +1233,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Serving",
+        "key": "Serving",
         "label": "Serving",
         "reverse_label": "Served by",
-        "source_type_key": "arch_ApplicationComponent",
-        "target_type_key": "arch_BusinessProcess",
+        "source_type_key": "ApplicationComponent",
+        "target_type_key": "BusinessProcess",
         "translations": {
             "label": {
                 "de": "Bedienung",
@@ -1251,11 +1251,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Access",
+        "key": "Access",
         "label": "Access",
         "reverse_label": "Accessed by",
-        "source_type_key": "arch_ApplicationComponent",
-        "target_type_key": "arch_DataObject",
+        "source_type_key": "ApplicationComponent",
+        "target_type_key": "DataObject",
         "translations": {
             "label": {
                 "de": "Zugriff",
@@ -1269,11 +1269,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Influence",
+        "key": "Influence",
         "label": "Influence",
         "reverse_label": "Influenced by",
-        "source_type_key": "arch_Stakeholder",
-        "target_type_key": "arch_Goal",
+        "source_type_key": "Stakeholder",
+        "target_type_key": "Goal",
         "translations": {
             "label": {
                 "de": "Einfluss",
@@ -1287,11 +1287,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Triggering",
+        "key": "Triggering",
         "label": "Triggering",
         "reverse_label": "Triggered by",
-        "source_type_key": "arch_BusinessEvent",
-        "target_type_key": "arch_BusinessProcess",
+        "source_type_key": "BusinessEvent",
+        "target_type_key": "BusinessProcess",
         "translations": {
             "label": {
                 "de": "Auslösung",
@@ -1305,11 +1305,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Flow",
+        "key": "Flow",
         "label": "Flow",
         "reverse_label": "Flows to",
-        "source_type_key": "arch_BusinessProcess",
-        "target_type_key": "arch_BusinessProcess",
+        "source_type_key": "BusinessProcess",
+        "target_type_key": "BusinessProcess",
         "translations": {
             "label": {
                 "de": "Fluss",
@@ -1323,11 +1323,11 @@ _RELATION_TYPES: list[dict] = [
         },
     },
     {
-        "key": "arch_rel_Specialization",
+        "key": "Specialization",
         "label": "Specialization",
         "reverse_label": "Generalized by",
-        "source_type_key": "arch_BusinessActor",
-        "target_type_key": "arch_BusinessActor",
+        "source_type_key": "BusinessActor",
+        "target_type_key": "BusinessActor",
         "translations": {
             "label": {
                 "de": "Spezialisierung",

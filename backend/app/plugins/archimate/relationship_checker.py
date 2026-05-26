@@ -7634,14 +7634,12 @@ _RELATIONSHIP_MATRIX: dict[str, dict[str, list[str]]] = {
 
 
 def _archimate_to_plugin_key(archimate_name: str) -> str:
-    """Convert ArchiMate element name to plugin card type key."""
-    return f"arch_{archimate_name}"
+    """Convert ArchiMate element name to plugin card type key (identity after prefix removal)."""
+    return archimate_name
 
 
 def _plugin_to_archimate_key(plugin_key: str) -> str:
-    """Convert plugin card type key to ArchiMate element name."""
-    if plugin_key.startswith("arch_"):
-        return plugin_key[5:]
+    """Convert plugin card type key to ArchiMate element name (identity after prefix removal)."""
     return plugin_key
 
 
@@ -7699,10 +7697,9 @@ def get_valid_relation_keys(source_type_key: str, target_type_key: str) -> list[
         target_type_key: Plugin card type key
 
     Returns:
-        List of valid relation type keys (arch_rel_Serving, etc.).
+        List of valid relation type keys (Serving, Realization, etc.).
     """
-    names = get_valid_relation_names(source_type_key, target_type_key)
-    return [f"arch_rel_{name}" for name in names]
+    return get_valid_relation_names(source_type_key, target_type_key)
 
 
 def is_valid_archimate_relation_type(relation_name: str) -> bool:

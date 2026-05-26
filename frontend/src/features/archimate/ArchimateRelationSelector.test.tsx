@@ -8,8 +8,8 @@ describe("ArchimateRelationSelector", () => {
     render(
       <ArchimateRelationSelector
         open={true}
-        sourceTypeKey="arch_ApplicationComponent"
-        targetTypeKey="arch_ApplicationService"
+        sourceTypeKey="ApplicationComponent"
+        targetTypeKey="ApplicationService"
         onSelect={vi.fn()}
         onClose={vi.fn()}
       />,
@@ -21,8 +21,8 @@ describe("ArchimateRelationSelector", () => {
     render(
       <ArchimateRelationSelector
         open={false}
-        sourceTypeKey="arch_ApplicationComponent"
-        targetTypeKey="arch_ApplicationService"
+        sourceTypeKey="ApplicationComponent"
+        targetTypeKey="ApplicationService"
         onSelect={vi.fn()}
         onClose={vi.fn()}
       />,
@@ -34,8 +34,8 @@ describe("ArchimateRelationSelector", () => {
     render(
       <ArchimateRelationSelector
         open={true}
-        sourceTypeKey="arch_ApplicationComponent"
-        targetTypeKey="arch_ApplicationService"
+        sourceTypeKey="ApplicationComponent"
+        targetTypeKey="ApplicationService"
         onSelect={vi.fn()}
         onClose={vi.fn()}
       />,
@@ -49,8 +49,8 @@ describe("ArchimateRelationSelector", () => {
     render(
       <ArchimateRelationSelector
         open={true}
-        sourceTypeKey="arch_ApplicationComponent"
-        targetTypeKey="arch_ApplicationService"
+        sourceTypeKey="ApplicationComponent"
+        targetTypeKey="ApplicationService"
         onSelect={onSelect}
         onClose={vi.fn()}
       />,
@@ -58,7 +58,7 @@ describe("ArchimateRelationSelector", () => {
     const assocBtn = screen.getByText(/Association/i).closest("button") ??
       screen.getByRole("button", { name: /Association/i });
     fireEvent.click(assocBtn!);
-    expect(onSelect).toHaveBeenCalledWith("arch_rel_Association");
+    expect(onSelect).toHaveBeenCalledWith("Association");
   });
 
   it("calls onClose when cancel is clicked", () => {
@@ -66,8 +66,8 @@ describe("ArchimateRelationSelector", () => {
     render(
       <ArchimateRelationSelector
         open={true}
-        sourceTypeKey="arch_ApplicationComponent"
-        targetTypeKey="arch_ApplicationService"
+        sourceTypeKey="ApplicationComponent"
+        targetTypeKey="ApplicationService"
         onSelect={vi.fn()}
         onClose={onClose}
       />,

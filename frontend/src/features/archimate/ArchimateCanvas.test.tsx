@@ -32,11 +32,11 @@ const diagramWithNodes: ArchiMateDiagramData = {
   nodes: [
     {
       id: "n1",
-      type: "arch_ApplicationComponent",
+      type: "ApplicationComponent",
       position: { x: 100, y: 100 },
       data: {
         label: "NexaCore ERP",
-        elementTypeKey: "arch_ApplicationComponent",
+        elementTypeKey: "ApplicationComponent",
         layer: "Application",
         aspect: "ActiveStructure",
         color: "#b3d9ff",
@@ -81,7 +81,9 @@ describe("ArchimateCanvas", () => {
     const dropEvent = new MouseEvent("drop", { bubbles: true, clientX: 200, clientY: 200 });
     Object.defineProperty(dropEvent, "dataTransfer", {
       value: {
-        getData: vi.fn().mockReturnValue("arch_ApplicationComponent"),
+        getData: vi.fn((key: string) =>
+          key === "archimate/element-type" ? "ApplicationComponent" : "",
+        ),
       },
     });
     fireEvent(canvas!, dropEvent);
@@ -89,7 +91,7 @@ describe("ArchimateCanvas", () => {
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith(
         "/cards",
-        expect.objectContaining({ type_key: "arch_ApplicationComponent" }),
+        expect.objectContaining({ type_key: "ApplicationComponent" }),
       );
     });
   });

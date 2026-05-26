@@ -194,6 +194,7 @@ export interface CardType {
   is_hidden: boolean;
   sort_order: number;
   translations?: MetamodelTranslations;
+  plugin_id?: string;
 }
 
 export interface RelationType {

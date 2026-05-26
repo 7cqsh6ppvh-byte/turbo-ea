@@ -12,8 +12,8 @@ describe("ArchiMate Element Metadata", () => {
     expect(Object.keys(ARCHIMATE_ELEMENT_META)).toHaveLength(61);
   });
 
-  it("all element keys start with arch_", () => {
-    const invalid = Object.keys(ARCHIMATE_ELEMENT_META).filter((k) => !k.startsWith("arch_"));
+  it("no element keys have arch_ prefix", () => {
+    const invalid = Object.keys(ARCHIMATE_ELEMENT_META).filter((k) => k.startsWith("arch_"));
     expect(invalid).toHaveLength(0);
   });
 
@@ -51,7 +51,7 @@ describe("ArchiMate Element Metadata", () => {
   });
 
   it("getElementMeta returns metadata for known key", () => {
-    const meta = getElementMeta("arch_ApplicationComponent");
+    const meta = getElementMeta("ApplicationComponent");
     expect(meta).toBeDefined();
     expect(meta?.layer).toBe("Application");
     expect(meta?.aspect).toBe("ActiveStructure");
@@ -93,35 +93,35 @@ describe("ArchiMate Relation Styles", () => {
     expect(Object.keys(ARCHIMATE_RELATION_STYLES)).toHaveLength(11);
   });
 
-  it("all relation keys start with arch_rel_", () => {
+  it("no relation style keys have arch_rel_ prefix", () => {
     const invalid = Object.keys(ARCHIMATE_RELATION_STYLES).filter(
-      (k) => !k.startsWith("arch_rel_"),
+      (k) => k.startsWith("arch_rel_"),
     );
     expect(invalid).toHaveLength(0);
   });
 
   it("Composition has filled diamond source marker", () => {
-    const style = ARCHIMATE_RELATION_STYLES["arch_rel_Composition"];
+    const style = ARCHIMATE_RELATION_STYLES["Composition"];
     expect(style.sourceMarker).toBe("diamond-filled");
   });
 
   it("Realization uses dashed line", () => {
-    const style = ARCHIMATE_RELATION_STYLES["arch_rel_Realization"];
+    const style = ARCHIMATE_RELATION_STYLES["Realization"];
     expect(style.strokeDasharray).toBeTruthy();
   });
 
   it("Assignment has filled circle source marker", () => {
-    const style = ARCHIMATE_RELATION_STYLES["arch_rel_Assignment"];
+    const style = ARCHIMATE_RELATION_STYLES["Assignment"];
     expect(style.sourceMarker).toBe("circle-filled");
   });
 
   it("Association has no special markers", () => {
-    const style = ARCHIMATE_RELATION_STYLES["arch_rel_Association"];
+    const style = ARCHIMATE_RELATION_STYLES["Association"];
     expect(style.sourceMarker).toBeUndefined();
   });
 
   it("getRelationStyle returns style for known key", () => {
-    const style = getRelationStyle("arch_rel_Serving");
+    const style = getRelationStyle("Serving");
     expect(style).toBeDefined();
   });
 

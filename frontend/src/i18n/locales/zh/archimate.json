@@ -43,17 +43,17 @@
         "Composite": "复合层"
     },
     "relation": {
-        "arch_rel_Association": "关联",
-        "arch_rel_Composition": "组合",
-        "arch_rel_Aggregation": "聚合",
-        "arch_rel_Realization": "实现",
-        "arch_rel_Assignment": "分配",
-        "arch_rel_Serving": "服务",
-        "arch_rel_Access": "访问",
-        "arch_rel_Influence": "影响",
-        "arch_rel_Triggering": "触发",
-        "arch_rel_Flow": "流动",
-        "arch_rel_Specialization": "专化"
+        "Association": "关联",
+        "Composition": "组合",
+        "Aggregation": "聚合",
+        "Realization": "实现",
+        "Assignment": "分配",
+        "Serving": "服务",
+        "Access": "访问",
+        "Influence": "影响",
+        "Triggering": "触发",
+        "Flow": "流动",
+        "Specialization": "专化"
     },
     "export": {
         "title": "导出 ArchiMate 模型",

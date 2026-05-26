@@ -25,11 +25,11 @@ export function VisualFirstLeftSidebar({ currentDiagramId, nodeCardIds }: Props)
   const [search, setSearch] = useState("");
 
   const hasArch = useMemo(
-    () => types.some((t) => t.key.startsWith("arch_") && !t.is_hidden),
+    () => types.some((t) => t.plugin_id === "archimate" && !t.is_hidden),
     [types],
   );
   const hasStandard = useMemo(
-    () => types.some((t) => !t.key.startsWith("arch_") && !t.is_hidden),
+    () => types.some((t) => t.plugin_id !== "archimate" && !t.is_hidden),
     [types],
   );
   const showSwitcher = hasArch && hasStandard;
@@ -43,7 +43,7 @@ export function VisualFirstLeftSidebar({ currentDiagramId, nodeCardIds }: Props)
       types.filter(
         (t) =>
           !t.is_hidden &&
-          (mode === "archimate" ? t.key.startsWith("arch_") : !t.key.startsWith("arch_")),
+          (mode === "archimate" ? t.plugin_id === "archimate" : t.plugin_id !== "archimate"),
       ),
     [types, mode],
   );

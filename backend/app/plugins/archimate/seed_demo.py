@@ -20,28 +20,28 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Business Layer — Active Structure
     {
         "ref": "ba_nexa_group",
-        "type_key": "arch_BusinessActor",
+        "type_key": "BusinessActor",
         "name": "NexaTech Industries",
         "desc": "Global industrial manufacturing conglomerate — parent organization.",
         "color": "#f5e27a",
     },
     {
         "ref": "ba_operations",
-        "type_key": "arch_BusinessActor",
+        "type_key": "BusinessActor",
         "name": "Operations Division",
         "desc": "Responsible for manufacturing, supply chain, and logistics.",
         "color": "#f5e27a",
     },
     {
         "ref": "ba_finance",
-        "type_key": "arch_BusinessRole",
+        "type_key": "BusinessRole",
         "name": "Finance & Controlling",
         "desc": "Business role overseeing financial planning and cost controlling.",
         "color": "#f5e27a",
     },
     {
         "ref": "ba_it_team",
-        "type_key": "arch_BusinessRole",
+        "type_key": "BusinessRole",
         "name": "IT Architecture Team",
         "desc": "EA governance, platform standards, and technology decisions.",
         "color": "#f5e27a",
@@ -49,21 +49,21 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Business Layer — Behavior
     {
         "ref": "bp_procure_to_pay",
-        "type_key": "arch_BusinessProcess",
+        "type_key": "BusinessProcess",
         "name": "Procure-to-Pay",
         "desc": "End-to-end process from purchase requisition through supplier payment.",
         "color": "#f5e27a",
     },
     {
         "ref": "bp_order_to_cash",
-        "type_key": "arch_BusinessProcess",
+        "type_key": "BusinessProcess",
         "name": "Order-to-Cash",
         "desc": "Customer order management through revenue recognition.",
         "color": "#f5e27a",
     },
     {
         "ref": "bs_erp_service",
-        "type_key": "arch_BusinessService",
+        "type_key": "BusinessService",
         "name": "ERP Core Service",
         "desc": "Business service providing integrated ERP capabilities across divisions.",
         "color": "#f5e27a",
@@ -71,7 +71,7 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Business Layer — Passive Structure
     {
         "ref": "bo_supplier_contract",
-        "type_key": "arch_Contract",
+        "type_key": "Contract",
         "name": "Supplier Framework Contract",
         "desc": "Master contract governing all supplier relationships.",
         "color": "#f5e27a",
@@ -79,49 +79,49 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Application Layer — Active Structure
     {
         "ref": "ac_erp",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "SAP S/4HANA",
         "desc": "Central ERP system for finance, procurement, and production planning.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ac_crm",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "Salesforce CRM",
         "desc": "Customer relationship management and sales process automation.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ac_plm",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "Siemens Teamcenter PLM",
         "desc": "Product lifecycle management for engineering BOM and CAD.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ac_mes",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "Opcenter MES",
         "desc": "Manufacturing execution system for shop-floor orchestration.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ac_iot",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "Azure IoT Hub",
         "desc": "IoT device management and telemetry ingestion platform.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ac_analytics",
-        "type_key": "arch_ApplicationComponent",
+        "type_key": "ApplicationComponent",
         "name": "Power BI Analytics",
         "desc": "Business intelligence and reporting platform.",
         "color": "#b3d9ff",
     },
     {
         "ref": "ai_erp_api",
-        "type_key": "arch_ApplicationInterface",
+        "type_key": "ApplicationInterface",
         "name": "ERP Integration API",
         "desc": "REST/SOAP API gateway exposing ERP services to external applications.",
         "color": "#b3d9ff",
@@ -129,14 +129,14 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Application Layer — Behavior
     {
         "ref": "as_procurement_svc",
-        "type_key": "arch_ApplicationService",
+        "type_key": "ApplicationService",
         "name": "Procurement Service",
         "desc": "Application service encapsulating purchasing workflows.",
         "color": "#b3d9ff",
     },
     {
         "ref": "as_analytics_svc",
-        "type_key": "arch_ApplicationService",
+        "type_key": "ApplicationService",
         "name": "Analytics Service",
         "desc": "Delivers dashboards and KPI reports to business stakeholders.",
         "color": "#b3d9ff",
@@ -144,14 +144,14 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Application Layer — Passive Structure
     {
         "ref": "do_product_data",
-        "type_key": "arch_DataObject",
+        "type_key": "DataObject",
         "name": "Product Master Data",
         "desc": "Canonical product information including BOM, specs, and pricing.",
         "color": "#b3d9ff",
     },
     {
         "ref": "do_financial_data",
-        "type_key": "arch_DataObject",
+        "type_key": "DataObject",
         "name": "Financial Data",
         "desc": "General ledger, cost centers, and financial reporting data.",
         "color": "#b3d9ff",
@@ -159,28 +159,28 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Technology Layer — Active Structure
     {
         "ref": "tn_azure_prod",
-        "type_key": "arch_Node",
+        "type_key": "Node",
         "name": "Azure Production Cluster",
         "desc": "AKS-managed Kubernetes cluster hosting core business applications.",
         "color": "#aae6aa",
     },
     {
         "ref": "tn_edge_gateways",
-        "type_key": "arch_Device",
+        "type_key": "Device",
         "name": "Factory Edge Gateways",
         "desc": "Industrial IoT edge gateways deployed at manufacturing sites.",
         "color": "#aae6aa",
     },
     {
         "ref": "ts_kafka",
-        "type_key": "arch_SystemSoftware",
+        "type_key": "SystemSoftware",
         "name": "Apache Kafka",
         "desc": "Event streaming platform for real-time data pipeline integration.",
         "color": "#aae6aa",
     },
     {
         "ref": "tc_wan",
-        "type_key": "arch_CommunicationNetwork",
+        "type_key": "CommunicationNetwork",
         "name": "Global WAN",
         "desc": "MPLS/SD-WAN connecting all NexaTech manufacturing sites.",
         "color": "#aae6aa",
@@ -188,7 +188,7 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Technology Layer — Passive Structure
     {
         "ref": "ta_backup",
-        "type_key": "arch_Artifact",
+        "type_key": "Artifact",
         "name": "Encrypted Backup Archive",
         "desc": "Encrypted daily snapshots of all production databases.",
         "color": "#aae6aa",
@@ -196,21 +196,21 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Motivation Layer
     {
         "ref": "goal_digital_ops",
-        "type_key": "arch_Goal",
+        "type_key": "Goal",
         "name": "Digital Operations Excellence",
         "desc": "Transform factory operations through data-driven automation and IoT.",
         "color": "#ffcca8",
     },
     {
         "ref": "driver_cost",
-        "type_key": "arch_Driver",
+        "type_key": "Driver",
         "name": "Cost Reduction Pressure",
         "desc": "Competitive pressure to reduce operational costs by 15% in 3 years.",
         "color": "#ffcca8",
     },
     {
         "ref": "req_integration",
-        "type_key": "arch_Requirement",
+        "type_key": "Requirement",
         "name": "Real-time ERP–MES Integration",
         "desc": "All shop-floor events must be reflected in ERP within 30 seconds.",
         "color": "#ffcca8",
@@ -218,14 +218,14 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Strategy Layer
     {
         "ref": "cap_mfg",
-        "type_key": "arch_Capability",
+        "type_key": "Capability",
         "name": "Smart Manufacturing",
         "desc": "Capability to operate connected, data-driven production environments.",
         "color": "#d9b3ff",
     },
     {
         "ref": "cap_data",
-        "type_key": "arch_Capability",
+        "type_key": "Capability",
         "name": "Enterprise Data & Analytics",
         "desc": "Unified data platform and analytics capability across all divisions.",
         "color": "#d9b3ff",
@@ -233,7 +233,7 @@ ARCHIMATE_DEMO_CARDS: list[dict[str, Any]] = [
     # Composite Layer
     {
         "ref": "grp_digital_backbone",
-        "type_key": "arch_Grouping",
+        "type_key": "Grouping",
         "name": "Digital Backbone",
         "desc": "Core integrated application landscape forming NexaTech's digital backbone.",
         "color": "#ffffff",
@@ -249,117 +249,117 @@ ARCHIMATE_DEMO_RELATIONS: list[dict[str, Any]] = [
         "ref": "rel_ops_procure",
         "source_ref": "ba_operations",
         "target_ref": "bp_procure_to_pay",
-        "rel_type": "arch_rel_Assignment",
+        "rel_type": "Assignment",
     },
     {
         "ref": "rel_fin_otc",
         "source_ref": "ba_finance",
         "target_ref": "bp_order_to_cash",
-        "rel_type": "arch_rel_Assignment",
+        "rel_type": "Assignment",
     },
     # Business services realized by processes
     {
         "ref": "rel_procure_erpsvc",
         "source_ref": "bp_procure_to_pay",
         "target_ref": "bs_erp_service",
-        "rel_type": "arch_rel_Realization",
+        "rel_type": "Realization",
     },
     # Applications realizing business services
     {
         "ref": "rel_erp_erpsvc",
         "source_ref": "ac_erp",
         "target_ref": "bs_erp_service",
-        "rel_type": "arch_rel_Realization",
+        "rel_type": "Realization",
     },
     # Application serving relationships
     {
         "ref": "rel_erp_serves_crm",
         "source_ref": "ac_erp",
         "target_ref": "ac_crm",
-        "rel_type": "arch_rel_Serving",
+        "rel_type": "Serving",
     },
     {
         "ref": "rel_erp_serves_mes",
         "source_ref": "ac_erp",
         "target_ref": "ac_mes",
-        "rel_type": "arch_rel_Serving",
+        "rel_type": "Serving",
     },
     {
         "ref": "rel_iot_serves_analytics",
         "source_ref": "ac_iot",
         "target_ref": "ac_analytics",
-        "rel_type": "arch_rel_Serving",
+        "rel_type": "Serving",
     },
     # Application component compositions
     {
         "ref": "rel_erp_api_comp",
         "source_ref": "ac_erp",
         "target_ref": "ai_erp_api",
-        "rel_type": "arch_rel_Composition",
+        "rel_type": "Composition",
     },
     # Data access
     {
         "ref": "rel_erp_prod_data",
         "source_ref": "ac_erp",
         "target_ref": "do_product_data",
-        "rel_type": "arch_rel_Access",
+        "rel_type": "Access",
     },
     {
         "ref": "rel_erp_fin_data",
         "source_ref": "ac_erp",
         "target_ref": "do_financial_data",
-        "rel_type": "arch_rel_Access",
+        "rel_type": "Access",
     },
     # Technology assignments
     {
         "ref": "rel_azure_erp",
         "source_ref": "tn_azure_prod",
         "target_ref": "ac_erp",
-        "rel_type": "arch_rel_Assignment",
+        "rel_type": "Assignment",
     },
     {
         "ref": "rel_azure_analytics",
         "source_ref": "tn_azure_prod",
         "target_ref": "ac_analytics",
-        "rel_type": "arch_rel_Assignment",
+        "rel_type": "Assignment",
     },
     {
         "ref": "rel_kafka_sys",
         "source_ref": "ts_kafka",
         "target_ref": "ac_iot",
-        "rel_type": "arch_rel_Serving",
+        "rel_type": "Serving",
     },
     # Goal / driver associations
     {
         "ref": "rel_driver_goal",
         "source_ref": "driver_cost",
         "target_ref": "goal_digital_ops",
-        "rel_type": "arch_rel_Influence",
+        "rel_type": "Influence",
     },
     {
         "ref": "rel_goal_cap",
         "source_ref": "goal_digital_ops",
         "target_ref": "cap_mfg",
-        "rel_type": "arch_rel_Association",
+        "rel_type": "Association",
     },
     # Grouping
     {
         "ref": "rel_grp_erp",
         "source_ref": "grp_digital_backbone",
         "target_ref": "ac_erp",
-        "rel_type": "arch_rel_Aggregation",
+        "rel_type": "Aggregation",
     },
     {
         "ref": "rel_grp_mes",
         "source_ref": "grp_digital_backbone",
         "target_ref": "ac_mes",
-        "rel_type": "arch_rel_Aggregation",
+        "rel_type": "Aggregation",
     },
     {
         "ref": "rel_grp_plm",
         "source_ref": "grp_digital_backbone",
         "target_ref": "ac_plm",
-        "rel_type": "arch_rel_Aggregation",
+        "rel_type": "Aggregation",
     },
 ]
 

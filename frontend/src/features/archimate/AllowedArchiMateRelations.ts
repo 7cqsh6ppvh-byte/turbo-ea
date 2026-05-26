@@ -10,10 +10,10 @@
  */
 
 /**
- * Convert plugin card type key to ArchiMate element name.
+ * Convert plugin card type key to ArchiMate element name (identity after prefix removal).
  */
 function pluginToArchiName(pluginKey: string): string {
-    return pluginKey.startsWith("arch_") ? pluginKey.slice(5) : pluginKey;
+    return pluginKey;
 }
 
 /**
@@ -19253,7 +19253,7 @@ export function getValidRelationKeys(
     const target = pluginToArchiName(targetTypeKey);
 
     if (source in RELATIONSHIP_MATRIX && target in RELATIONSHIP_MATRIX[source]) {
-        return RELATIONSHIP_MATRIX[source][target].map((r) => `arch_rel_${r}`);
+        return RELATIONSHIP_MATRIX[source][target];
     }
     return [];
 }

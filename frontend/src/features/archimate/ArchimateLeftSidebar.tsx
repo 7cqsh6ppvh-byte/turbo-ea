@@ -25,16 +25,16 @@ export function ArchimateLeftSidebar({ currentDiagramId, nodeCardIds }: Props) {
   const [search, setSearch] = useState("");
 
   const hasArch = useMemo(
-    () => types.some((t) => t.key.startsWith("arch_") && !t.is_hidden),
+    () => types.some((t) => t.plugin_id === "archimate" && !t.is_hidden),
     [types],
   );
   const hasStandard = useMemo(
-    () => types.some((t) => !t.key.startsWith("arch_") && !t.is_hidden),
+    () => types.some((t) => t.plugin_id !== "archimate" && !t.is_hidden),
     [types],
   );
   const showSwitcher = hasArch && hasStandard;
 
-  // Default to archimate mode when only arch_ types exist in the database.
+  // Default to archimate mode when only archimate plugin types exist in the database.
   const [mode, setMode] = useState<DiagramMode>(() =>
     hasArch && !hasStandard ? "archimate" : "ea",
   );
@@ -44,7 +44,7 @@ export function ArchimateLeftSidebar({ currentDiagramId, nodeCardIds }: Props) {
       types.filter(
         (t) =>
           !t.is_hidden &&
-          (mode === "archimate" ? t.key.startsWith("arch_") : !t.key.startsWith("arch_")),
+          (mode === "archimate" ? t.plugin_id === "archimate" : t.plugin_id !== "archimate"),
       ),
     [types, mode],
   );

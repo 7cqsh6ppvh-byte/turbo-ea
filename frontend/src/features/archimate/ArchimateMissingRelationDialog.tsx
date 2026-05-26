@@ -70,8 +70,8 @@ export function ArchimateMissingRelationDialog({
             <DialogContentText sx={{ mb: 2 }}>
               {t("missingRelation.description", {
                 relation: RELATION_LABELS[relationType] ?? relationType,
-                source: sourceTypeKey.replace("arch_", ""),
-                target: targetTypeKey.replace("arch_", ""),
+                source: sourceTypeKey,
+                target: targetTypeKey,
               })}
             </DialogContentText>
             {error && (

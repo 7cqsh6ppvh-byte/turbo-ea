@@ -32,67 +32,67 @@ AMEFF_VERSION = "3.2"
 
 # Mapping from AMEFF xsi:type → arch_* card type key
 _TYPE_TO_KEY: dict[str, str] = {
-    "BusinessActor": "arch_BusinessActor",
-    "BusinessRole": "arch_BusinessRole",
-    "BusinessCollaboration": "arch_BusinessCollaboration",
-    "BusinessInterface": "arch_BusinessInterface",
-    "BusinessProcess": "arch_BusinessProcess",
-    "BusinessFunction": "arch_BusinessFunction",
-    "BusinessInteraction": "arch_BusinessInteraction",
-    "BusinessEvent": "arch_BusinessEvent",
-    "BusinessService": "arch_BusinessService",
-    "BusinessObject": "arch_BusinessObject",
-    "Contract": "arch_Contract",
-    "Representation": "arch_Representation",
-    "Product": "arch_Product",
-    "ApplicationComponent": "arch_ApplicationComponent",
-    "ApplicationCollaboration": "arch_ApplicationCollaboration",
-    "ApplicationInterface": "arch_ApplicationInterface",
-    "ApplicationProcess": "arch_ApplicationProcess",
-    "ApplicationFunction": "arch_ApplicationFunction",
-    "ApplicationInteraction": "arch_ApplicationInteraction",
-    "ApplicationEvent": "arch_ApplicationEvent",
-    "ApplicationService": "arch_ApplicationService",
-    "DataObject": "arch_DataObject",
-    "Node": "arch_Node",
-    "Device": "arch_Device",
-    "SystemSoftware": "arch_SystemSoftware",
-    "TechnologyCollaboration": "arch_TechnologyCollaboration",
-    "TechnologyInterface": "arch_TechnologyInterface",
-    "TechnologyProcess": "arch_TechnologyProcess",
-    "TechnologyFunction": "arch_TechnologyFunction",
-    "TechnologyInteraction": "arch_TechnologyInteraction",
-    "TechnologyEvent": "arch_TechnologyEvent",
-    "TechnologyService": "arch_TechnologyService",
-    "Path": "arch_Path",
-    "CommunicationNetwork": "arch_CommunicationNetwork",
-    "Artifact": "arch_Artifact",
-    "Stakeholder": "arch_Stakeholder",
-    "Driver": "arch_Driver",
-    "Assessment": "arch_Assessment",
-    "Goal": "arch_Goal",
-    "Outcome": "arch_Outcome",
-    "Principle": "arch_Principle",
-    "Requirement": "arch_Requirement",
-    "Constraint": "arch_Constraint",
-    "Meaning": "arch_Meaning",
-    "Value": "arch_Value",
-    "Resource": "arch_Resource",
-    "Capability": "arch_Capability",
-    "ValueStream": "arch_ValueStream",
-    "CourseOfAction": "arch_CourseOfAction",
-    "WorkPackage": "arch_WorkPackage",
-    "ImplementationEvent": "arch_ImplementationEvent",
-    "Deliverable": "arch_Deliverable",
-    "Gap": "arch_Gap",
-    "Plateau": "arch_Plateau",
-    "Equipment": "arch_Equipment",
-    "Facility": "arch_Facility",
-    "DistributionNetwork": "arch_DistributionNetwork",
-    "Material": "arch_Material",
-    "Grouping": "arch_Grouping",
-    "Location": "arch_Location",
-    "Junction": "arch_Junction",
+    "BusinessActor": "BusinessActor",
+    "BusinessRole": "BusinessRole",
+    "BusinessCollaboration": "BusinessCollaboration",
+    "BusinessInterface": "BusinessInterface",
+    "BusinessProcess": "BusinessProcess",
+    "BusinessFunction": "BusinessFunction",
+    "BusinessInteraction": "BusinessInteraction",
+    "BusinessEvent": "BusinessEvent",
+    "BusinessService": "BusinessService",
+    "BusinessObject": "BusinessObject",
+    "Contract": "Contract",
+    "Representation": "Representation",
+    "Product": "Product",
+    "ApplicationComponent": "ApplicationComponent",
+    "ApplicationCollaboration": "ApplicationCollaboration",
+    "ApplicationInterface": "ApplicationInterface",
+    "ApplicationProcess": "ApplicationProcess",
+    "ApplicationFunction": "ApplicationFunction",
+    "ApplicationInteraction": "ApplicationInteraction",
+    "ApplicationEvent": "ApplicationEvent",
+    "ApplicationService": "ApplicationService",
+    "DataObject": "DataObject",
+    "Node": "Node",
+    "Device": "Device",
+    "SystemSoftware": "SystemSoftware",
+    "TechnologyCollaboration": "TechnologyCollaboration",
+    "TechnologyInterface": "TechnologyInterface",
+    "TechnologyProcess": "TechnologyProcess",
+    "TechnologyFunction": "TechnologyFunction",
+    "TechnologyInteraction": "TechnologyInteraction",
+    "TechnologyEvent": "TechnologyEvent",
+    "TechnologyService": "TechnologyService",
+    "Path": "Path",
+    "CommunicationNetwork": "CommunicationNetwork",
+    "Artifact": "Artifact",
+    "Stakeholder": "Stakeholder",
+    "Driver": "Driver",
+    "Assessment": "Assessment",
+    "Goal": "Goal",
+    "Outcome": "Outcome",
+    "Principle": "Principle",
+    "Requirement": "Requirement",
+    "Constraint": "Constraint",
+    "Meaning": "Meaning",
+    "Value": "Value",
+    "Resource": "Resource",
+    "Capability": "Capability",
+    "ValueStream": "ValueStream",
+    "CourseOfAction": "CourseOfAction",
+    "WorkPackage": "WorkPackage",
+    "ImplementationEvent": "ImplementationEvent",
+    "Deliverable": "Deliverable",
+    "Gap": "Gap",
+    "Plateau": "Plateau",
+    "Equipment": "Equipment",
+    "Facility": "Facility",
+    "DistributionNetwork": "DistributionNetwork",
+    "Material": "Material",
+    "Grouping": "Grouping",
+    "Location": "Location",
+    "Junction": "Junction",
 }
 
 # Reverse mapping: arch_* key → AMEFF xsi:type
@@ -100,17 +100,17 @@ _KEY_TO_TYPE: dict[str, str] = {v: k for k, v in _TYPE_TO_KEY.items()}
 
 # Mapping from AMEFF relation type → arch_rel_* key
 _REL_TYPE_TO_KEY: dict[str, str] = {
-    "Association": "arch_rel_Association",
-    "Composition": "arch_rel_Composition",
-    "Aggregation": "arch_rel_Aggregation",
-    "Realization": "arch_rel_Realization",
-    "Assignment": "arch_rel_Assignment",
-    "Serving": "arch_rel_Serving",
-    "Access": "arch_rel_Access",
-    "Influence": "arch_rel_Influence",
-    "Triggering": "arch_rel_Triggering",
-    "Flow": "arch_rel_Flow",
-    "Specialization": "arch_rel_Specialization",
+    "Association": "Association",
+    "Composition": "Composition",
+    "Aggregation": "Aggregation",
+    "Realization": "Realization",
+    "Assignment": "Assignment",
+    "Serving": "Serving",
+    "Access": "Access",
+    "Influence": "Influence",
+    "Triggering": "Triggering",
+    "Flow": "Flow",
+    "Specialization": "Specialization",
 }
 
 _REL_KEY_TO_TYPE: dict[str, str] = {v: k for k, v in _REL_TYPE_TO_KEY.items()}
@@ -259,12 +259,23 @@ async def export_model_to_ameff(
     """Export ArchiMate cards and relations from DB to AMEFF model dict.
 
     If card_ids is given, only those cards (and their interconnecting relations)
-    are exported. Otherwise all arch_* cards are exported.
+    are exported. Otherwise all archimate plugin cards are exported.
     """
     from app.models.card import Card
+    from app.models.card_type import CardType
     from app.models.relation import Relation
+    from app.models.relation_type import RelationType
 
-    query = select(Card).where(Card.type.like("arch_%"))
+    # Resolve archimate card and relation type keys from the DB (plugin_id discriminator)
+    ct_result = await db.execute(select(CardType.key).where(CardType.plugin_id == "archimate"))
+    arch_type_keys = {row[0] for row in ct_result.all()}
+
+    rt_result = await db.execute(
+        select(RelationType.key).where(RelationType.plugin_id == "archimate")
+    )
+    arch_rel_keys = {row[0] for row in rt_result.all()}
+
+    query = select(Card).where(Card.type.in_(arch_type_keys))
     if card_ids:
         query = query.where(Card.id.in_(card_ids))
     result = await db.execute(query)
@@ -275,7 +286,7 @@ async def export_model_to_ameff(
     rel_query = select(Relation).where(
         Relation.source_id.in_(card_id_set),
         Relation.target_id.in_(card_id_set),
-        Relation.type.like("arch_rel_%"),
+        Relation.type.in_(arch_rel_keys),
     )
     rel_result = await db.execute(rel_query)
     relations = rel_result.scalars().all()
