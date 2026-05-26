@@ -340,6 +340,7 @@
   "modules.ppm": "PPM",
   "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
+  "modules.visualfirst": "VisualFirst Canvas",
   "moduleDisabled.title": "{{module}} is disabled",
   "moduleDisabled.body": "The {{module}} module is currently disabled by an administrator. Enable it from the admin settings to access this area.",
   "moduleDisabled.backToDashboard": "Back to dashboard",

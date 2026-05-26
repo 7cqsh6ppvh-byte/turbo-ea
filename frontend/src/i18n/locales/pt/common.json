@@ -264,6 +264,7 @@
   "modules.ppm": "PPM",
   "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
+  "modules.visualfirst": "VisualFirst Canvas",
   "moduleDisabled.title": "{{module}} está desativado",
   "moduleDisabled.body": "O módulo {{module}} está atualmente desativado por um administrador. Ative-o nas configurações de administração para acessar esta seção.",
   "moduleDisabled.backToDashboard": "Voltar ao painel",

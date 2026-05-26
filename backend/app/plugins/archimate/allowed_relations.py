@@ -3,7 +3,6 @@
 Re-exports the relation type keys for use in API endpoints.
 """
 
-
 ARCHIMATE_RELATIONS = (
     "Access",
     "Composition",

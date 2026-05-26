@@ -4,6 +4,9 @@
     "newDiagram": "新建图表",
     "noDiagrams": "暂无图表",
     "noDiagramsHint": "创建您的第一个图表以开始使用。",
+    "diagramNameLabel": "图表名称",
+    "cancel": "取消",
+    "create": "创建",
     "admin": {
         "title": "VisualFirst 画布",
         "enable": "启用 VisualFirst 画布",

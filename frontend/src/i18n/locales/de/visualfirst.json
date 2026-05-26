@@ -4,6 +4,9 @@
     "newDiagram": "Neues Diagramm",
     "noDiagrams": "Noch keine Diagramme",
     "noDiagramsHint": "Erstellen Sie Ihr erstes Diagramm, um loszulegen.",
+    "diagramNameLabel": "Diagrammname",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
     "admin": {
         "title": "VisualFirst Canvas",
         "enable": "VisualFirst Canvas aktivieren",

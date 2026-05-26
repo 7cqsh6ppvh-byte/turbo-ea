@@ -4,6 +4,9 @@
     "newDiagram": "Новая диаграмма",
     "noDiagrams": "Диаграмм пока нет",
     "noDiagramsHint": "Создайте первую диаграмму для начала работы.",
+    "diagramNameLabel": "Название диаграммы",
+    "cancel": "Отмена",
+    "create": "Создать",
     "admin": {
         "title": "VisualFirst Canvas",
         "enable": "Включить VisualFirst Canvas",

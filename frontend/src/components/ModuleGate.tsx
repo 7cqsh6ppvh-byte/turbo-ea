@@ -18,8 +18,9 @@ import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
+import { useVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 
-type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc";
+type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst";
 
 interface Props {
   module: ModuleKey;
@@ -32,6 +33,7 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
   grc: "/admin/settings",
+  visualfirst: "/admin/settings?tab=visualfirst",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
@@ -40,6 +42,7 @@ const MODULE_ICON: Record<ModuleKey, string> = {
   ppm: "rocket_launch",
   turbolens: "psychology",
   grc: "policy",
+  visualfirst: "layers",
 };
 
 export default function ModuleGate({ module, children }: Props) {
@@ -50,6 +53,7 @@ export default function ModuleGate({ module, children }: Props) {
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
   const { grcEnabled, grcLoaded } = useGrcEnabled();
+  const { visualFirstEnabled, visualFirstLoaded } = useVisualFirstEnabled();
 
   const enabled =
     module === "archimate"
@@ -60,7 +64,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? ppmEnabled
           : module === "grc"
             ? grcEnabled
-            : turboLensEnabled;
+            : module === "visualfirst"
+              ? visualFirstEnabled
+              : turboLensEnabled;
   const loaded =
     module === "archimate"
       ? archiMateLoaded
@@ -70,7 +76,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? ppmLoaded
           : module === "grc"
             ? grcLoaded
-            : turboLensLoaded;
+            : module === "visualfirst"
+              ? visualFirstLoaded
+              : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.
