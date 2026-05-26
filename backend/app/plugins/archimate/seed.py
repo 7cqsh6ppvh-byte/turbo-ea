@@ -1360,7 +1360,7 @@ async def seed_archimate_metamodel(db: AsyncSession) -> dict:
     conflict_ct_result = await db.execute(
         select(CardType).where(
             CardType.key.in_(arch_ct_keys),
-            CardType.plugin_id != PLUGIN_ID,
+            or_(CardType.plugin_id.is_(None), CardType.plugin_id != PLUGIN_ID),
         )
     )
     for ct in conflict_ct_result.scalars().all():
@@ -1382,7 +1382,7 @@ async def seed_archimate_metamodel(db: AsyncSession) -> dict:
     conflict_rt_result = await db.execute(
         select(RelationType).where(
             RelationType.key.in_(arch_rt_keys),
-            RelationType.plugin_id != PLUGIN_ID,
+            or_(RelationType.plugin_id.is_(None), RelationType.plugin_id != PLUGIN_ID),
         )
     )
     for rt in conflict_rt_result.scalars().all():

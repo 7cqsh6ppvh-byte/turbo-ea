@@ -36,14 +36,14 @@ async def migrate_archimate_unique(db: AsyncSession) -> dict[str, int]:
     # Built-in types have plugin_id=NULL; in PostgreSQL, NULL != 'archimate'
     # evaluates to NULL (falsy), so we must explicitly check for NULL too.
     ct_result = await db.execute(
-        delete(CardType).where(or_(CardType.plugin_id == None, CardType.plugin_id != "archimate"))
+        delete(CardType).where(or_(CardType.plugin_id.is_(None), CardType.plugin_id != "archimate"))
     )
     card_types_deleted = ct_result.rowcount
 
     # ── 2. Delete non-ArchiMate relation types ─────────────────────────────
     rt_result = await db.execute(
         delete(RelationType).where(
-            or_(RelationType.plugin_id == None, RelationType.plugin_id != "archimate")
+            or_(RelationType.plugin_id.is_(None), RelationType.plugin_id != "archimate")
         )
     )
     relation_types_deleted = rt_result.rowcount
