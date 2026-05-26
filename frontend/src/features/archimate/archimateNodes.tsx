@@ -143,3 +143,8 @@ export const NODE_TYPES: Record<string, ComponentType<any>> = Object.fromEntries
     return [key, _elementNode];
   }),
 );
+
+// Stable base map used by ArchimateCanvas to build the full nodeTypes map dynamically.
+export const ARCH_NODE_TYPES: Record<string, ComponentType<any>> = {
+  ...NODE_TYPES,
+};

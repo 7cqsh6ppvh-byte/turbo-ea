@@ -29,11 +29,18 @@ export interface ArchiMateDiagramNodeData extends Record<string, unknown> {
   label: string;
   elementTypeKey: string;
   cardId?: string;
-  layer: ArchiMateLayer;
-  aspect: ArchiMateAspect;
+  layer: ArchiMateLayer | string;
+  aspect: ArchiMateAspect | string;
   color: string;
   width: number;
   height: number;
+  icon?: string;
+}
+
+export interface ExistingCardDrop {
+  cardId: string;
+  typeKey: string;
+  name: string;
 }
 
 export interface ArchiMateDiagramEdgeData extends Record<string, unknown> {

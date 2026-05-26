@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type NodeChange,
   type EdgeChange,
@@ -14,20 +17,30 @@ import {
 import "@xyflow/react/dist/style.css";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import { api } from "@/api/client";
-import { NODE_TYPES } from "./archimateNodes";
+import { useMetamodel } from "@/hooks/useMetamodel";
+import { useResolveMetaLabel } from "@/hooks/useResolveLabel";
+import { ARCH_NODE_TYPES } from "./archimateNodes";
 import { EDGE_TYPES } from "./archimateEdges";
 import { ARCHIMATE_ELEMENT_META } from "./archimateShapes";
 import { computeArchiMateLayout } from "./archimateElkLayout";
-import type { ArchiMateDiagramData, ArchiMateDiagramNode, ArchiMateDiagramEdge } from "./types";
+import type {
+  ArchiMateDiagramData,
+  ArchiMateDiagramNode,
+  ArchiMateDiagramEdge,
+  ExistingCardDrop,
+} from "./types";
 
 interface Props {
   diagramId: string;
   initialData: ArchiMateDiagramData;
   onSave?: (data: ArchiMateDiagramData) => void;
+  onNodeCardIdsChange?: (ids: Set<string>) => void;
 }
 
-export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
+export function ArchimateCanvas({ diagramId, initialData, onSave, onNodeCardIdsChange }: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<ArchiMateDiagramNode>(
     initialData.nodes,
   );
@@ -36,11 +49,39 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
   );
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
+  const { t } = useTranslation("archimate");
+  const { screenToFlowPosition } = useReactFlow();
+  const { types, getType } = useMetamodel();
+  const rml = useResolveMetaLabel();
+  const [duplicateToast, setDuplicateToast] = useState(false);
+  const [mismatchToast, setMismatchToast] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nodeTypes = useMemo<Record<string, ComponentType<any>>>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const extra: Record<string, ComponentType<any>> = {};
+    for (const t of types) {
+      if (!t.is_hidden && !ARCH_NODE_TYPES[t.key]) {
+        extra[t.key] = ARCH_NODE_TYPES["generic"] ?? Object.values(ARCH_NODE_TYPES)[0];
+      }
+    }
+    return { ...ARCH_NODE_TYPES, ...extra };
+  }, [types]);
 
   useEffect(() => {
     setNodes(initialData.nodes);
     setEdges(initialData.edges);
   }, [initialData, setNodes, setEdges]);
+
+  // Emit nodeCardIds to parent sidebar.
+  useEffect(() => {
+    const ids = new Set<string>();
+    for (const n of nodes) {
+      if (n.data.cardId) ids.add(n.data.cardId as string);
+      ids.add(n.id);
+    }
+    onNodeCardIdsChange?.(ids);
+  }, [nodes, onNodeCardIdsChange]);
 
   const scheduleSave = useCallback(
     (nextNodes: ArchiMateDiagramNode[], nextEdges: ArchiMateDiagramEdge[]) => {
@@ -105,39 +146,90 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
   const onDrop = useCallback(
     async (event: React.DragEvent) => {
       event.preventDefault();
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      // ── Drop from Elements tree (existing card) ──────────────────────────────
+      const existingJson = event.dataTransfer.getData("archimate/existing-card");
+      if (existingJson) {
+        const { cardId, typeKey, name } = JSON.parse(existingJson) as ExistingCardDrop;
+
+        if (nodes.some((n) => n.data.cardId === cardId || n.id === cardId)) {
+          setDuplicateToast(true);
+          return;
+        }
+
+        const isArchDrop = typeKey.startsWith("arch_");
+        const canvasHasArch = nodes.some((n) =>
+          String(n.data.elementTypeKey ?? "").startsWith("arch_"),
+        );
+        const canvasHasStd = nodes.some(
+          (n) => !String(n.data.elementTypeKey ?? "").startsWith("arch_"),
+        );
+        if ((isArchDrop && canvasHasStd) || (!isArchDrop && canvasHasArch)) {
+          setMismatchToast(true);
+          return;
+        }
+
+        const archMeta = ARCHIMATE_ELEMENT_META[typeKey];
+        const ct = getType(typeKey);
+        const newNode: ArchiMateDiagramNode = {
+          id: cardId,
+          type: nodeTypes[typeKey] ? typeKey : "arch_ApplicationComponent",
+          position,
+          data: {
+            label: name,
+            elementTypeKey: typeKey,
+            cardId,
+            layer: archMeta?.layer ?? ct?.category ?? "Other",
+            aspect: archMeta?.aspect ?? "Other",
+            color: archMeta?.defaultColor ?? ct?.color ?? "#e0e0e0",
+            icon: ct?.icon,
+            width: archMeta?.defaultWidth ?? 160,
+            height: archMeta?.defaultHeight ?? 60,
+          },
+        };
+        setNodes((nds) => {
+          const next = [...nds, newNode];
+          scheduleSave(next, edges);
+          return next;
+        });
+        return;
+      }
+
+      // ── Drop from Palette (create new card) ─────────────────────────────────
       const typeKey = event.dataTransfer.getData("archimate/element-type");
       if (!typeKey) return;
 
-      const meta = ARCHIMATE_ELEMENT_META[typeKey];
-      if (!meta) return;
-
-      const wrapperRect = reactFlowWrapper.current?.getBoundingClientRect();
-      const x = wrapperRect ? event.clientX - wrapperRect.left : event.clientX;
-      const y = wrapperRect ? event.clientY - wrapperRect.top : event.clientY;
+      const archMeta = ARCHIMATE_ELEMENT_META[typeKey];
+      const ct = getType(typeKey);
+      const label =
+        rml(typeKey, ct?.translations, "label") ||
+        typeKey.replace("arch_", "").replace(/([A-Z])/g, " $1").trim();
 
       const tempId = `temp-${Date.now()}`;
       const newNode: ArchiMateDiagramNode = {
         id: tempId,
-        type: typeKey,
-        position: { x, y },
+        type: nodeTypes[typeKey] ? typeKey : "arch_ApplicationComponent",
+        position,
         data: {
-          label: typeKey.replace("arch_", "").replace(/([A-Z])/g, " $1").trim(),
+          label,
           elementTypeKey: typeKey,
-          layer: meta.layer,
-          aspect: meta.aspect,
-          color: meta.defaultColor,
-          width: meta.defaultWidth,
-          height: meta.defaultHeight,
+          layer: archMeta?.layer ?? ct?.category ?? "Other",
+          aspect: archMeta?.aspect ?? "Other",
+          color: archMeta?.defaultColor ?? ct?.color ?? "#e0e0e0",
+          icon: ct?.icon,
+          width: archMeta?.defaultWidth ?? 160,
+          height: archMeta?.defaultHeight ?? 60,
         },
       };
 
       setNodes((nds) => [...nds, newNode]);
 
       try {
-        const card = await api.post("/cards", {
+        const card = (await api.post("/cards", {
           type_key: typeKey,
-          name: newNode.data.label,
-        }) as { id: string; name: string };
+          name: label,
+        })) as { id: string; name: string };
 
         setNodes((nds) =>
           nds.map((n) =>
@@ -150,7 +242,7 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
         // keep optimistic node even if API call fails
       }
     },
-    [setNodes],
+    [nodes, edges, setNodes, scheduleSave, screenToFlowPosition, nodeTypes, getType, rml],
   );
 
   const handleAutoLayout = useCallback(async () => {
@@ -184,11 +276,11 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
         <Button
           size="small"
           variant="outlined"
-          aria-label="Auto Layout"
+          aria-label={t("autoLayout")}
           onClick={handleAutoLayout}
           sx={{ fontSize: "11px" }}
         >
-          Auto Layout
+          {t("autoLayout")}
         </Button>
       </Box>
       <ReactFlow
@@ -200,7 +292,7 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
         onDrop={onDrop}
         onDragOver={onDragOver}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        nodeTypes={NODE_TYPES as any}
+        nodeTypes={nodeTypes as any}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         edgeTypes={EDGE_TYPES as any}
         onInit={() => setInitialized(true)}
@@ -214,6 +306,27 @@ export function ArchimateCanvas({ diagramId, initialData, onSave }: Props) {
           </>
         )}
       </ReactFlow>
+
+      <Snackbar
+        open={duplicateToast}
+        autoHideDuration={3000}
+        onClose={() => setDuplicateToast(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="warning" onClose={() => setDuplicateToast(false)} sx={{ fontSize: "12px" }}>
+          {t("sidebar.duplicateCard")}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={mismatchToast}
+        autoHideDuration={4000}
+        onClose={() => setMismatchToast(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="error" onClose={() => setMismatchToast(false)} sx={{ fontSize: "12px" }}>
+          {t("sidebar.mixedMetamodel")}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
