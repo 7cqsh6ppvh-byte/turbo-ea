@@ -16,10 +16,12 @@ Credits: element/relation definitions derived from bigArchiMate by borkdominik
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.card import Card
 from app.models.card_type import CardType
+from app.models.relation import Relation
 from app.models.relation_type import RelationType
 
 PLUGIN_ID = "archimate"
@@ -1344,52 +1346,100 @@ _RELATION_TYPES: list[dict] = [
 
 
 async def seed_archimate_metamodel(db: AsyncSession) -> dict:
-    """Seed all ArchiMate 3.2 card types and relation types. Idempotent."""
-    # Check ALL existing keys (not just archimate ones) to avoid unique-constraint
-    # violations when standard metamodel types share a key with ArchiMate types
-    # (e.g. BusinessProcess, DataObject) after the arch_ prefix was removed.
-    existing_ct_result = await db.execute(select(CardType.key))
+    """Seed all ArchiMate 3.2 card types and relation types.
+
+    Before inserting, any non-ArchiMate card types whose key collides with an
+    ArchiMate key are removed together with every card and relation that
+    references them.  This ensures the seed can always insert cleanly.
+    Idempotent: if ArchiMate rows already exist they are left untouched.
+    """
+    arch_ct_keys = {t["key"] for t in _ELEMENT_TYPES}
+    arch_rt_keys = {r["key"] for r in _RELATION_TYPES}
+
+    # ── 1. Remove conflicting non-ArchiMate card types ─────────────────────
+    conflict_ct_result = await db.execute(
+        select(CardType).where(
+            CardType.key.in_(arch_ct_keys),
+            CardType.plugin_id != PLUGIN_ID,
+        )
+    )
+    for ct in conflict_ct_result.scalars().all():
+        card_ids_result = await db.execute(select(Card.id).where(Card.type == ct.key))
+        card_ids = [row[0] for row in card_ids_result.all()]
+        if card_ids:
+            await db.execute(
+                delete(Relation).where(
+                    or_(
+                        Relation.source_id.in_(card_ids),
+                        Relation.target_id.in_(card_ids),
+                    )
+                )
+            )
+            await db.execute(delete(Card).where(Card.id.in_(card_ids)))
+        await db.delete(ct)
+
+    # ── 2. Remove conflicting non-ArchiMate relation types ─────────────────
+    conflict_rt_result = await db.execute(
+        select(RelationType).where(
+            RelationType.key.in_(arch_rt_keys),
+            RelationType.plugin_id != PLUGIN_ID,
+        )
+    )
+    for rt in conflict_rt_result.scalars().all():
+        await db.delete(rt)
+
+    await db.flush()
+
+    # ── 3. Insert ArchiMate card types (skip already-seeded ones) ───────────
+    existing_ct_result = await db.execute(
+        select(CardType.key).where(CardType.plugin_id == PLUGIN_ID)
+    )
     existing_ct_keys = {row[0] for row in existing_ct_result.all()}
 
     for t in _ELEMENT_TYPES:
         if t["key"] in existing_ct_keys:
             continue
-        ct = CardType(
-            key=t["key"],
-            label=t["label"],
-            category=t["category"],
-            icon=t.get("icon", "category"),
-            color=t.get("color", "#1976d2"),
-            plugin_id=PLUGIN_ID,
-            built_in=False,
-            is_hidden=False,
-            has_hierarchy=False,
-            sort_order=0,
-            fields_schema=[],
-            subtypes=[],
-            translations={"label": t["translations"]["label"]},
+        db.add(
+            CardType(
+                key=t["key"],
+                label=t["label"],
+                category=t["category"],
+                icon=t.get("icon", "category"),
+                color=t.get("color", "#1976d2"),
+                plugin_id=PLUGIN_ID,
+                built_in=False,
+                is_hidden=False,
+                has_hierarchy=False,
+                sort_order=0,
+                fields_schema=[],
+                subtypes=[],
+                translations={"label": t["translations"]["label"]},
+            )
         )
-        db.add(ct)
 
-    existing_rt_result = await db.execute(select(RelationType.key))
+    # ── 4. Insert ArchiMate relation types (skip already-seeded ones) ───────
+    existing_rt_result = await db.execute(
+        select(RelationType.key).where(RelationType.plugin_id == PLUGIN_ID)
+    )
     existing_rt_keys = {row[0] for row in existing_rt_result.all()}
 
     for r in _RELATION_TYPES:
         if r["key"] in existing_rt_keys:
             continue
-        rt = RelationType(
-            key=r["key"],
-            label=r["label"],
-            reverse_label=r.get("reverse_label"),
-            source_type_key=r["source_type_key"],
-            target_type_key=r["target_type_key"],
-            plugin_id=PLUGIN_ID,
-            built_in=False,
-            is_hidden=False,
-            cardinality="n:m",
-            translations={"label": r["translations"]["label"]},
+        db.add(
+            RelationType(
+                key=r["key"],
+                label=r["label"],
+                reverse_label=r.get("reverse_label"),
+                source_type_key=r["source_type_key"],
+                target_type_key=r["target_type_key"],
+                plugin_id=PLUGIN_ID,
+                built_in=False,
+                is_hidden=False,
+                cardinality="n:m",
+                translations={"label": r["translations"]["label"]},
+            )
         )
-        db.add(rt)
 
     await db.flush()
     return {"card_types": len(_ELEMENT_TYPES), "relation_types": len(_RELATION_TYPES)}
