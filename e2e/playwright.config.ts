@@ -5,7 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  timeout: 60000, // Increase global timeout from 30s to 60s for slow environments
+  timeout: 60000, // 60s per test for slow environments
+  globalSetup: "./helpers/global-setup.ts", // Login once; cache token to .auth/token.json
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:8920",
@@ -14,19 +15,11 @@ export default defineConfig({
     screenshot: "only-on-failure",
     navigationTimeout: 30000,
   },
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:8920",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120000,
-      },
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  workers: process.env.CI ? 1 : 2, // Reduce parallelism to 2 (from 5) to prevent auth rate limiting
+  workers: process.env.CI ? 1 : 2, // 2 workers to prevent auth rate limiting
 });

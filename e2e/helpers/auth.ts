@@ -1,31 +1,41 @@
 import { type BrowserContext, type APIRequestContext } from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
 
 export const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "admin@turboea.demo";
 export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "TurboEA!2025";
 
+const TOKEN_FILE = path.join(__dirname, "../.auth/token.json");
+
+function getCachedToken(): string {
+  try {
+    const data = JSON.parse(fs.readFileSync(TOKEN_FILE, "utf-8"));
+    return data.access_token;
+  } catch {
+    throw new Error(
+      "No cached auth token found. Did globalSetup run? Token file: " + TOKEN_FILE,
+    );
+  }
+}
+
+/**
+ * Inject the pre-cached admin JWT into the browser context's sessionStorage.
+ * Does NOT call the login API — token is fetched once in globalSetup.
+ */
 export async function loginAsAdmin(
   context: BrowserContext,
-  baseURL: string,
+  _baseURL: string,
 ): Promise<string> {
-  const response = await context.request.post(`${baseURL}/api/v1/auth/login`, {
-    data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-  });
+  const token = getCachedToken();
 
-  if (!response.ok()) {
-    throw new Error(`Login failed: ${response.status()} ${await response.text()}`);
-  }
-
-  const { access_token } = await response.json();
-
-  // Inject token into sessionStorage for all pages opened in this context
   await context.addInitScript(
-    ({ token }) => {
-      sessionStorage.setItem("token", token);
+    ({ t }) => {
+      sessionStorage.setItem("token", t);
     },
-    { token: access_token },
+    { t: token },
   );
 
-  return access_token;
+  return token;
 }
 
 export async function enableArchiMate(
