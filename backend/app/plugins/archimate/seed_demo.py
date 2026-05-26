@@ -390,7 +390,7 @@ async def seed_archimate_demo(db: AsyncSession) -> dict:
 
         card = Card(
             id=card_id,
-            type_key=card_def["type_key"],
+            type=card_def["type_key"],
             name=card_def["name"],
             description=card_def.get("desc", ""),
             attributes={"archimateColor": card_def.get("color", "#e0e0e0")},
@@ -415,7 +415,7 @@ async def seed_archimate_demo(db: AsyncSession) -> dict:
 
         rel = Relation(
             id=rel_id,
-            type_key=rel_def["rel_type"],
+            type=rel_def["rel_type"],
             source_id=source_id,
             target_id=target_id,
             attributes={},
