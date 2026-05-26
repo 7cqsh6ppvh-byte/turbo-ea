@@ -16,13 +16,19 @@
         "description": "VisualFirst 画布是基于 ReactFlow 的图表编辑器，支持任何元模型，包括 ArchiMate。",
         "dangerZone": "危险区域",
         "hideAll": "禁用并隐藏所有 ArchiMate 类型",
-        "migrateUnique": {
+"migrateUnique": {
             "title": "迁移到 ArchiMate-Only",
-            "description": "删除所有标准 Turbo EA 卡片类型、卡片和关系，仅保留 ArchiMate 元素。然后加载 ArchiMate 演示数据集。",
+            "description": "删除所有标准 Turbo EA 卡片类型、卡片和关系，只保留 ArchiMate 元素。然后加载 ArchiMate 演示数据集。",
+            "descriptionNoDemo": "删除所有标准 Turbo EA 卡片类型、卡片和关系，只保留 ArchiMate 元素。",
             "button": "运行迁移",
             "confirm": "这将永久删除所有非 ArchiMate 数据，包括卡片类型、卡片和关系，然后加载 ArchiMate 演示数据集。此操作无法撤销。确定吗？",
+            "confirmNoDemo": "这将永久删除所有非 ArchiMate 数据，包括卡片类型、卡片和关系。此操作无法撤销。确定吗？",
             "success": "迁移完成：删除了 {{cards}} 张卡片、{{relations}} 个关系、{{types}} 种卡片类型、{{rt}} 种关系类型。演示数据已加载：创建了 {{demoCards}} 张卡片、{{demoRels}} 个关系。",
-            "disabled": "标准类型已隐藏。重新启用 ArchiMate 并刷新页面。"
+            "successWithDemo": "迁移完成：删除了 {{cards}} 张卡片、{{relations}} 个关系、{{types}} 种卡片类型、{{rt}} 种关系类型。演示数据已加载：创建了 {{demoCards}} 张卡片、{{demoRels}} 个关系。",
+            "successNoDemo": "迁移完成：删除了 {{cards}} 张卡片、{{relations}} 个关系、{{types}} 种卡片类型、{{rt}} 种关系类型。",
+            "disabled": "标准类型已隐藏。重新启用 ArchiMate 并刷新页面。",
+            "seedDemoSection": "演示卡片",
+            "seedDemoToggle": "在迁移期间加载 ArchiMate 演示卡片"
         }
     },
     "autoLayout": "自动布局",

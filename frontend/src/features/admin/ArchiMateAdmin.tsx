@@ -45,6 +45,7 @@ interface MigrationResult {
 export default function ArchiMateAdmin() {
   const { t } = useTranslation("visualfirst");
   const [enabled, setEnabled] = useState(false);
+  const [seedDemoEnabled, setSeedDemoEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [migrating, setMigrating] = useState(false);
@@ -78,17 +79,30 @@ export default function ArchiMateAdmin() {
     setConfirmOpen(false);
     setMigrating(true);
     try {
-      const result = await api.post<MigrationResult>("/settings/archimate-migrate-unique");
-      setSnack(
-        t("admin.migrateUnique.success", {
-          cards: result.cards_deleted,
-          relations: result.relations_deleted,
-          types: result.card_types_deleted,
-          rt: result.relation_types_deleted,
-          demoCards: result.demo_cards_created,
-          demoRels: result.demo_relations_created,
-        })
-      );
+      const result = await api.post<MigrationResult>("/settings/archimate-migrate-unique", {
+        seed_demo: seedDemoEnabled,
+      });
+      if (seedDemoEnabled) {
+        setSnack(
+          t("admin.migrateUnique.successWithDemo", {
+            cards: result.cards_deleted,
+            relations: result.relations_deleted,
+            types: result.card_types_deleted,
+            rt: result.relation_types_deleted,
+            demoCards: result.demo_cards_created,
+            demoRels: result.demo_relations_created,
+          })
+        );
+      } else {
+        setSnack(
+          t("admin.migrateUnique.successNoDemo", {
+            cards: result.cards_deleted,
+            relations: result.relations_deleted,
+            types: result.card_types_deleted,
+            rt: result.relation_types_deleted,
+          })
+        );
+      }
     } catch (err) {
       const detail = fmtApiError(err);
       setSnack(`Migration failed: ${detail}`);
@@ -145,6 +159,22 @@ export default function ArchiMateAdmin() {
         <>
           <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>
+              {t("admin.migrateUnique.seedDemoSection")}
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={seedDemoEnabled}
+                  onChange={(e) => setSeedDemoEnabled(e.target.checked)}
+                  disabled={saving || migrating}
+                />
+              }
+              label={t("admin.migrateUnique.seedDemoToggle")}
+            />
+          </Paper>
+
+          <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>
               {t("export.title")} / {t("import.title")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -159,7 +189,9 @@ export default function ArchiMateAdmin() {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("admin.migrateUnique.description")}
+              {seedDemoEnabled
+                ? t("admin.migrateUnique.description")
+                : t("admin.migrateUnique.descriptionNoDemo")}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Button
@@ -213,7 +245,9 @@ export default function ArchiMateAdmin() {
         <DialogTitle>{t("admin.migrateUnique.title")}</DialogTitle>
         <DialogContent>
           <Alert severity="error" sx={{ mb: 2 }}>
-            {t("admin.migrateUnique.confirm")}
+            {seedDemoEnabled
+              ? t("admin.migrateUnique.confirm")
+              : t("admin.migrateUnique.confirmNoDemo")}
           </Alert>
         </DialogContent>
         <DialogActions>

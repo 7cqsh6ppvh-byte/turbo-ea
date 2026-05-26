@@ -19,10 +19,16 @@
         "migrateUnique": {
             "title": "Migra a ArchiMate-Only",
             "description": "Rimuove tutti i tipi di scheda, schede e relazioni Turbo EA standard, mantenendo solo gli elementi ArchiMate. Quindi carica il set di dati demo ArchiMate.",
+            "descriptionNoDemo": "Rimuove tutti i tipi di scheda, schede e relazioni Turbo EA standard, mantenendo solo gli elementi ArchiMate.",
             "button": "Esegui migrazione",
             "confirm": "Questo eliminerà definitivamente tutti i dati non-ArchiMate, inclusi tipi di scheda, schede e relazioni, e poi caricherà i dati demo ArchiMate. Questa azione non può essere annullata. Sei sicuro?",
+            "confirmNoDemo": "Questo eliminerà definitivamente tutti i dati non-ArchiMate, inclusi tipi di scheda, schede e relazioni. Questa azione non può essere annullata. Sei sicuro?",
             "success": "Migrazione completata: {{cards}} schede, {{relations}} relazioni, {{types}} tipi di scheda, {{rt}} tipi di relazione rimossi. Demo caricata: {{demoCards}} schede, {{demoRels}} relazioni create.",
-            "disabled": "I tipi standard sono nascosti. Riabilita ArchiMate e aggiorna la pagina."
+            "successWithDemo": "Migrazione completata: {{cards}} schede, {{relations}} relazioni, {{types}} tipi di scheda, {{rt}} tipi di relazione rimossi. Demo caricata: {{demoCards}} schede, {{demoRels}} relazioni create.",
+            "successNoDemo": "Migrazione completata: {{cards}} schede, {{relations}} relazioni, {{types}} tipi di scheda, {{rt}} tipi di relazione rimossi.",
+            "disabled": "I tipi standard sono nascosti. Riabilita ArchiMate e aggiorna la pagina.",
+            "seedDemoSection": "Seed Demo Cards",
+            "seedDemoToggle": "Seed ArchiMate Demo Cards during migration"
         }
     },
     "autoLayout": "Layout automatico",

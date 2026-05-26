@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
@@ -653,18 +653,23 @@ async def update_visualfirst_enabled(
     return {"ok": True}
 
 
+class ArchimateMigratePayload(BaseModel):
+    seed_demo: bool = False
+
+
 @router.post("/archimate-migrate-unique")
 @limiter.limit("10/minute")
 async def migrate_archimate_unique(
     request: Request,
+    body: ArchimateMigratePayload = Body(default_factory=ArchimateMigratePayload),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Admin endpoint — migrate instance to ArchiMate-only and seed demo data.
+    """Admin endpoint — migrate instance to ArchiMate-only.
 
     First runs migrate_archimate_unique (strips all non-ArchiMate card types,
-    relation types, cards, and relations), then seeds the ArchiMate demo
-    dataset (NexaTech Industries mapped to ArchiMate 3.2).
+    relation types, cards, and relations), then optionally seeds the ArchiMate demo
+    dataset (NexaTech Industries mapped to ArchiMate 3.2) if seed_demo is true.
 
     Requires archimate.manage permission.
     """
@@ -674,11 +679,12 @@ async def migrate_archimate_unique(
 
     counts = await _run_migration(db)
 
-    from app.plugins.archimate.seed_demo import seed_archimate_demo
+    if body.seed_demo:
+        from app.plugins.archimate.seed_demo import seed_archimate_demo
 
-    demo_result = await seed_archimate_demo(db)
-    counts["demo_cards_created"] = demo_result["cards_created"]
-    counts["demo_relations_created"] = demo_result["relations_created"]
+        demo_result = await seed_archimate_demo(db)
+        counts["demo_cards_created"] = demo_result["cards_created"]
+        counts["demo_relations_created"] = demo_result["relations_created"]
 
     return counts
 

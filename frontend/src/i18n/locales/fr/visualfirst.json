@@ -75,13 +75,19 @@
         "disabled": "ArchiMate est désactivé",
         "dangerZone": "Zone dangereuse",
         "hideAll": "Désactiver et masquer tous les types ArchiMate",
-        "migrateUnique": {
+"migrateUnique": {
             "title": "Migrer vers ArchiMate-Only",
-            "description": "Supprime tous les types de cartes, cartes et relations Turbo EA standard, ne gardant que les éléments ArchiMate. Puis charge les données de démonstration ArchiMate.",
+            "description": "Supprime tous les types de cartes, cartes et relations Turbo EA standard, ne gardant que les éléments ArchiMate. Puis charge le jeu de données de démonstration ArchiMate.",
+            "descriptionNoDemo": "Supprime tous les types de cartes, cartes et relations Turbo EA standard, ne gardant que les éléments ArchiMate.",
             "button": "Exécuter la migration",
-            "confirm": "Cela supprimera définitivement toutes les données non-ArchiMate, y compris les types de cartes, les cartes et les relations, puis chargera les données de démonstration ArchiMate. Cette action est irréversible. Êtes-vous sûr ?",
+            "confirm": "Cela supprimera définitivement tous les données non-ArchiMate, y compris les types de cartes, les cartes et les relations, puis chargera le jeu de données de démonstration ArchiMate. Cette action est irréversible. Êtes-vous sûr ?",
+            "confirmNoDemo": "Cela supprimera définitivement tous les données non-ArchiMate, y compris les types de cartes, les cartes et les relations. Cette action est irréversible. Êtes-vous sûr ?",
             "success": "Migration terminée : {{cards}} cartes, {{relations}} relations, {{types}} types de cartes, {{rt}} types de relations supprimés. Démo chargée : {{demoCards}} cartes, {{demoRels}} relations créées.",
-            "disabled": "Les types standard sont masqués. Réactivez ArchiMate et actualisez la page."
+            "successWithDemo": "Migration terminée : {{cards}} cartes, {{relations}} relations, {{types}} types de cartes, {{rt}} types de relations supprimés. Démo chargée : {{demoCards}} cartes, {{demoRels}} relations créées.",
+            "successNoDemo": "Migration terminée : {{cards}} cartes, {{relations}} relations, {{types}} types de cartes, {{rt}} types de relations supprimés.",
+            "disabled": "Les types standard sont masqués. Réactivez ArchiMate et actualisez la page.",
+            "seedDemoSection": "Seed Demo Cards",
+            "seedDemoToggle": "Seed ArchiMate Demo Cards during migration"
         }
     },
     "relationSelector": {

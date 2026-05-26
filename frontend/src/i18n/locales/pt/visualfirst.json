@@ -19,10 +19,16 @@
         "migrateUnique": {
             "title": "Migrar para ArchiMate-Only",
             "description": "Remove todos os tipos de cartão, cartões e relações padrão do Turbo EA, mantendo apenas elementos ArchiMate. Em seguida, carrega o conjunto de dados de demonstração do ArchiMate.",
+            "descriptionNoDemo": "Remove todos os tipos de cartão, cartões e relações padrão do Turbo EA, mantendo apenas elementos ArchiMate.",
             "button": "Executar migração",
             "confirm": "Isso excluirá permanentemente todos os dados não-ArchiMate, incluindo tipos de cartão, cartões e relações, e então carregará os dados de demonstração do ArchiMate. Esta ação não pode ser desfeita. Tem certeza?",
+            "confirmNoDemo": "Isso excluirá permanentemente todos os dados não-ArchiMate, incluindo tipos de cartão, cartões e relações. Esta ação não pode ser desfeita. Tem certeza?",
             "success": "Migração concluída: {{cards}} cartões, {{relations}} relações, {{types}} tipos de cartão, {{rt}} tipos de relação removidos. Demo carregada: {{demoCards}} cartões, {{demoRels}} relações criadas.",
-            "disabled": "Os tipos padrão estão ocultos. Reative o ArchiMate e atualize a página."
+            "successWithDemo": "Migração concluída: {{cards}} cartões, {{relations}} relações, {{types}} tipos de cartão, {{rt}} tipos de relação removidos. Demo carregada: {{demoCards}} cartões, {{demoRels}} relações criadas.",
+            "successNoDemo": "Migração concluída: {{cards}} cartões, {{relations}} relações, {{types}} tipos de cartão, {{rt}} tipos de relação removidos.",
+            "disabled": "Os tipos padrão estão ocultos. Reative o ArchiMate e atualize a página.",
+            "seedDemoSection": "Seed Demo Cards",
+            "seedDemoToggle": "Seed ArchiMate Demo Cards during migration"
         }
     },
     "autoLayout": "Layout automático",

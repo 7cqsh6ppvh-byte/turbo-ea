@@ -78,10 +78,16 @@
         "migrateUnique": {
             "title": "Migrate to ArchiMate-Only",
             "description": "Remove all standard Turbo EA card types, cards, and relations, keeping only ArchiMate elements. Then seeds the ArchiMate demo dataset.",
+            "descriptionNoDemo": "Remove all standard Turbo EA card types, cards, and relations, keeping only ArchiMate elements.",
             "button": "Run Migration",
             "confirm": "This will permanently delete all non-ArchiMate data including card types, cards, and relations, then seed the ArchiMate demo dataset. This action cannot be undone. Are you sure?",
+            "confirmNoDemo": "This will permanently delete all non-ArchiMate data including card types, cards, and relations. This action cannot be undone. Are you sure?",
             "success": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed. Demo seeded: {{demoCards}} cards, {{demoRels}} relations created.",
-            "disabled": "Standard types are hidden. Re-enable ArchiMate and refresh to make the migration available."
+            "successWithDemo": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed. Demo seeded: {{demoCards}} cards, {{demoRels}} relations created.",
+            "successNoDemo": "Migration complete: {{cards}} cards, {{relations}} relations, {{types}} card types, {{rt}} relation types removed.",
+            "disabled": "Standard types are hidden. Re-enable ArchiMate and refresh to make the migration available.",
+            "seedDemoSection": "Seed Demo Cards",
+            "seedDemoToggle": "Seed ArchiMate Demo Cards during migration"
         }
     },
     "relationSelector": {

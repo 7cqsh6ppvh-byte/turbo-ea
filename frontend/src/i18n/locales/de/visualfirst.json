@@ -78,10 +78,16 @@
         "migrateUnique": {
             "title": "Zu ArchiMate-Only migrieren",
             "description": "Entfernt alle standard Turbo-EA-Kartentypen, -Karten und -Beziehungen und behält nur ArchiMate-Elemente. Anschließend werden die ArchiMate-Demodaten eingespielt.",
+            "descriptionNoDemo": "Entfernt alle standard Turbo-EA-Kartentypen, -Karten und -Beziehungen und behält nur ArchiMate-Elemente.",
             "button": "Migration ausführen",
             "confirm": "Dies löscht dauerhaft alle nicht-ArchiMate-Daten einschließlich Kartentypen, Karten und Beziehungen und spielt dann die ArchiMate-Demodaten ein. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?",
+            "confirmNoDemo": "Dies löscht dauerhaft alle nicht-ArchiMate-Daten einschließlich Kartentypen, Karten und Beziehungen. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie sicher?",
             "success": "Migration abgeschlossen: {{cards}} Karten, {{relations}} Beziehungen, {{types}} Kartentypen, {{rt}} Beziehungstypen entfernt. Demo eingespielt: {{demoCards}} Karten, {{demoRels}} Beziehungen erstellt.",
-            "disabled": "Standard-Typen sind ausgeblendet. Aktivieren Sie ArchiMate erneut und aktualisieren Sie die Seite."
+            "successWithDemo": "Migration abgeschlossen: {{cards}} Karten, {{relations}} Beziehungen, {{types}} Kartentypen, {{rt}} Beziehungstypen entfernt. Demo eingespielt: {{demoCards}} Karten, {{demoRels}} Beziehungen erstellt.",
+            "successNoDemo": "Migration abgeschlossen: {{cards}} Karten, {{relations}} Beziehungen, {{types}} Kartentypen, {{rt}} Beziehungstypen entfernt.",
+            "disabled": "Standard-Typen sind ausgeblendet. Aktivieren Sie ArchiMate erneut und aktualisieren Sie die Seite.",
+            "seedDemoSection": "Demo-Karten seeden",
+            "seedDemoToggle": "ArchiMate-Demo-Karten während Migration seeden"
         }
     },
     "relationSelector": {

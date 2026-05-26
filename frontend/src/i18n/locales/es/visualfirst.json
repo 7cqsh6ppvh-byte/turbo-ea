@@ -16,13 +16,19 @@
         "description": "VisualFirst Canvas es el editor de diagramas basado en ReactFlow. Funciona con cualquier metamodelo, incluido ArchiMate.",
         "dangerZone": "Zona de peligro",
         "hideAll": "Desactivar y ocultar todos los tipos ArchiMate",
-        "migrateUnique": {
+"migrateUnique": {
             "title": "Migrar a ArchiMate-Only",
             "description": "Elimina todos los tipos de tarjetas, tarjetas y relaciones estándar de Turbo EA, manteniendo solo elementos ArchiMate. Luego carga el conjunto de datos de demostración de ArchiMate.",
+            "descriptionNoDemo": "Elimina todos los tipos de tarjetas, tarjetas y relaciones estándar de Turbo EA, manteniendo solo elementos ArchiMate.",
             "button": "Ejecutar migración",
-            "confirm": "Esto eliminará permanentemente todos los datos no-ArchiMate, incluidos tipos de tarjetas, tarjetas y relaciones, y luego cargará los datos de demostración de ArchiMate. Esta acción no se puede deshacer. ¿Está seguro?",
-            "success": "Migración completada: {{cards}} tarjetas, {{relations}} relaciones, {{types}} tipos de tarjetas, {{rt}} tipos de relación eliminados. Demo cargada: {{demoCards}} tarjetas, {{demoRels}} relaciones creadas.",
-            "disabled": "Los tipos estándar están ocultos. Reactive ArchiMate y actualice la página."
+            "confirm": "Esto eliminará permanentemente todos los datos no-ArchiMate, incluidos tipos de tarjetas, tarjetas y relaciones, y entonces cargará el conjunto de datos de demostración de ArchiMate. Esta acción no se puede deshacer. ¿Está seguro?",
+            "confirmNoDemo": "Esto eliminará permanentemente todos los datos no-ArchiMate, incluidos tipos de tarjetas, tarjetas y relaciones. Esta acción no se puede deshacer. ¿Está seguro?",
+            "success": "Migración completada: {{cards}} tarjetas, {{relations}} relaciones, {{types}} tipos de tarjeta, {{rt}} tipos de relación eliminados. Demo cargada: {{demoCards}} tarjetas, {{demoRels}} relaciones creadas.",
+            "successWithDemo": "Migración completada: {{cards}} tarjetas, {{relations}} relaciones, {{types}} tipos de tarjeta, {{rt}} tipos de relación eliminados. Demo cargada: {{demoCards}} tarjetas, {{demoRels}} relaciones creadas.",
+            "successNoDemo": "Migración completada: {{cards}} tarjetas, {{relations}} relaciones, {{types}} tipos de tarjeta, {{rt}} tipos de relación eliminados.",
+            "disabled": "Los tipos estándar están ocultos. Reactive ArchiMate y actualice la página.",
+            "seedDemoSection": "Seed Demo Cards",
+            "seedDemoToggle": "Seed ArchiMate Demo Cards during migration"
         }
     },
     "autoLayout": "Diseño automático",
