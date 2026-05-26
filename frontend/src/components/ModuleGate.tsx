@@ -31,7 +31,7 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
   grc: "/admin/settings",
-  visualfirst: "/admin/settings?tab=visualfirst",
+  visualfirst: "/admin/settings",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {

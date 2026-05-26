@@ -29,6 +29,7 @@ import {
 } from "@/hooks/useDateFormat";
 import { invalidateAppTitle, DEFAULT_APP_TITLE } from "@/hooks/useAppTitle";
 import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
+import { invalidateVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 import { invalidateLoginBranding } from "@/hooks/useLoginBranding";
 import { useMetamodel } from "@/hooks/useMetamodel";
 import { useEnabledLocales } from "@/hooks/useEnabledLocales";
@@ -183,6 +184,10 @@ function GeneralTab() {
   const [grcEnabled, setGrcEnabled] = useState(true);
   const [savingGrc, setSavingGrc] = useState(false);
 
+  // VisualFirst toggle state
+  const [visualfirstEnabled, setVisualfirstEnabled] = useState(true);
+  const [savingVisualfirst, setSavingVisualfirst] = useState(false);
+
   // Fiscal year start
   const [fiscalYearStart, setFiscalYearStart] = useState(1);
   const [savingFiscal, setSavingFiscal] = useState(false);
@@ -208,64 +213,66 @@ function GeneralTab() {
   const [appBaseUrl, setAppBaseUrl] = useState("");
   const [configured, setConfigured] = useState(false);
 
-  useEffect(() => {
-    setEnabledLocales(cachedLocales);
-  }, [cachedLocales]);
+   useEffect(() => {
+     setEnabledLocales(cachedLocales);
+   }, [cachedLocales]);
 
-  useEffect(() => {
-    Promise.all([
-      api.get<EmailSettings>("/settings/email"),
-      api.get<LogoInfo>("/settings/logo/info"),
-      api.get<FaviconInfo>("/settings/favicon/info"),
-      api.get<{ currency: string }>("/settings/currency"),
-      api.get<{ enabled: boolean }>("/settings/bpm-enabled"),
-      api.get<{ locales: string[] }>("/settings/enabled-locales"),
-      api.get<{ enabled: boolean }>("/settings/ppm-enabled"),
-      api.get<{ month: number }>("/settings/fiscal-year-start"),
-      api.get<{ app_title: string }>("/settings/app-title"),
-      api.get<{ date_format: string }>("/settings/date-format"),
-      api.get<{ enabled: boolean }>("/settings/grc-enabled"),
-      api.get<{
-        login_tagline: string;
-        login_tagline_hidden: boolean;
-        login_help_text: string;
-        login_help_link: string;
-      }>("/settings/login-branding"),
-    ])
-      .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData, loginBrandingData]) => {
-        setSmtpHost(emailData.smtp_host);
-        setSmtpPort(emailData.smtp_port);
-        setSmtpUser(emailData.smtp_user);
-        setSmtpPassword(emailData.smtp_password);
-        setSmtpFrom(emailData.smtp_from);
-        setSmtpTls(emailData.smtp_tls);
-        setAppBaseUrl(emailData.app_base_url);
-        setConfigured(emailData.configured);
-        setHasCustomLogo(logoData.has_custom_logo);
-        setHasCustomFavicon(faviconData.has_custom_favicon);
-        setSelectedCurrency(currencyData.currency);
-        setBpmEnabled(bpmData.enabled);
-        setPpmEnabled(ppmData.enabled);
-        setGrcEnabled(grcData.enabled);
-        setFiscalYearStart(fiscalData.month);
-        setAppTitle(appTitleData.app_title || DEFAULT_APP_TITLE);
-        const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
-          ? (dateFormatData.date_format as DateFormatKey)
-          : DEFAULT_DATE_FORMAT;
-        setCurrentDateFormat(fmt);
-        setSelectedDateFormat(fmt);
-        const validLocales = (localesData.locales || []).filter((l: string): l is SupportedLocale =>
-          (SUPPORTED_LOCALES as readonly string[]).includes(l),
-        );
-        if (validLocales.length > 0) setEnabledLocales(validLocales);
-        setLoginTagline(loginBrandingData.login_tagline || "");
-        setLoginTaglineHidden(Boolean(loginBrandingData.login_tagline_hidden));
-        setLoginHelpText(loginBrandingData.login_help_text || "");
-        setLoginHelpLink(loginBrandingData.login_help_link || "");
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : t("common:errors.generic")))
-      .finally(() => setLoading(false));
-  }, []);
+   useEffect(() => {
+     Promise.all([
+       api.get<EmailSettings>("/settings/email"),
+       api.get<LogoInfo>("/settings/logo/info"),
+       api.get<FaviconInfo>("/settings/favicon/info"),
+       api.get<{ currency: string }>("/settings/currency"),
+       api.get<{ enabled: boolean }>("/settings/bpm-enabled"),
+       api.get<{ locales: string[] }>("/settings/enabled-locales"),
+       api.get<{ enabled: boolean }>("/settings/ppm-enabled"),
+       api.get<{ month: number }>("/settings/fiscal-year-start"),
+       api.get<{ app_title: string }>("/settings/app-title"),
+       api.get<{ date_format: string }>("/settings/date-format"),
+       api.get<{ enabled: boolean }>("/settings/grc-enabled"),
+       api.get<{ enabled: boolean }>("/settings/visualfirst-enabled"),
+       api.get<{
+         login_tagline: string;
+         login_tagline_hidden: boolean;
+         login_help_text: string;
+         login_help_link: string;
+       }>("/settings/login-branding"),
+     ])
+     .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData, visualfirstData, loginBrandingData]) => {
+       setSmtpHost(emailData.smtp_host);
+       setSmtpPort(emailData.smtp_port);
+       setSmtpUser(emailData.smtp_user);
+       setSmtpPassword(emailData.smtp_password);
+       setSmtpFrom(emailData.smtp_from);
+       setSmtpTls(emailData.smtp_tls);
+       setAppBaseUrl(emailData.app_base_url);
+       setConfigured(emailData.configured);
+       setHasCustomLogo(logoData.has_custom_logo);
+       setHasCustomFavicon(faviconData.has_custom_favicon);
+       setSelectedCurrency(currencyData.currency);
+       setBpmEnabled(bpmData.enabled);
+       setPpmEnabled(ppmData.enabled);
+       setGrcEnabled(grcData.enabled);
+       setVisualfirstEnabled(visualfirstData.enabled);
+       setFiscalYearStart(fiscalData.month);
+       setAppTitle(appTitleData.app_title || DEFAULT_APP_TITLE);
+       const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
+         ? (dateFormatData.date_format as DateFormatKey)
+         : DEFAULT_DATE_FORMAT;
+       setCurrentDateFormat(fmt);
+       setSelectedDateFormat(fmt);
+       const validLocales = (localesData.locales || []).filter((l: string): l is SupportedLocale =>
+         (SUPPORTED_LOCALES as readonly string[]).includes(l),
+       );
+       if (validLocales.length > 0) setEnabledLocales(validLocales);
+       setLoginTagline(loginBrandingData.login_tagline || "");
+       setLoginTaglineHidden(Boolean(loginBrandingData.login_tagline_hidden));
+       setLoginHelpText(loginBrandingData.login_help_text || "");
+       setLoginHelpLink(loginBrandingData.login_help_link || "");
+     })
+     .catch((e) => setError(e instanceof Error ? e.message : t("common:errors.generic")))
+     .finally(() => setLoading(false));
+   }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -411,20 +418,35 @@ function GeneralTab() {
     }
   };
 
-  const handleGrcToggle = async (enabled: boolean) => {
-    setSavingGrc(true);
-    setError("");
-    try {
-      await api.patch("/settings/grc-enabled", { enabled });
-      setGrcEnabled(enabled);
-      invalidateGrcEnabled(enabled);
-      setSnack(enabled ? t("settings.grc.enabledSuccess") : t("settings.grc.disabledSuccess"));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("common:errors.generic"));
-    } finally {
-      setSavingGrc(false);
-    }
-  };
+   const handleGrcToggle = async (enabled: boolean) => {
+     setSavingGrc(true);
+     setError("");
+     try {
+       await api.patch("/settings/grc-enabled", { enabled });
+       setGrcEnabled(enabled);
+       invalidateGrcEnabled(enabled);
+       setSnack(enabled ? t("settings.grc.enabledSuccess") : t("settings.grc.disabledSuccess"));
+     } catch (e) {
+       setError(e instanceof Error ? e.message : t("common:errors.generic"));
+     } finally {
+       setSavingGrc(false);
+     }
+   };
+
+   const handleVisualfirstToggle = async (enabled: boolean) => {
+     setSavingVisualfirst(true);
+     setError("");
+     try {
+       await api.patch("/settings/visualfirst-enabled", { enabled });
+       setVisualfirstEnabled(enabled);
+       invalidateVisualFirstEnabled(enabled);
+       setSnack(enabled ? t("settings.visualfirst.enabledSuccess") : t("settings.visualfirst.disabledSuccess"));
+     } catch (e) {
+       setError(e instanceof Error ? e.message : t("common:errors.generic"));
+     } finally {
+       setSavingVisualfirst(false);
+     }
+   };
 
   const handleFiscalYearSave = async (month: number) => {
     setSavingFiscal(true);
@@ -1086,6 +1108,35 @@ function GeneralTab() {
             />
           }
           label={grcEnabled ? t("settings.grc.visible") : t("settings.grc.hidden")}
+        />
+      </Paper>
+
+      {/* VisualFirst Module Toggle */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
+          <MaterialSymbol icon="layers" size={22} color="#555" />
+          <Typography variant="h6" fontWeight={600}>
+            {t("settings.visualfirst.title")}
+          </Typography>
+          <Chip
+            label={visualfirstEnabled ? t("settings.visualfirst.enabled") : t("settings.visualfirst.disabled")}
+            size="small"
+            color={visualfirstEnabled ? "success" : "default"}
+            sx={{ ml: 1 }}
+          />
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("settings.visualfirst.description")}
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={visualfirstEnabled}
+              onChange={(e) => handleVisualfirstToggle(e.target.checked)}
+              disabled={savingVisualfirst}
+            />
+          }
+          label={visualfirstEnabled ? t("settings.visualfirst.visible") : t("settings.visualfirst.hidden")}
         />
       </Paper>
 
