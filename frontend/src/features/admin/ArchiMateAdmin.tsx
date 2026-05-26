@@ -16,8 +16,23 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Alert from "@mui/material/Alert";
 import MaterialSymbol from "@/components/MaterialSymbol";
-import { api } from "@/api/client";
+import { api, ApiError } from "@/api/client";
 import { invalidateArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
+
+function fmtApiError(err: unknown): string {
+  if (err instanceof ApiError) {
+    const d = err.detail;
+    const body =
+      typeof d === "string" && d
+        ? d
+        : d && typeof d === "object"
+          ? JSON.stringify(d)
+          : err.message || "";
+    return `HTTP ${err.status}${body ? ": " + body : ""}`;
+  }
+  if (err instanceof Error) return err.message || err.name;
+  return String(err);
+}
 
 interface MigrationResult {
   cards_deleted: number;
@@ -51,7 +66,7 @@ export default function ArchiMateAdmin() {
       invalidateArchiMateEnabled(value);
       setSnack(value ? t("admin.enabled") : t("admin.disabled"));
     } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err);
+      const detail = fmtApiError(err);
       setSnack(`Error updating ArchiMate settings: ${detail}`);
       console.error("[ArchiMateAdmin] toggle failed:", err);
     } finally {
@@ -73,7 +88,7 @@ export default function ArchiMateAdmin() {
         })
       );
     } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err);
+      const detail = fmtApiError(err);
       setSnack(`Migration failed: ${detail}`);
       console.error("[ArchiMateAdmin] migration failed:", err);
     } finally {
