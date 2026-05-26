@@ -1,7 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-import * as path from "path";
-
-const authFile = path.join(__dirname, ".auth/admin.json");
 
 export default defineConfig({
   testDir: "./tests",
@@ -9,7 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   timeout: 60000, // 60s per test for slow environments
-  globalSetup: "./helpers/global-setup.ts", // Login once; cache auth state to .auth/admin.json
+  globalSetup: "./helpers/global-setup.ts", // One login; JWT saved to .auth/token.json
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:8920",
@@ -17,7 +14,8 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     navigationTimeout: 30000,
-    storageState: authFile, // Restore auth cookies + storage from globalSetup
+    // No storageState here — auth is injected per-context via loginAsAdmin()
+    // using context.addCookies(), which is more reliable for HTTPS/OrbStack setups.
   },
   projects: [
     {
@@ -25,5 +23,5 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  workers: process.env.CI ? 1 : 2, // 2 workers to prevent auth rate limiting
+  workers: process.env.CI ? 1 : 2,
 });

@@ -77,8 +77,9 @@ test.describe("Dashboard", () => {
   });
 
   test("create button is accessible from dashboard", async ({ page }) => {
+    // Button text is "Create" (nav:create translation key)
     const createBtn = page
-      .getByRole("button", { name: /\+ create|new card|create card/i })
+      .getByRole("button", { name: /^create$|create card|new card|\+ create/i })
       .or(page.locator("button").filter({ hasText: /^\+$/ }))
       .first();
     await expect(createBtn).toBeVisible();

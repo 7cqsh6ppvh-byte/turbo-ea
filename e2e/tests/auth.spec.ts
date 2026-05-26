@@ -111,13 +111,15 @@ test.describe("Authenticated session", () => {
     await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10000 });
   });
 
-  test("session is cleared on logout (sessionStorage token removed)", async ({ page }) => {
+  test("session is cleared on logout (auth cookie removed)", async ({ page }) => {
+    // Auth uses httpOnly cookies, not sessionStorage.
+    // After logout the cookie is cleared and the login page appears.
     const avatarBtn = page.locator("header").getByRole("button").last();
     await avatarBtn.click();
     await page.getByRole("menuitem", { name: /log out|sign out|logout/i }).click();
     await page.waitForLoadState("load");
 
-    const token = await page.evaluate(() => sessionStorage.getItem("token"));
-    expect(token).toBeNull();
+    // After logout, the login form should be visible
+    await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10000 });
   });
 });

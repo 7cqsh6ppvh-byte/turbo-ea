@@ -104,8 +104,9 @@ test.describe("Inventory", () => {
   });
 
   test("Create card dialog opens and accepts a name", async ({ page }) => {
+    // Button text is "Create" (nav:create translation key)
     const createBtn = page
-      .getByRole("button", { name: /\+ create|create card|new card/i })
+      .getByRole("button", { name: /^create$|create card|new card|\+ create/i })
       .first();
     await expect(createBtn).toBeVisible();
     await createBtn.click();

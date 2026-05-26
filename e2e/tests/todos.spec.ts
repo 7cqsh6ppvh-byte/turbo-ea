@@ -21,30 +21,13 @@ test.describe("Todos page", () => {
   });
 
   test("status filter buttons are present (Open, Done, All)", async ({ page }) => {
+    // The Todos page shows Open/Done/All ToggleButtons — there is no "New Todo" button
+    // (todos are created from card detail views, not the standalone todos page)
     const openBtn = page
       .getByRole("button", { name: /^open$/i })
       .or(page.getByRole("tab", { name: /^open$/i }))
       .first();
     await expect(openBtn).toBeVisible({ timeout: 5000 });
-  });
-
-  test("New Todo button opens creation dialog", async ({ page }) => {
-    const newTodoBtn = page
-      .getByRole("button", { name: /new todo|add todo|\+ todo/i })
-      .first();
-    await expect(newTodoBtn).toBeVisible();
-    await newTodoBtn.click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible({ timeout: 5000 });
-
-    // Dialog should have a title input
-    await expect(
-      dialog.getByRole("textbox").first()
-        .or(dialog.getByLabel(/title/i)),
-    ).toBeVisible();
-
-    await page.keyboard.press("Escape");
   });
 
   test("can create and toggle a todo", async ({ context, page }) => {

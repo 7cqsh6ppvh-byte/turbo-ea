@@ -28,8 +28,11 @@ test.describe("BPM — Dashboard and Navigator", () => {
   });
 
   test("filter controls are present", async ({ page }) => {
-    // Filters for type, maturity, automation level, risk
-    const filterControl = page.getByRole("combobox").or(page.getByLabel(/type|maturity|automation|risk/i)).first();
+    // Process Navigator uses ToggleButtons for overlay filters (Type, Maturity, Automation, Risk)
+    const filterControl = page
+      .getByRole("button", { name: /^type$|^maturity$|^automation$|^risk$/i })
+      .or(page.getByRole("combobox"))
+      .first();
     await expect(filterControl).toBeVisible({ timeout: 8000 });
   });
 
