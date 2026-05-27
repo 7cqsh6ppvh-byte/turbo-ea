@@ -42,9 +42,18 @@ interface Props {
   onSave?: (data: VisualFirstDiagramData) => void;
   onNodeCardIdsChange?: (ids: Set<string>) => void;
   onCardSelect?: (cardId: string | null) => void;
+  /** When set, all saves/creates route through branch endpoints. */
+  branchId?: string;
 }
 
-export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardIdsChange, onCardSelect }: Props) {
+export function VisualFirstCanvas({
+  diagramId,
+  initialData,
+  onSave,
+  onNodeCardIdsChange,
+  onCardSelect,
+  branchId,
+}: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<VisualFirstDiagramNode>(
     initialData.nodes,
   );
@@ -106,15 +115,18 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(async () => {
         const data: VisualFirstDiagramData = { nodes: nextNodes, edges: nextEdges, version: "1" };
+        const saveUrl = branchId
+          ? `/rwf/branches/${branchId}/diagrams/${diagramId}`
+          : `/diagrams/${diagramId}`;
         try {
-          await api.patch(`/diagrams/${diagramId}`, { data });
+          await api.patch(saveUrl, { data });
           onSave?.(data);
         } catch {
           // ignore save errors silently
         }
       }, 800);
     },
-    [diagramId, onSave],
+    [diagramId, branchId, onSave],
   );
 
   const handleNodesChange = useCallback(
@@ -280,7 +292,8 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
       setNodes((nds) => [...nds, newNode]);
 
       try {
-        const card = (await api.post("/cards", {
+        const cardCreateUrl = branchId ? `/rwf/branches/${branchId}/cards` : "/cards";
+        const card = (await api.post(cardCreateUrl, {
           type: typeKey,
           name: label,
         })) as { id: string; name: string };
@@ -298,7 +311,7 @@ export function VisualFirstCanvas({ diagramId, initialData, onSave, onNodeCardId
         // keep optimistic node even if API call fails
       }
     },
-    [nodes, edges, setNodes, scheduleSave, screenToFlowPosition, nodeTypes, getType, rml],
+    [nodes, edges, setNodes, scheduleSave, screenToFlowPosition, nodeTypes, getType, rml, branchId],
   );
 
   const handleNodeClick = useCallback(

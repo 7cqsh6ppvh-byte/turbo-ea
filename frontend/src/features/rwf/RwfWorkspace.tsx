@@ -40,7 +40,7 @@ export default function RwfWorkspace() {
   const [cards, setCards] = useState<BranchCard[]>([]);
   const [relations, setRelations] = useState<BranchRelation[]>([]);
   const [diagramOverrides, setDiagramOverrides] = useState<
-    { override_id: string; operation: string; draft: Record<string, unknown> }[]
+    { override_id: string; diagram_id: string | null; operation: string; draft: Record<string, unknown> }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"cards" | "relations" | "diagrams">("cards");
@@ -56,9 +56,11 @@ export default function RwfWorkspace() {
         api.get<RwfBranch>(`/rwf/branches/${branchId}`),
         api.get<{ items: BranchCard[] }>(`/rwf/branches/${branchId}/cards`),
         api.get<{ items: BranchRelation[] }>(`/rwf/branches/${branchId}/relations`),
-        api.get<{ cards: unknown[]; relations: unknown[]; diagrams: { override_id: string; operation: string; draft: Record<string, unknown> }[] }>(
-          `/rwf/branches/${branchId}/diff`,
-        ),
+        api.get<{
+          cards: unknown[];
+          relations: unknown[];
+          diagrams: { override_id: string; diagram_id: string | null; operation: string; draft: Record<string, unknown> }[];
+        }>(`/rwf/branches/${branchId}/diff`),
       ]);
       setBranch(b);
       setCards(cardsRes.items ?? []);
@@ -253,7 +255,16 @@ export default function RwfWorkspace() {
               </TableHead>
               <TableBody>
                 {diagramOverrides.map((d) => (
-                  <TableRow key={d.override_id} hover>
+                  <TableRow
+                    key={d.override_id}
+                    hover
+                    sx={{ cursor: d.diagram_id ? "pointer" : "default" }}
+                    onClick={() => {
+                      if (d.diagram_id && branchId) {
+                        navigate(`/rwf/branches/${branchId}/workspace/visualfirst/${d.diagram_id}`);
+                      }
+                    }}
+                  >
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>
                         {(d.draft as { name?: string })?.name ?? d.override_id}

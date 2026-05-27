@@ -81,6 +81,7 @@ const RwfBranchDetail = lazy(() => import("@/features/rwf/RwfBranchDetail"));
 const RwfWorkspace = lazy(() => import("@/features/rwf/RwfWorkspace"));
 const RwfBranchDiffPage = lazy(() => import("@/features/rwf/RwfBranchDiffPage"));
 const RwfSnapshotDiff = lazy(() => import("@/features/rwf/RwfSnapshotDiff"));
+const RwfVisualFirstEditor = lazy(() => import("@/features/rwf/RwfVisualFirstEditor"));
 const PrinciplesCataloguePage = lazy(
   () => import("@/features/principles-catalogue/PrinciplesCataloguePage"),
 );
@@ -199,6 +200,7 @@ function AppRoutes() {
                 <Route path="/rwf/branches/:id" element={<ModuleGate module="rwf"><RwfBranchDetail /></ModuleGate>} />
                 <Route path="/rwf/branches/:id/workspace" element={<ModuleGate module="rwf"><RwfWorkspace /></ModuleGate>} />
                 <Route path="/rwf/branches/:id/diff" element={<ModuleGate module="rwf"><RwfBranchDiffPage /></ModuleGate>} />
+                <Route path="/rwf/branches/:id/workspace/visualfirst/:did" element={<ModuleGate module="rwf"><RwfVisualFirstEditor /></ModuleGate>} />
                 <Route path="/rwf/snapshots/:id/diff" element={<ModuleGate module="rwf"><RwfSnapshotDiff /></ModuleGate>} />
                 <Route path="/todos" element={<TodosPage />} />
                 <Route path="/surveys" element={<Navigate to="/todos?tab=surveys" />} />
