@@ -697,7 +697,121 @@ async def execute_merge(
         "diagrams_created": 0,
     }
 
-    # --- Phase 2: apply card overrides ---
+    # --- Phase 2: capture pre-merge snapshot BEFORE writing anything ---
+    # Each entry records enough information for execute_rollback() to undo the
+    # operation precisely:
+    #   modified → pre_merge_state (restore to this)
+    #   deleted  → pre_merge_state (un-archive / re-insert)
+    #   created  → new_id (delete this row during rollback)
+    snapshot_cards: list[dict] = []
+    snapshot_relations: list[dict] = []
+    snapshot_diagrams: list[dict] = []
+
+    # Pre-assign UUIDs for newly created items so the snapshot knows their IDs
+    # even before the INSERT happens (needed for rollback to DELETE them).
+    new_card_ids: dict[str, uuid.UUID] = {}  # override.id → new card UUID
+    new_rel_ids: dict[str, uuid.UUID] = {}  # override.id → new relation UUID
+    new_diag_ids: dict[str, uuid.UUID] = {}  # override.id → new diagram UUID
+
+    for ov in card_overrides:
+        if ov.operation == "modified" and ov.card_id:
+            card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+            main_card = card_result.scalar_one_or_none()
+            if main_card:
+                snapshot_cards.append(
+                    {
+                        "override_id": str(ov.id),
+                        "operation": "modified",
+                        "pre_merge_state": card_to_dict(main_card),
+                    }
+                )
+        elif ov.operation == "created":
+            new_id = uuid.uuid4()
+            new_card_ids[str(ov.id)] = new_id
+            snapshot_cards.append(
+                {
+                    "override_id": str(ov.id),
+                    "operation": "created",
+                    "new_id": str(new_id),
+                }
+            )
+        elif ov.operation == "deleted" and ov.card_id:
+            card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+            main_card = card_result.scalar_one_or_none()
+            if main_card:
+                snapshot_cards.append(
+                    {
+                        "override_id": str(ov.id),
+                        "operation": "deleted",
+                        "pre_merge_state": card_to_dict(main_card),
+                    }
+                )
+
+    for ov in rel_overrides:
+        if ov.operation == "created":
+            new_id = uuid.uuid4()
+            new_rel_ids[str(ov.id)] = new_id
+            snapshot_relations.append(
+                {
+                    "override_id": str(ov.id),
+                    "operation": "created",
+                    "new_id": str(new_id),
+                }
+            )
+        elif ov.operation == "deleted" and ov.relation_id:
+            rel_result = await db.execute(select(Relation).where(Relation.id == ov.relation_id))
+            main_rel = rel_result.scalar_one_or_none()
+            if main_rel:
+                snapshot_relations.append(
+                    {
+                        "override_id": str(ov.id),
+                        "operation": "deleted",
+                        "pre_merge_state": relation_to_dict(main_rel),
+                    }
+                )
+
+    for ov in diag_overrides:
+        if ov.operation == "modified" and ov.diagram_id:
+            diag_result = await db.execute(select(Diagram).where(Diagram.id == ov.diagram_id))
+            main_diag = diag_result.scalar_one_or_none()
+            if main_diag:
+                snapshot_diagrams.append(
+                    {
+                        "override_id": str(ov.id),
+                        "operation": "modified",
+                        "pre_merge_state": diagram_to_dict(main_diag),
+                    }
+                )
+        elif ov.operation == "created":
+            new_id = uuid.uuid4()
+            new_diag_ids[str(ov.id)] = new_id
+            snapshot_diagrams.append(
+                {
+                    "override_id": str(ov.id),
+                    "operation": "created",
+                    "new_id": str(new_id),
+                }
+            )
+        elif ov.operation == "deleted" and ov.diagram_id:
+            diag_result = await db.execute(select(Diagram).where(Diagram.id == ov.diagram_id))
+            main_diag = diag_result.scalar_one_or_none()
+            if main_diag:
+                snapshot_diagrams.append(
+                    {
+                        "override_id": str(ov.id),
+                        "operation": "deleted",
+                        "pre_merge_state": diagram_to_dict(main_diag),
+                    }
+                )
+
+    branch.pre_merge_snapshot = {
+        "cards": snapshot_cards,
+        "relations": snapshot_relations,
+        "diagrams": snapshot_diagrams,
+        "merged_at": now.isoformat(),
+    }
+
+    # --- Phase 3: apply card overrides ---
     for ov in card_overrides:
         if ov.operation == "modified" and ov.card_id:
             card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
@@ -728,7 +842,9 @@ async def execute_merge(
             stats["cards_modified"] += 1
 
         elif ov.operation == "created":
-            new_card = _draft_to_new_card(ov.draft, now)
+            # Use pre-assigned UUID so the snapshot can reference it for rollback
+            pre_assigned_id = new_card_ids.get(str(ov.id), uuid.uuid4())
+            new_card = _draft_to_new_card(ov.draft, now, card_id=pre_assigned_id)
             db.add(new_card)
             stats["cards_created"] += 1
 
@@ -740,11 +856,12 @@ async def execute_merge(
                 main_card.updated_at = now
             stats["cards_deleted"] += 1
 
-    # --- Phase 3: apply relation overrides ---
+    # --- Phase 4: apply relation overrides ---
     for ov in rel_overrides:
         if ov.operation == "created":
+            pre_assigned_id = new_rel_ids.get(str(ov.id), uuid.uuid4())
             new_rel = Relation(
-                id=uuid.uuid4(),
+                id=pre_assigned_id,
                 type=ov.draft["type"],
                 source_id=uuid.UUID(ov.draft["source_id"]),
                 target_id=uuid.UUID(ov.draft["target_id"]),
@@ -762,7 +879,7 @@ async def execute_merge(
                 await db.delete(main_rel)
             stats["relations_deleted"] += 1
 
-    # --- Phase 4: apply diagram overrides ---
+    # --- Phase 5: apply diagram overrides ---
     for ov in diag_overrides:
         if ov.operation == "modified" and ov.diagram_id:
             diag_result = await db.execute(select(Diagram).where(Diagram.id == ov.diagram_id))
@@ -777,8 +894,9 @@ async def execute_merge(
             stats["diagrams_modified"] += 1
 
         elif ov.operation == "created":
+            pre_assigned_id = new_diag_ids.get(str(ov.id), uuid.uuid4())
             new_diag = Diagram(
-                id=uuid.uuid4(),
+                id=pre_assigned_id,
                 name=ov.draft.get("name", "Untitled"),
                 type=ov.draft.get("type", "drawio"),
                 data=ov.draft.get("data") or {},
@@ -788,7 +906,14 @@ async def execute_merge(
             db.add(new_diag)
             stats["diagrams_created"] += 1
 
-    # --- Phase 5: finalise branch ---
+        elif ov.operation == "deleted" and ov.diagram_id:
+            diag_result = await db.execute(select(Diagram).where(Diagram.id == ov.diagram_id))
+            main_diag = diag_result.scalar_one_or_none()
+            if main_diag:
+                await db.delete(main_diag)
+            stats["diagrams_deleted"] = stats.get("diagrams_deleted", 0) + 1
+
+    # --- Phase 6: finalise branch ---
     branch.status = "merged"
     branch.reviewed_by = merged_by_id
     branch.reviewed_at = now
@@ -906,6 +1031,232 @@ async def _run_post_merge_side_effects(
             )
 
 
+# ---------------------------------------------------------------------------
+# Rollback (undo a merged branch)
+# ---------------------------------------------------------------------------
+
+
+async def execute_rollback(
+    db: AsyncSession,
+    branch: "RwfBranch",
+    rolled_back_by_id: "uuid.UUID",
+) -> dict:
+    """Undo a previously merged branch by restoring all main-table records to
+    their pre-merge state.
+
+    Requirements:
+        - branch.status must be 'merged'
+        - branch.pre_merge_snapshot must be populated (branches merged before
+          migration 099 will have NULL — reject those with a clear error)
+
+    Algorithm (mirrors execute_merge in reverse):
+        modified cards/diagrams   → restore from pre_merge_state
+        created  cards/relations/diagrams → DELETE the row
+        deleted  cards            → restore status + clear archived_at
+        deleted  relations        → re-INSERT from pre_merge_state
+        deleted  diagrams         → re-INSERT from pre_merge_state
+
+    After restoring main tables, runs the same post-write side-effects
+    (data quality, calculated fields, events) so every downstream feature
+    stays consistent.
+
+    Sets branch.status = 'rolled_back' on success.
+    """
+    from datetime import datetime, timezone
+
+    if branch.status != "merged":
+        raise ValueError(
+            f"Branch must be in 'merged' status to roll back (current: {branch.status})"
+        )
+    if not branch.pre_merge_snapshot:
+        raise ValueError(
+            "This branch was merged before rollback support was added (no pre-merge snapshot). "
+            "Manual restoration is required."
+        )
+
+    now = datetime.now(timezone.utc)
+    snapshot = branch.pre_merge_snapshot
+    stats: dict[str, int] = {
+        "cards_restored": 0,
+        "cards_deleted": 0,
+        "cards_unarchived": 0,
+        "relations_deleted": 0,
+        "relations_restored": 0,
+        "diagrams_restored": 0,
+        "diagrams_deleted": 0,
+        "diagrams_unarchived": 0,
+    }
+
+    rolled_back_card_ids: list[uuid.UUID] = []  # for post-rollback side-effects
+
+    # --- Restore cards ---
+    for entry in snapshot.get("cards", []):
+        op = entry["operation"]
+
+        if op == "modified":
+            state = entry["pre_merge_state"]
+            card_id = uuid.UUID(state["id"])
+            res = await db.execute(select(Card).where(Card.id == card_id))
+            card = res.scalar_one_or_none()
+            if card:
+                _apply_draft_to_card(card, state, now)
+                stats["cards_restored"] += 1
+                rolled_back_card_ids.append(card_id)
+
+        elif op == "created":
+            # Card was INSERTed by the merge — delete it now
+            new_id = uuid.UUID(entry["new_id"])
+            res = await db.execute(select(Card).where(Card.id == new_id))
+            card = res.scalar_one_or_none()
+            if card:
+                await db.delete(card)
+                stats["cards_deleted"] += 1
+
+        elif op == "deleted":
+            # Card was ARCHIVEd by the merge — restore it
+            state = entry["pre_merge_state"]
+            card_id = uuid.UUID(state["id"])
+            res = await db.execute(select(Card).where(Card.id == card_id))
+            card = res.scalar_one_or_none()
+            if card:
+                card.status = state.get("status", "ACTIVE")
+                card.updated_at = now
+                stats["cards_unarchived"] += 1
+                rolled_back_card_ids.append(card_id)
+
+    # --- Restore relations ---
+    for entry in snapshot.get("relations", []):
+        op = entry["operation"]
+
+        if op == "created":
+            new_id = uuid.UUID(entry["new_id"])
+            res = await db.execute(select(Relation).where(Relation.id == new_id))
+            rel = res.scalar_one_or_none()
+            if rel:
+                await db.delete(rel)
+                stats["relations_deleted"] += 1
+
+        elif op == "deleted":
+            state = entry["pre_merge_state"]
+            rel_id = uuid.UUID(state["id"])
+            # Only re-insert if it no longer exists (idempotent)
+            res = await db.execute(select(Relation).where(Relation.id == rel_id))
+            existing = res.scalar_one_or_none()
+            if not existing:
+                restored_rel = Relation(
+                    id=rel_id,
+                    type=state["type"],
+                    source_id=uuid.UUID(state["source_id"]),
+                    target_id=uuid.UUID(state["target_id"]),
+                    attributes=state.get("attributes") or {},
+                    created_at=now,
+                    updated_at=now,
+                )
+                db.add(restored_rel)
+                stats["relations_restored"] += 1
+
+    # --- Restore diagrams ---
+    for entry in snapshot.get("diagrams", []):
+        op = entry["operation"]
+
+        if op == "modified":
+            state = entry["pre_merge_state"]
+            diag_id = uuid.UUID(state["id"])
+            res = await db.execute(select(Diagram).where(Diagram.id == diag_id))
+            diag = res.scalar_one_or_none()
+            if diag:
+                diag.name = state.get("name", diag.name)
+                diag.data = state.get("data", diag.data)
+                diag.updated_at = now
+                stats["diagrams_restored"] += 1
+
+        elif op == "created":
+            new_id = uuid.UUID(entry["new_id"])
+            res = await db.execute(select(Diagram).where(Diagram.id == new_id))
+            diag = res.scalar_one_or_none()
+            if diag:
+                await db.delete(diag)
+                stats["diagrams_deleted"] += 1
+
+        elif op == "deleted":
+            state = entry["pre_merge_state"]
+            diag_id = uuid.UUID(state["id"])
+            res = await db.execute(select(Diagram).where(Diagram.id == diag_id))
+            existing = res.scalar_one_or_none()
+            if not existing:
+                restored_diag = Diagram(
+                    id=diag_id,
+                    name=state.get("name", "Untitled"),
+                    type=state.get("type", "drawio"),
+                    data=state.get("data") or {},
+                    created_at=now,
+                    updated_at=now,
+                )
+                db.add(restored_diag)
+                stats["diagrams_unarchived"] += 1
+
+    # --- Mark branch as rolled back ---
+    branch.status = "rolled_back"
+    branch.rolled_back_by = rolled_back_by_id
+    branch.rolled_back_at = now
+    branch.updated_at = now
+
+    await db.flush()
+
+    # --- Post-rollback side-effects (best-effort) ---
+    await _run_post_rollback_side_effects(db, rolled_back_card_ids, rolled_back_by_id, now)
+
+    return stats
+
+
+async def _run_post_rollback_side_effects(
+    db: "AsyncSession",
+    card_ids: list["uuid.UUID"],
+    actor_id: "uuid.UUID",
+    now: "datetime",
+) -> None:
+    """Run data-quality, calculated-field, and event-bus side-effects for each
+    card that was restored or un-archived by a rollback.
+
+    Mirrors the pattern in _run_post_merge_side_effects — best-effort only.
+    """
+    import logging
+
+    from app.services.calculation_engine import run_calculations_for_card
+    from app.services.event_bus import event_bus
+
+    logger = logging.getLogger(__name__)
+
+    for card_id in card_ids:
+        try:
+            res = await db.execute(select(Card).where(Card.id == card_id))
+            card = res.scalar_one_or_none()
+            if not card:
+                continue
+
+            from app.api.v1.cards import _calc_data_quality
+
+            card.data_quality = await _calc_data_quality(db, card)
+
+            try:
+                from app.api.v1.cards import _get_ppm_exclusions
+
+                ppm_excl = await _get_ppm_exclusions(db, card)
+            except Exception:  # noqa: BLE001
+                ppm_excl: set[str] = set()
+            await run_calculations_for_card(db, card, exclude_fields=ppm_excl)
+
+            await event_bus.publish(
+                "card.updated",
+                {"id": str(card.id), "source": "rwf_rollback"},
+                db=db,
+                card_id=card.id,
+                user_id=actor_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("RWF rollback post-side-effect failed for card %s: %s", card_id, exc)
+
+
 def _apply_draft_to_card(card: "Card", draft: dict, now: "datetime") -> None:
     """Apply draft fields to an existing Card row."""
 
@@ -928,10 +1279,10 @@ def _apply_draft_to_card(card: "Card", draft: dict, now: "datetime") -> None:
     card.updated_at = now
 
 
-def _draft_to_new_card(draft: dict, now: "datetime") -> "Card":
+def _draft_to_new_card(draft: dict, now: "datetime", *, card_id: uuid.UUID | None = None) -> "Card":
     """Create a new Card ORM object from a branch draft dict."""
     return Card(
-        id=uuid.uuid4(),
+        id=card_id or uuid.uuid4(),
         type=draft.get("type", "Application"),
         subtype=draft.get("subtype"),
         name=draft.get("name", "Untitled"),

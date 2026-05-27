@@ -16,6 +16,9 @@ class RwfBranch(UUIDMixin, Base):
 
     name: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Lifecycle: open → in_review → merged → rolled_back
+    #            open → in_review → rejected
+    #            open → abandoned
     status: Mapped[str] = mapped_column(Text, nullable=False, default="open")
     base_snapshot_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
@@ -26,6 +29,20 @@ class RwfBranch(UUIDMixin, Base):
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     review_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Snapshot of all affected main-table records taken just before merge writes.
+    # NULL for branches merged before migration 099 — rollback not available for those.
+    # Structure: { "cards": [...], "relations": [...], "diagrams": [...] }
+    # Each entry carries: operation, pre_merge_state (for modified/deleted),
+    # new_id (for created items so rollback knows which rows to delete).
+    pre_merge_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    # Rollback audit
+    rolled_back_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    rolled_back_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

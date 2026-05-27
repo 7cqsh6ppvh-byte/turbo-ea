@@ -69,6 +69,17 @@
   "branchDetail.baseSnapshot": "Basierend auf Landschaft vom",
   "branchDetail.notFound": "Branch nicht gefunden.",
   "branchDetail.actions": "Aktionen",
+  "branchDetail.rolledBackBy": "Zurückgesetzt von",
+
+  "rollback.title": "Merge rückgängig machen",
+  "rollback.description": "Diesen Merge rückgängig machen und alle betroffenen Karten, Beziehungen und Diagramme auf den Zustand vor dem Merge zurücksetzen. Dies kann nicht rückgängig gemacht werden.",
+  "rollback.action": "Merge rückgängig machen",
+  "rollback.confirm": "Möchten Sie diesen Merge wirklich rückgängig machen? Alle Änderungen dieses Branches werden aus dem Live-Landscape entfernt. Dies kann nicht rückgängig gemacht werden.",
+  "rollback.inProgress": "Wird rückgesetzt...",
+  "rollback.unavailable": "Rollback ist für diesen Branch nicht verfügbar. Er wurde vor der Einführung der Rollback-Funktion gemergt. Wenden Sie sich an Ihren Administrator für eine manuelle Wiederherstellung.",
+  "rollback.done": "Dieser Branch wurde zurückgesetzt. Alle Änderungen aus diesem Branch wurden aus dem Live-Landscape entfernt.",
+
+  "branch.status.rolled_back": "Zurückgesetzt",
 
   "workspace.title": "Arbeitsbereich",
   "workspace.back": "Zurück zum Branch",

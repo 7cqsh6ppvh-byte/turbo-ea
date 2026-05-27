@@ -63,6 +63,18 @@
   "branchDetail.baseSnapshot": "Basado en el paisaje del",
   "branchDetail.notFound": "Rama no encontrada.",
   "branchDetail.actions": "Acciones",
+  "branchDetail.rolledBackBy": "Revertido por",
+
+  "rollback.title": "Revertir fusión",
+  "rollback.description": "Deshacer esta fusión y restaurar todas las tarjetas, relaciones y diagramas afectados a su estado anterior a la fusión. Esta acción no se puede deshacer.",
+  "rollback.action": "Revertir fusión",
+  "rollback.confirm": "¿Está seguro de que desea revertir esta fusión? Todos los cambios de esta rama se eliminarán del landscape en vivo. Esta acción no se puede deshacer.",
+  "rollback.inProgress": "Revirtiendo...",
+  "rollback.unavailable": "La reversión no está disponible para esta rama. Se fusionó antes de que se añadiera la funcionalidad de reversión. Contacte a su administrador para una restauración manual.",
+  "rollback.done": "Esta rama ha sido revertida. Todos los cambios de esta rama han sido eliminados del landscape en vivo.",
+
+  "branch.status.rolled_back": "Revertido",
+
   "workspace.title": "Espacio de trabajo",
   "workspace.back": "Volver a la rama",
   "workspace.tabs.cards": "Tarjetas",

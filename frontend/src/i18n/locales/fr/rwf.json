@@ -63,6 +63,18 @@
   "branchDetail.baseSnapshot": "Basé sur le paysage au",
   "branchDetail.notFound": "Branche introuvable.",
   "branchDetail.actions": "Actions",
+  "branchDetail.rolledBackBy": "Annulé par",
+
+  "rollback.title": "Annuler la fusion",
+  "rollback.description": "Annuler cette fusion et restaurer toutes les cartes, relations et diagrammes affectés à leur état avant la fusion. Cette opération est irréversible.",
+  "rollback.action": "Annuler la fusion",
+  "rollback.confirm": "Êtes-vous sûr de vouloir annuler cette fusion ? Toutes les modifications de cette branche seront supprimées du paysage en direct. Cette opération est irréversible.",
+  "rollback.inProgress": "Annulation en cours...",
+  "rollback.unavailable": "L'annulation n'est pas disponible pour cette branche. Elle a été fusionnée avant l'ajout de la fonctionnalité d'annulation. Contactez votre administrateur pour une restauration manuelle.",
+  "rollback.done": "Cette branche a été annulée. Toutes les modifications de cette branche ont été supprimées du paysage en direct.",
+
+  "branch.status.rolled_back": "Annulé",
+
   "workspace.title": "Espace de travail",
   "workspace.back": "Retour à la branche",
   "workspace.tabs.cards": "Cartes",

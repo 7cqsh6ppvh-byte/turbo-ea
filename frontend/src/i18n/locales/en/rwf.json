@@ -69,6 +69,17 @@
   "branchDetail.baseSnapshot": "Based on landscape at",
   "branchDetail.notFound": "Branch not found.",
   "branchDetail.actions": "Actions",
+  "branchDetail.rolledBackBy": "Rolled back by",
+
+  "rollback.title": "Rollback Merge",
+  "rollback.description": "Undo this merge and restore all affected cards, relations, and diagrams to their state before the merge was applied. This cannot be undone.",
+  "rollback.action": "Rollback Merge",
+  "rollback.confirm": "Are you sure you want to roll back this merge? All changes from this branch will be removed from the live landscape. This cannot be undone.",
+  "rollback.inProgress": "Rolling back...",
+  "rollback.unavailable": "Rollback is not available for this branch. It was merged before rollback support was added. Contact your administrator to restore manually.",
+  "rollback.done": "This branch has been rolled back. All changes from this branch have been removed from the live landscape.",
+
+  "branch.status.rolled_back": "Rolled Back",
 
   "workspace.title": "Workspace",
   "workspace.back": "Back to branch",

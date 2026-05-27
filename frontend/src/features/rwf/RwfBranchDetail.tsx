@@ -42,6 +42,7 @@ export default function RwfBranchDetail() {
   const [abandonOpen, setAbandonOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState("");
+  const [rollbackOpen, setRollbackOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
   const [syncOpen, setSyncOpen] = useState(false);
@@ -100,7 +101,9 @@ export default function RwfBranchDetail() {
   const isOpen = branch.status === "open";
   const isInReview = branch.status === "in_review";
   const isApproved = branch.status === "approved";
-  const isClosed = ["merged", "rejected", "abandoned"].includes(branch.status);
+  const isMerged = branch.status === "merged";
+  const isRolledBack = branch.status === "rolled_back";
+  const isClosed = ["merged", "rejected", "abandoned", "rolled_back"].includes(branch.status);
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 900, mx: "auto" }}>
@@ -199,8 +202,66 @@ export default function RwfBranchDetail() {
               <Typography variant="caption">{branch.review_comment}</Typography>
             </Stack>
           )}
+          {branch.rolled_back_by && (
+            <Stack direction="row" spacing={1}>
+              <Typography variant="caption" color="text.secondary" width={160}>
+                {t("branchDetail.rolledBackBy")}
+              </Typography>
+              <Typography variant="caption">
+                {branch.rolled_back_by}
+                {branch.rolled_back_at && ` · ${fmt(branch.rolled_back_at)}`}
+              </Typography>
+            </Stack>
+          )}
         </Stack>
       </Paper>
+
+      {/* Rollback section — only for merged branches with a pre-merge snapshot */}
+      {isMerged && (
+        <Paper
+          variant="outlined"
+          sx={{ p: 2.5, mb: 3, borderColor: branch.can_rollback ? "warning.main" : "divider" }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+            <MaterialSymbol icon="history" size={20} color={branch.can_rollback ? "#ed6c02" : "#999"} />
+            <Typography variant="subtitle2" fontWeight={700}>
+              {t("rollback.title")}
+            </Typography>
+          </Stack>
+          {branch.can_rollback ? (
+            <>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                {t("rollback.description")}
+              </Typography>
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<MaterialSymbol icon="undo" size={16} />}
+                onClick={() => setRollbackOpen(true)}
+                disabled={actionLoading}
+              >
+                {t("rollback.action")}
+              </Button>
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {t("rollback.unavailable")}
+            </Typography>
+          )}
+        </Paper>
+      )}
+
+      {/* Rolled-back notice */}
+      {isRolledBack && (
+        <Paper variant="outlined" sx={{ p: 2.5, mb: 3, borderColor: "divider" }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <MaterialSymbol icon="history" size={20} color="#5d4037" />
+            <Typography variant="body2" color="text.secondary">
+              {t("rollback.done")}
+            </Typography>
+          </Stack>
+        </Paper>
+      )}
 
       {/* Action buttons */}
       {!isClosed && (
@@ -384,6 +445,49 @@ export default function RwfBranchDetail() {
           onSynced={() => { setSyncOpen(false); load(); }}
         />
       )}
+
+      {/* Rollback confirmation dialog */}
+      <Dialog open={rollbackOpen} onClose={() => setRollbackOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <MaterialSymbol icon="undo" size={20} color="#ed6c02" />
+            <span>{t("rollback.title")}</span>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>{t("rollback.confirm")}</DialogContentText>
+          {actionError && (
+            <Alert severity="error" sx={{ mt: 2 }}>{actionError}</Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setRollbackOpen(false); setActionError(""); }}>
+            {t("createBranch.cancel")}
+          </Button>
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={<MaterialSymbol icon="undo" size={16} />}
+            disabled={actionLoading}
+            onClick={async () => {
+              setActionLoading(true);
+              setActionError("");
+              try {
+                const updated = await api.post<RwfBranch>(`/rwf/branches/${id}/rollback`, {});
+                setBranch(updated);
+                setRollbackOpen(false);
+              } catch (e: unknown) {
+                const msg = (e as { detail?: string })?.detail;
+                setActionError(msg ?? t("error.saveFailed"));
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+          >
+            {actionLoading ? t("rollback.inProgress") : t("rollback.action")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -6,7 +6,8 @@ export type BranchStatus =
   | "approved"
   | "merged"
   | "rejected"
-  | "abandoned";
+  | "abandoned"
+  | "rolled_back";
 
 export interface RwfBranch {
   id: string;
@@ -18,6 +19,14 @@ export interface RwfBranch {
   reviewed_by?: string;
   reviewed_at?: string;
   review_comment?: string;
+  /** Populated after a successful rollback */
+  rolled_back_by?: string;
+  rolled_back_at?: string;
+  /**
+   * True when this branch can be rolled back.
+   * False for branches merged before migration 099 (no snapshot stored).
+   */
+  can_rollback: boolean;
   created_at: string;
   updated_at: string;
   card_count: number;

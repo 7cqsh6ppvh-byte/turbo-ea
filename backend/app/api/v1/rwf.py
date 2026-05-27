@@ -85,6 +85,11 @@ def _branch_out(
         "reviewed_by": str(b.reviewed_by) if b.reviewed_by else None,
         "reviewed_at": b.reviewed_at.isoformat() if b.reviewed_at else None,
         "review_comment": b.review_comment,
+        # Rollback audit — present only after the branch has been rolled back
+        "rolled_back_by": str(b.rolled_back_by) if b.rolled_back_by else None,
+        "rolled_back_at": b.rolled_back_at.isoformat() if b.rolled_back_at else None,
+        # Whether a rollback is technically possible (snapshot available)
+        "can_rollback": b.status == "merged" and b.pre_merge_snapshot is not None,
         "created_at": b.created_at.isoformat(),
         "updated_at": b.updated_at.isoformat(),
         "change_counts": {
@@ -455,6 +460,52 @@ async def merge_branch(
     await db.commit()
     c, r, d = await _change_counts(db, branch.id)
     return {**_branch_out(branch, card_count=c, rel_count=r, diag_count=d), "merge_stats": stats}
+
+
+@router.post("/branches/{branch_id}/rollback")
+async def rollback_branch(
+    branch_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Roll back a merged branch, restoring all main-table records to their
+    pre-merge state.
+
+    - Only callable on branches with status='merged'.
+    - Requires rwf.approve.
+    - Branches merged before migration 099 (no pre_merge_snapshot) cannot be
+      rolled back automatically — returns 422 with a clear explanation.
+    - Idempotent protection: attempting to roll back a 'rolled_back' branch
+      returns 422 so accidental double-rollback is blocked.
+    """
+    from app.services.rwf_service import execute_rollback
+
+    await PermissionService.require_permission(db, user, "rwf.approve")
+    branch = await _get_branch_or_404(db, branch_id)
+
+    if branch.status == "rolled_back":
+        raise HTTPException(
+            status_code=422,
+            detail="This branch has already been rolled back.",
+        )
+    if branch.status != "merged":
+        raise HTTPException(
+            status_code=422,
+            detail=(f"Branch is '{branch.status}'. Only 'merged' branches can be rolled back."),
+        )
+
+    try:
+        stats = await execute_rollback(db, branch, user.id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    await db.commit()
+    c, r, d = await _change_counts(db, branch.id)
+    return {
+        **_branch_out(branch, card_count=c, rel_count=r, diag_count=d),
+        "rollback_stats": stats,
+    }
 
 
 class SyncPayload(BaseModel):

@@ -8,6 +8,7 @@ export const STATUS_COLOR: Record<BranchStatus, string> = {
   merged: "#6a1b9a",
   rejected: "#c62828",
   abandoned: "#757575",
+  rolled_back: "#5d4037",
 };
 
 export const STATUS_BG: Record<BranchStatus, string> = {
@@ -17,6 +18,7 @@ export const STATUS_BG: Record<BranchStatus, string> = {
   merged: "#f3e5f5",
   rejected: "#ffebee",
   abandoned: "#f5f5f5",
+  rolled_back: "#efebe9",
 };
 
 export function fmt(dateStr: string): string {
