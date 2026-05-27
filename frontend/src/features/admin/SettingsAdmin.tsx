@@ -28,9 +28,8 @@ import {
   type DateFormatKey,
 } from "@/hooks/useDateFormat";
 import { invalidateAppTitle, DEFAULT_APP_TITLE } from "@/hooks/useAppTitle";
-import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
-import { invalidateVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
-import { invalidateRwfEnabled } from "@/hooks/useRwfEnabled";
+import { setModuleEnabled } from "@/hooks/useModules";
+import { MODULE_REGISTRY, type ModuleKey } from "@/config/modules";
 import { invalidateLoginBranding } from "@/hooks/useLoginBranding";
 import { useMetamodel } from "@/hooks/useMetamodel";
 import { useEnabledLocales } from "@/hooks/useEnabledLocales";
@@ -173,25 +172,12 @@ function GeneralTab() {
   const [appTitle, setAppTitle] = useState(DEFAULT_APP_TITLE);
   const [savingAppTitle, setSavingAppTitle] = useState(false);
 
-  // BPM toggle state
-  const [bpmEnabled, setBpmEnabled] = useState(true);
-  const [savingBpm, setSavingBpm] = useState(false);
-
-  // PPM toggle state
-  const [ppmEnabled, setPpmEnabled] = useState(false);
-  const [savingPpm, setSavingPpm] = useState(false);
-
-  // GRC toggle state
-  const [grcEnabled, setGrcEnabled] = useState(true);
-  const [savingGrc, setSavingGrc] = useState(false);
-
-  // VisualFirst toggle state
-  const [visualfirstEnabled, setVisualfirstEnabled] = useState(true);
-  const [savingVisualfirst, setSavingVisualfirst] = useState(false);
-
-  // RWF toggle state
-  const [rwfEnabled, setRwfEnabled] = useState(false);
-  const [savingRwf, setSavingRwf] = useState(false);
+  // Module toggle state — keyed by ModuleKey (excludes turbolens which has its own tab)
+  const SETTINGS_MODULES = MODULE_REGISTRY.filter((m) => m.key !== "turbolens");
+  const [moduleEnabled, setModuleEnabledState] = useState<Partial<Record<ModuleKey, boolean>>>(
+    () => Object.fromEntries(SETTINGS_MODULES.map((m) => [m.key, m.defaultEnabled])),
+  );
+  const [moduleSaving, setModuleSaving] = useState<Partial<Record<ModuleKey, boolean>>>({});
 
   // Fiscal year start
   const [fiscalYearStart, setFiscalYearStart] = useState(1);
@@ -228,23 +214,19 @@ function GeneralTab() {
        api.get<LogoInfo>("/settings/logo/info"),
        api.get<FaviconInfo>("/settings/favicon/info"),
        api.get<{ currency: string }>("/settings/currency"),
-       api.get<{ enabled: boolean }>("/settings/bpm-enabled"),
        api.get<{ locales: string[] }>("/settings/enabled-locales"),
-       api.get<{ enabled: boolean }>("/settings/ppm-enabled"),
        api.get<{ month: number }>("/settings/fiscal-year-start"),
        api.get<{ app_title: string }>("/settings/app-title"),
        api.get<{ date_format: string }>("/settings/date-format"),
-       api.get<{ enabled: boolean }>("/settings/grc-enabled"),
-       api.get<{ enabled: boolean }>("/settings/visualfirst-enabled"),
        api.get<{
          login_tagline: string;
          login_tagline_hidden: boolean;
          login_help_text: string;
          login_help_link: string;
        }>("/settings/login-branding"),
-       api.get<{ enabled: boolean }>("/settings/rwf-enabled"),
+       api.get<Record<string, boolean>>("/settings/modules"),
      ])
-     .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData, visualfirstData, loginBrandingData, rwfData]) => {
+     .then(([emailData, logoData, faviconData, currencyData, localesData, fiscalData, appTitleData, dateFormatData, loginBrandingData, modulesData]) => {
        setSmtpHost(emailData.smtp_host);
        setSmtpPort(emailData.smtp_port);
        setSmtpUser(emailData.smtp_user);
@@ -256,11 +238,14 @@ function GeneralTab() {
        setHasCustomLogo(logoData.has_custom_logo);
        setHasCustomFavicon(faviconData.has_custom_favicon);
        setSelectedCurrency(currencyData.currency);
-       setBpmEnabled(bpmData.enabled);
-       setPpmEnabled(ppmData.enabled);
-       setGrcEnabled(grcData.enabled);
-       setVisualfirstEnabled(visualfirstData.enabled);
-       setRwfEnabled(rwfData.enabled);
+       // Populate module enabled state from the single /settings/modules response
+       setModuleEnabledState((prev) => {
+         const next = { ...prev };
+         for (const mod of SETTINGS_MODULES) {
+           if (mod.key in modulesData) next[mod.key] = Boolean(modulesData[mod.key]);
+         }
+         return next;
+       });
        setFiscalYearStart(fiscalData.month);
        setAppTitle(appTitleData.app_title || DEFAULT_APP_TITLE);
        const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
@@ -396,77 +381,22 @@ function GeneralTab() {
     }
   };
 
-  const handleBpmToggle = async (enabled: boolean) => {
-    setSavingBpm(true);
+  const handleModuleToggle = async (key: ModuleKey, enabled: boolean) => {
+    setModuleSaving((s) => ({ ...s, [key]: true }));
     setError("");
     try {
-      await api.patch("/settings/bpm-enabled", { enabled });
-      setBpmEnabled(enabled);
-      invalidateMetamodel();
-      setSnack(enabled ? t("settings.bpm.enabledSuccess") : t("settings.bpm.disabledSuccess"));
+      const mod = SETTINGS_MODULES.find((m) => m.key === key);
+      if (!mod) return;
+      await api.patch(mod.settingsEndpoint, { enabled });
+      setModuleEnabledState((s) => ({ ...s, [key]: enabled }));
+      setModuleEnabled(key, enabled);
+      // BPM toggle affects metamodel visibility — invalidate the cached types
+      if (key === "bpm") invalidateMetamodel();
+      setSnack(enabled ? t(`settings.${key}.enabledSuccess`) : t(`settings.${key}.disabledSuccess`));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("common:errors.generic"));
     } finally {
-      setSavingBpm(false);
-    }
-  };
-
-  const handlePpmToggle = async (enabled: boolean) => {
-    setSavingPpm(true);
-    setError("");
-    try {
-      await api.patch("/settings/ppm-enabled", { enabled });
-      setPpmEnabled(enabled);
-      setSnack(enabled ? t("settings.ppm.enabledSuccess") : t("settings.ppm.disabledSuccess"));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("common:errors.generic"));
-    } finally {
-      setSavingPpm(false);
-    }
-  };
-
-   const handleGrcToggle = async (enabled: boolean) => {
-     setSavingGrc(true);
-     setError("");
-     try {
-       await api.patch("/settings/grc-enabled", { enabled });
-       setGrcEnabled(enabled);
-       invalidateGrcEnabled(enabled);
-       setSnack(enabled ? t("settings.grc.enabledSuccess") : t("settings.grc.disabledSuccess"));
-     } catch (e) {
-       setError(e instanceof Error ? e.message : t("common:errors.generic"));
-     } finally {
-       setSavingGrc(false);
-     }
-   };
-
-   const handleVisualfirstToggle = async (enabled: boolean) => {
-     setSavingVisualfirst(true);
-     setError("");
-     try {
-       await api.patch("/settings/visualfirst-enabled", { enabled });
-       setVisualfirstEnabled(enabled);
-       invalidateVisualFirstEnabled(enabled);
-       setSnack(enabled ? t("settings.visualfirst.enabledSuccess") : t("settings.visualfirst.disabledSuccess"));
-     } catch (e) {
-       setError(e instanceof Error ? e.message : t("common:errors.generic"));
-     } finally {
-       setSavingVisualfirst(false);
-     }
-   };
-
-  const handleRwfToggle = async (enabled: boolean) => {
-    setSavingRwf(true);
-    setError("");
-    try {
-      await api.patch("/settings/rwf-enabled", { enabled });
-      setRwfEnabled(enabled);
-      invalidateRwfEnabled(enabled);
-      setSnack(enabled ? t("settings.rwf.enabledSuccess") : t("settings.rwf.disabledSuccess"));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("common:errors.generic"));
-    } finally {
-      setSavingRwf(false);
+      setModuleSaving((s) => ({ ...s, [key]: false }));
     }
   };
 
@@ -1046,150 +976,42 @@ function GeneralTab() {
       {/* ── Modules ───────────────────────────────────────────────── */}
       <SectionHeader>{t("settings.section.modules")}</SectionHeader>
 
-      {/* BPM Module Toggle */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-          <MaterialSymbol icon="route" size={22} color="#555" />
-          <Typography variant="h6" fontWeight={600}>
-            {t("settings.bpm.title")}
-          </Typography>
-          <Chip
-            label={bpmEnabled ? t("settings.bpm.enabled") : t("settings.bpm.disabled")}
-            size="small"
-            color={bpmEnabled ? "success" : "default"}
-            sx={{ ml: 1 }}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("settings.bpm.description")}
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={bpmEnabled}
-              onChange={(e) => handleBpmToggle(e.target.checked)}
-              disabled={savingBpm}
+      {/* Module toggles — data-driven from MODULE_REGISTRY.
+          Adding a new module: add one entry to src/config/modules.ts +
+          add settings.{key}.* i18n keys in all 8 locale files. */}
+      {SETTINGS_MODULES.map((mod) => {
+        const enabled = Boolean(moduleEnabled[mod.key]);
+        const saving = Boolean(moduleSaving[mod.key]);
+        return (
+          <Paper key={mod.key} sx={{ p: 3, mb: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
+              <MaterialSymbol icon={mod.icon} size={22} color="#555" />
+              <Typography variant="h6" fontWeight={600}>
+                {t(`settings.${mod.key}.title`)}
+              </Typography>
+              <Chip
+                label={enabled ? t(`settings.${mod.key}.enabled`) : t(`settings.${mod.key}.disabled`)}
+                size="small"
+                color={enabled ? "success" : "default"}
+                sx={{ ml: 1 }}
+              />
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t(`settings.${mod.key}.description`)}
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={enabled}
+                  onChange={(e) => handleModuleToggle(mod.key, e.target.checked)}
+                  disabled={saving}
+                />
+              }
+              label={enabled ? t(`settings.${mod.key}.visible`) : t(`settings.${mod.key}.hidden`)}
             />
-          }
-          label={bpmEnabled ? t("settings.bpm.visible") : t("settings.bpm.hidden")}
-        />
-      </Paper>
-
-      {/* PPM Module Toggle */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-          <MaterialSymbol icon="assignment" size={22} color="#555" />
-          <Typography variant="h6" fontWeight={600}>
-            {t("settings.ppm.title")}
-          </Typography>
-          <Chip
-            label={ppmEnabled ? t("settings.ppm.enabled") : t("settings.ppm.disabled")}
-            size="small"
-            color={ppmEnabled ? "success" : "default"}
-            sx={{ ml: 1 }}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("settings.ppm.description")}
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={ppmEnabled}
-              onChange={(e) => handlePpmToggle(e.target.checked)}
-              disabled={savingPpm}
-            />
-          }
-          label={ppmEnabled ? t("settings.ppm.visible") : t("settings.ppm.hidden")}
-        />
-      </Paper>
-
-      {/* GRC Module Toggle */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-          <MaterialSymbol icon="policy" size={22} color="#555" />
-          <Typography variant="h6" fontWeight={600}>
-            {t("settings.grc.title")}
-          </Typography>
-          <Chip
-            label={grcEnabled ? t("settings.grc.enabled") : t("settings.grc.disabled")}
-            size="small"
-            color={grcEnabled ? "success" : "default"}
-            sx={{ ml: 1 }}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("settings.grc.description")}
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={grcEnabled}
-              onChange={(e) => handleGrcToggle(e.target.checked)}
-              disabled={savingGrc}
-            />
-          }
-          label={grcEnabled ? t("settings.grc.visible") : t("settings.grc.hidden")}
-        />
-      </Paper>
-
-      {/* VisualFirst Module Toggle */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-          <MaterialSymbol icon="layers" size={22} color="#555" />
-          <Typography variant="h6" fontWeight={600}>
-            {t("settings.visualfirst.title")}
-          </Typography>
-          <Chip
-            label={visualfirstEnabled ? t("settings.visualfirst.enabled") : t("settings.visualfirst.disabled")}
-            size="small"
-            color={visualfirstEnabled ? "success" : "default"}
-            sx={{ ml: 1 }}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("settings.visualfirst.description")}
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={visualfirstEnabled}
-              onChange={(e) => handleVisualfirstToggle(e.target.checked)}
-              disabled={savingVisualfirst}
-            />
-          }
-          label={visualfirstEnabled ? t("settings.visualfirst.visible") : t("settings.visualfirst.hidden")}
-        />
-      </Paper>
-
-      {/* Release Workflow Module Toggle */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
-          <MaterialSymbol icon="account_tree" size={22} color="#555" />
-          <Typography variant="h6" fontWeight={600}>
-            {t("settings.rwf.title")}
-          </Typography>
-          <Chip
-            label={rwfEnabled ? t("settings.rwf.enabled") : t("settings.rwf.disabled")}
-            size="small"
-            color={rwfEnabled ? "success" : "default"}
-            sx={{ ml: 1 }}
-          />
-        </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("settings.rwf.description")}
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={rwfEnabled}
-              onChange={(e) => handleRwfToggle(e.target.checked)}
-              disabled={savingRwf}
-            />
-          }
-          label={rwfEnabled ? t("settings.rwf.visible") : t("settings.rwf.hidden")}
-        />
-      </Paper>
+          </Paper>
+        );
+      })}
 
       {/* Fiscal Year Start */}
       <Paper sx={{ p: 3, mb: 3 }}>
