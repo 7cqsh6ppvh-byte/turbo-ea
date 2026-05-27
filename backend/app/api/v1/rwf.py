@@ -346,8 +346,25 @@ async def get_branch_diff(
         select(RwfBranchDiagramOverride).where(RwfBranchDiagramOverride.branch_id == branch.id)
     )
 
+    from app.services.rwf_service import (
+        card_to_dict,
+        compute_field_diff,
+        diagram_to_dict,
+    )
+
     cards = []
     for o in card_overrides_result.scalars().all():
+        conflicts: dict = {}
+        if o.operation == "modified" and o.base_snapshot and o.card_id:
+            # Fast guard: only run deepdiff if main has moved since branch was created
+            card_result = await db.execute(select(Card).where(Card.id == o.card_id))
+            main_card = card_result.scalar_one_or_none()
+            if main_card and (
+                main_card.updated_at is None or main_card.updated_at > branch.base_snapshot_at
+            ):
+                main_dict = card_to_dict(main_card)
+                conflicts = compute_field_diff(o.base_snapshot, main_dict, o.draft)
+
         cards.append(
             {
                 "override_id": str(o.id),
@@ -355,7 +372,8 @@ async def get_branch_diff(
                 "operation": o.operation,
                 "draft": o.draft,
                 "base_snapshot": o.base_snapshot,
-                "conflicts": {},  # populated in Phase 5
+                "has_conflicts": any(v == "conflict" for v in conflicts.values()),
+                "conflicts": conflicts,
             }
         )
 
@@ -372,6 +390,16 @@ async def get_branch_diff(
 
     diagrams = []
     for o in diag_overrides_result.scalars().all():
+        diag_conflicts: dict = {}
+        if o.operation == "modified" and o.base_snapshot and o.diagram_id:
+            diag_result = await db.execute(select(Diagram).where(Diagram.id == o.diagram_id))
+            main_diag = diag_result.scalar_one_or_none()
+            if main_diag and (
+                main_diag.updated_at is None or main_diag.updated_at > branch.base_snapshot_at
+            ):
+                main_dict = diagram_to_dict(main_diag)
+                diag_conflicts = compute_field_diff(o.base_snapshot, main_dict, o.draft)
+
         diagrams.append(
             {
                 "override_id": str(o.id),
@@ -379,7 +407,8 @@ async def get_branch_diff(
                 "operation": o.operation,
                 "draft": o.draft,
                 "base_snapshot": o.base_snapshot,
-                "conflicts": {},  # populated in Phase 5
+                "has_conflicts": any(v == "conflict" for v in diag_conflicts.values()),
+                "conflicts": diag_conflicts,
             }
         )
 
