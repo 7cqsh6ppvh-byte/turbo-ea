@@ -1,7 +1,19 @@
 """Release Workflow service — branch overlay and conflict-detection logic.
 
-This module contains pure business logic that does NOT touch main tables.
-All writes go through the rwf_branch_*_overrides shadow tables.
+During normal branch operations (reads and writes inside the workspace) this
+module does NOT touch main tables — all changes are isolated to the
+rwf_branch_*_overrides shadow tables.
+
+On MERGE the service applies overrides to main tables and then runs the same
+post-write side-effects as the standard card/relation/diagram endpoints:
+  • data_quality recomputation
+  • calculated field evaluation (calculation_engine)
+  • card.created / card.updated events (event_bus)
+
+This ensures that AI suggestion data, TurboLens analyses, calculated fields,
+and all other backend features that "seep through" card data remain consistent
+after a branch is merged — the merged cards look identical to cards that were
+edited directly through the standard API.
 """
 
 from __future__ import annotations
@@ -782,8 +794,116 @@ async def execute_merge(
     branch.reviewed_at = now
     branch.updated_at = now
 
+    # Flush so all new/updated Card rows get their PKs and are visible to
+    # the calculation engine and data-quality scorer within this transaction.
     await db.flush()
+
+    # --- Phase 6: post-merge side-effects ---
+    # Run the same post-write pipeline as the standard card endpoints so that
+    # AI suggestion data, TurboLens analyses, calculated fields, and other
+    # backend features that read card data see consistent state after merge.
+    await _run_post_merge_side_effects(
+        db=db,
+        card_overrides=card_overrides,
+        merged_by_id=merged_by_id,
+        now=now,
+    )
+
     return stats
+
+
+async def _run_post_merge_side_effects(
+    db: "AsyncSession",
+    card_overrides: list["RwfBranchCardOverride"],
+    merged_by_id: "uuid.UUID",
+    now: "datetime",
+) -> None:
+    """Run data-quality, calculated-field, and event-bus side-effects for every
+    card that was created or modified by the merge.
+
+    Mirrors the pipeline in ``cards.py`` PATCH / bulk-create so that merged
+    cards are indistinguishable from cards written through the standard API.
+    Failures are logged but do not abort the (already-committed) merge.
+    """
+    import logging
+
+    from app.services.calculation_engine import run_calculations_for_card
+    from app.services.event_bus import event_bus
+
+    logger = logging.getLogger(__name__)
+
+    for ov in card_overrides:
+        if ov.operation not in ("modified", "created"):
+            continue
+
+        card_id = ov.card_id
+        if ov.operation == "created":
+            # Newly created card — find it by matching the draft name/type
+            # (the card was added to the session in Phase 2; we locate it
+            #  via a DB query after flush so we have its real UUID).
+            try:
+                draft = dict(ov.draft)
+                from sqlalchemy import and_
+
+                result = await db.execute(
+                    select(Card).where(
+                        and_(
+                            Card.name == draft.get("name"),
+                            Card.type == draft.get("type"),
+                            Card.created_at >= now,
+                        )
+                    )
+                )
+                new_card = result.scalars().first()
+                if new_card:
+                    card_id = new_card.id
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "RWF merge: could not locate newly created card for side-effects: %s", exc
+                )
+                continue
+
+        if not card_id:
+            continue
+
+        try:
+            card_result = await db.execute(select(Card).where(Card.id == card_id))
+            card = card_result.scalar_one_or_none()
+            if not card:
+                continue
+
+            # 1. Recompute data quality
+            from app.api.v1.cards import _calc_data_quality
+
+            card.data_quality = await _calc_data_quality(db, card)
+
+            # 2. Run calculated fields (skip PPM-managed cost fields)
+            try:
+                from app.api.v1.cards import _get_ppm_exclusions
+
+                ppm_excl = await _get_ppm_exclusions(db, card)
+            except Exception:  # noqa: BLE001
+                ppm_excl: set[str] = set()
+            await run_calculations_for_card(db, card, exclude_fields=ppm_excl)
+
+            # 3. Emit event so SSE subscribers, AI, and audit trail are updated
+            event_type = "card.created" if ov.operation == "created" else "card.updated"
+            await event_bus.publish(
+                event_type,
+                {"id": str(card.id), "source": "rwf_merge", "branch_id": str(ov.branch_id)},
+                db=db,
+                card_id=card.id,
+                user_id=merged_by_id,
+            )
+
+        except Exception as exc:  # noqa: BLE001
+            # Side-effects are best-effort — the merge itself is already
+            # committed.  Log and continue so one bad card doesn't block the rest.
+            logger.warning(
+                "RWF merge post-merge side-effect failed for card %s: %s",
+                card_id,
+                exc,
+            )
 
 
 def _apply_draft_to_card(card: "Card", draft: dict, now: "datetime") -> None:

@@ -22,12 +22,8 @@ import {
 } from "@/hooks/useDateFormat";
 import { invalidateAppTitle } from "@/hooks/useAppTitle";
 import { invalidateCurrency } from "@/hooks/useCurrency";
-import { invalidateBpmEnabled } from "@/hooks/useBpmEnabled";
-import { invalidateVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
+import { primeModuleState } from "@/hooks/useModules";
 import { invalidateComplianceRegulations } from "@/hooks/useComplianceRegulations";
-import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
-import { invalidatePpmEnabled } from "@/hooks/usePpmEnabled";
-import { invalidateRwfEnabled } from "@/hooks/useRwfEnabled";
 import { invalidateEnabledLocalesGlobal } from "@/hooks/useEnabledLocales";
 import { invalidateLoginBranding } from "@/hooks/useLoginBranding";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n";
@@ -79,11 +75,17 @@ export function primeBootstrap(): Promise<void> {
 
       invalidateAppTitle(r.app_title);
 
-      invalidateBpmEnabled(r.bpm_enabled);
-      invalidatePpmEnabled(r.ppm_enabled);
-      invalidateVisualFirstEnabled(r.visualfirst_enabled);
-      invalidateGrcEnabled(r.grc_enabled);
-      invalidateRwfEnabled(r.rwf_enabled);
+      // Prime all optional module states from the single bootstrap response.
+      // Adding a new module: add its bootstrapKey to MODULE_REGISTRY in
+      // src/config/modules.ts and the corresponding field to BootstrapResponse.
+      primeModuleState({
+        bpm: r.bpm_enabled,
+        ppm: r.ppm_enabled,
+        grc: r.grc_enabled,
+        rwf: r.rwf_enabled,
+        visualfirst: r.visualfirst_enabled,
+        turbolens: r.turbolens_enabled,
+      });
 
       const validLocales = r.enabled_locales.filter((l): l is SupportedLocale =>
         (SUPPORTED_LOCALES as readonly string[]).includes(l),

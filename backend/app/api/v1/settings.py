@@ -1390,6 +1390,36 @@ async def update_rwf_enabled(
     return {"ok": True}
 
 
+@router.get("/modules")
+async def get_all_modules(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns the enabled/disabled state of every optional
+    feature module in a single response.
+
+    This is the canonical discovery endpoint for the module registry.  The
+    frontend bootstrap already returns the same values individually; this
+    endpoint exists for external tooling, admin UIs, and future modules that
+    want to self-register without touching the bootstrap handler.
+
+    Adding a new module requires only:
+      1. Storing its flag in general_settings (e.g. ``general["fooEnabled"]``).
+      2. Adding it to this response dict.
+      3. Adding it to the /settings/bootstrap response.
+      No schema migration needed — JSONB keys are data.
+    """
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {
+        "bpm": general.get("bpmEnabled", True),
+        "ppm": general.get("ppmEnabled", False),
+        "grc": general.get("grcEnabled", True),
+        "rwf": general.get("rwfEnabled", False),
+        "visualfirst": general.get("visualFirstEnabled", True),
+        "turbolens": general.get("turboLensEnabled", True),
+        "archimate": general.get("archiMateEnabled", False),
+    }
+
+
 @router.get("/mcp/status")
 async def get_mcp_status(db: AsyncSession = Depends(get_db)):
     """Public endpoint — returns MCP + SSO availability (no secrets exposed).

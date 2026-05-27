@@ -1,8 +1,11 @@
 /**
- * ModuleGate — wraps a route element for an optional module (BPM, PPM,
- * TurboLens, RWF) and renders a friendly "module disabled" placeholder when the
- * admin has turned the module off, instead of letting the page load and
- * issue API calls that would fail or render an empty shell.
+ * ModuleGate — wraps a route element for an optional module and renders a
+ * friendly "module disabled" placeholder when the admin has turned the module
+ * off, instead of letting the page load and issue API calls that would fail.
+ *
+ * Adding a new module requires only one change: add an entry to
+ * src/config/modules.ts.  This component derives all its behaviour (icon,
+ * settings tab, enabled state) from the MODULE_MAP registry — no edits here.
  */
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -13,76 +16,24 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
-import { useBpmEnabled } from "@/hooks/useBpmEnabled";
-import { useGrcEnabled } from "@/hooks/useGrcEnabled";
-import { usePpmEnabled } from "@/hooks/usePpmEnabled";
-import { useRwfEnabled } from "@/hooks/useRwfEnabled";
-import { useTurboLensReady } from "@/hooks/useTurboLensReady";
-import { useVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
-
-type ModuleKey = "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst" | "rwf";
+import { useModules } from "@/hooks/useModules";
+import { MODULE_MAP, type ModuleKey } from "@/config/modules";
 
 interface Props {
   module: ModuleKey;
   children: React.ReactNode;
 }
 
-const SETTINGS_TAB: Record<ModuleKey, string> = {
-  bpm: "/admin/settings?tab=bpm",
-  ppm: "/admin/settings?tab=ppm",
-  turbolens: "/admin/settings?tab=turbolens",
-  grc: "/admin/settings",
-  visualfirst: "/admin/settings",
-  rwf: "/admin/settings?tab=rwf",
-};
-
-const MODULE_ICON: Record<ModuleKey, string> = {
-  bpm: "schema",
-  ppm: "rocket_launch",
-  turbolens: "psychology",
-  grc: "policy",
-  visualfirst: "layers",
-  rwf: "account_tree",
-};
-
 export default function ModuleGate({ module, children }: Props) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
-  const { bpmEnabled, bpmLoaded } = useBpmEnabled();
-  const { ppmEnabled, ppmLoaded } = usePpmEnabled();
-  const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
-  const { grcEnabled, grcLoaded } = useGrcEnabled();
-  const { visualFirstEnabled, visualFirstLoaded } = useVisualFirstEnabled();
-  const { rwfEnabled, rwfLoaded } = useRwfEnabled();
+  const { isEnabled, isLoaded } = useModules();
 
-  const enabled =
-    module === "bpm"
-      ? bpmEnabled
-      : module === "ppm"
-        ? ppmEnabled
-        : module === "grc"
-          ? grcEnabled
-          : module === "visualfirst"
-            ? visualFirstEnabled
-            : module === "rwf"
-              ? rwfEnabled
-              : turboLensEnabled;
-  const loaded =
-    module === "bpm"
-      ? bpmLoaded
-      : module === "ppm"
-        ? ppmLoaded
-        : module === "grc"
-          ? grcLoaded
-          : module === "visualfirst"
-            ? visualFirstLoaded
-            : module === "rwf"
-              ? rwfLoaded
-              : turboLensLoaded;
+  const def = MODULE_MAP[module];
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.
-  if (!loaded) {
+  if (!isLoaded(module)) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress />
@@ -90,7 +41,7 @@ export default function ModuleGate({ module, children }: Props) {
     );
   }
 
-  if (enabled) return <>{children}</>;
+  if (isEnabled(module)) return <>{children}</>;
 
   const moduleLabel = t(`modules.${module}`);
 
@@ -98,7 +49,7 @@ export default function ModuleGate({ module, children }: Props) {
     <Box sx={{ maxWidth: 640, mx: "auto", mt: { xs: 4, sm: 8 }, px: 2 }}>
       <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
         <Stack alignItems="center" spacing={2}>
-          <MaterialSymbol icon={MODULE_ICON[module]} size={56} color="#888" />
+          <MaterialSymbol icon={def.icon} size={56} color="#888" />
           <Typography variant="h5" fontWeight={600}>
             {t("moduleDisabled.title", { module: moduleLabel })}
           </Typography>
@@ -111,7 +62,7 @@ export default function ModuleGate({ module, children }: Props) {
             </Button>
             <Button
               variant="contained"
-              onClick={() => navigate(SETTINGS_TAB[module])}
+              onClick={() => navigate(def.settingsTab)}
               startIcon={<MaterialSymbol icon="settings" size={18} />}
             >
               {t("moduleDisabled.openSettings")}
