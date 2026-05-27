@@ -50,5 +50,6 @@
     "userMenu.referenceCatalogues": "Referenzkataloge",
     "userMenu.processCatalogue": "Prozesskatalog",
     "userMenu.valueStreamCatalogue": "Wertstrom-Katalog",
-    "visualfirst": "VisualFirst"
+    "visualfirst": "VisualFirst",
+    "rwf": "Releases"
 }

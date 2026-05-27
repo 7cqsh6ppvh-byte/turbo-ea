@@ -7,7 +7,6 @@ import base64
 import secrets
 import time
 
-import pytest
 
 from turbo_ea_mcp.oauth import (
     OAuthStore,

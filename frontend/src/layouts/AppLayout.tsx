@@ -27,6 +27,7 @@ import { useEventStream } from "@/hooks/useEventStream";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
+import { useRwfEnabled } from "@/hooks/useRwfEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 import { useVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 import { useThemeMode } from "@/hooks/useThemeMode";
@@ -81,6 +82,7 @@ const NAV_ITEM_DEFS: NavItemDef[] = [
   { labelKey: "visualfirst", icon: "layers", path: "/visualfirst", permission: "visualfirst.view" },
   { labelKey: "diagrams", icon: "schema", path: "/diagrams", permission: "diagrams.view" },
   { labelKey: "grc", icon: "policy", path: "/grc", permission: "grc.view" },
+  { labelKey: "rwf", icon: "account_tree", path: "/rwf", permission: "rwf.view" },
   { labelKey: "todos", icon: "checklist", path: "/todos" },
 ];
 
@@ -111,6 +113,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
   const { bpmEnabled } = useBpmEnabled();
   const { ppmEnabled } = usePpmEnabled();
   const { grcEnabled } = useGrcEnabled();
+  const { rwfEnabled } = useRwfEnabled();
   const { turboLensReady } = useTurboLensReady();
   const { visualFirstEnabled } = useVisualFirstEnabled();
   const { enabledLocales } = useEnabledLocales();
@@ -134,6 +137,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     if (!bpmEnabled) items = items.filter((item) => item.labelKey !== "bpm");
     if (!ppmEnabled) items = items.filter((item) => item.labelKey !== "ppm");
     if (!grcEnabled) items = items.filter((item) => item.labelKey !== "grc");
+    if (!rwfEnabled) items = items.filter((item) => item.labelKey !== "rwf");
     if (!visualFirstEnabled) items = items.filter((item) => item.labelKey !== "visualfirst");
 
     // When PPM is disabled, EA Delivery has no parent tab to live under —
@@ -181,7 +185,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     });
 
     return items.filter((item) => hasPerm(item.permission)).map(resolve);
-  }, [bpmEnabled, ppmEnabled, grcEnabled, visualFirstEnabled, turboLensReady, can, t]);
+  }, [bpmEnabled, ppmEnabled, grcEnabled, rwfEnabled, visualFirstEnabled, turboLensReady, can, t]);
 
   // Resolve admin item labels via i18n and filter based on permissions
   const adminItems = useMemo(() => {
