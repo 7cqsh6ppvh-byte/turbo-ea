@@ -33,6 +33,7 @@ from app.api.v1 import (
     risk_mitigation_tasks,
     risks,
     roles,
+    rwf,
     saved_reports,
     servicenow,
     settings,
@@ -98,3 +99,4 @@ api_router.include_router(capability_catalogue.router)
 api_router.include_router(process_catalogue.router)
 api_router.include_router(value_stream_catalogue.router)
 api_router.include_router(principles_catalogue.router)
+api_router.include_router(rwf.router)
