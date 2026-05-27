@@ -131,6 +131,15 @@ async def _change_counts(db: AsyncSession, branch_id: uuid.UUID) -> tuple[int, i
     return card_cnt, rel_cnt, diag_cnt
 
 
+def _require_open_branch(branch: RwfBranch) -> None:
+    """Raise 422 if the branch is not in 'open' status (writes require open)."""
+    if branch.status != "open":
+        raise HTTPException(
+            status_code=422,
+            detail=(f"Branch is '{branch.status}'. Only 'open' branches accept workspace edits."),
+        )
+
+
 # ---------------------------------------------------------------------------
 # Branches — CRUD
 # ---------------------------------------------------------------------------
@@ -375,6 +384,294 @@ async def get_branch_diff(
         )
 
     return {"cards": cards, "relations": relations, "diagrams": diagrams}
+
+
+# ---------------------------------------------------------------------------
+# Workspace — branch-scoped card reads and writes
+# ---------------------------------------------------------------------------
+
+
+@router.get("/branches/{branch_id}/cards")
+async def branch_card_list(
+    branch_id: uuid.UUID,
+    page: int = 1,
+    page_size: int = 100,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Return the branch-overlay card list (main + overrides applied)."""
+    from app.services.rwf_service import get_branch_card_list
+
+    await PermissionService.require_permission(db, user, "rwf.view")
+    branch = await _get_branch_or_404(db, branch_id)
+    return await get_branch_card_list(db, branch, page=page, page_size=page_size)
+
+
+@router.get("/branches/{branch_id}/cards/{card_id}")
+async def branch_card_detail(
+    branch_id: uuid.UUID,
+    card_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Return branch-scoped card detail (draft if override exists, else main)."""
+    from app.services.rwf_service import get_branch_card
+
+    await PermissionService.require_permission(db, user, "rwf.view")
+    branch = await _get_branch_or_404(db, branch_id)
+    card = await get_branch_card(db, branch, card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not found in this branch")
+    return card
+
+
+class CardCreatePayload(BaseModel):
+    name: str
+    type: str
+    subtype: str | None = None
+    description: str | None = None
+    attributes: dict | None = None
+    lifecycle: dict | None = None
+
+
+class CardPatchPayload(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    subtype: str | None = None
+    attributes: dict | None = None
+    lifecycle: dict | None = None
+
+
+@router.post("/branches/{branch_id}/cards", status_code=201)
+async def branch_card_create(
+    branch_id: uuid.UUID,
+    body: CardCreatePayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Create a card exclusively in the branch (main `cards` table untouched)."""
+    from app.services.rwf_service import create_card_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    payload = {
+        "id": None,
+        "name": body.name,
+        "type": body.type,
+        "subtype": body.subtype,
+        "description": body.description,
+        "attributes": body.attributes or {},
+        "lifecycle": body.lifecycle or {},
+        "status": "ACTIVE",
+        "approval_status": "DRAFT",
+    }
+    result = await create_card_in_branch(db, branch, payload)
+    await db.commit()
+    return result
+
+
+@router.patch("/branches/{branch_id}/cards/{card_id}")
+async def branch_card_edit(
+    branch_id: uuid.UUID,
+    card_id: uuid.UUID,
+    body: CardPatchPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Edit a card within the branch (copy-on-write; main table untouched)."""
+    from app.services.rwf_service import edit_card_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    result = await edit_card_in_branch(db, branch, card_id, patch)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Card not found in this branch")
+    await db.commit()
+    return result
+
+
+@router.delete("/branches/{branch_id}/cards/{card_id}")
+async def branch_card_delete(
+    branch_id: uuid.UUID,
+    card_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Mark a main card as deleted in the branch (main table untouched)."""
+    from app.services.rwf_service import delete_card_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    ok = await delete_card_in_branch(db, branch, card_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Card not found")
+    await db.commit()
+    return {"ok": True}
+
+
+@router.delete("/branches/{branch_id}/cards/override/{override_id}")
+async def branch_card_override_delete(
+    branch_id: uuid.UUID,
+    override_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Remove a branch-created card override (no main row to touch)."""
+    from app.services.rwf_service import delete_branch_created_card
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    ok = await delete_branch_created_card(db, branch, override_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Override not found")
+    await db.commit()
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Workspace — branch-scoped relation reads and writes
+# ---------------------------------------------------------------------------
+
+
+@router.get("/branches/{branch_id}/relations")
+async def branch_relation_list(
+    branch_id: uuid.UUID,
+    page: int = 1,
+    page_size: int = 100,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Return branch-scoped relations (main + overrides applied)."""
+    from app.services.rwf_service import get_branch_relations
+
+    await PermissionService.require_permission(db, user, "rwf.view")
+    branch = await _get_branch_or_404(db, branch_id)
+    return await get_branch_relations(db, branch, page=page, page_size=page_size)
+
+
+class RelationCreatePayload(BaseModel):
+    type: str
+    source_id: str
+    target_id: str
+    attributes: dict | None = None
+
+
+@router.post("/branches/{branch_id}/relations", status_code=201)
+async def branch_relation_create(
+    branch_id: uuid.UUID,
+    body: RelationCreatePayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Add a relation exclusively in the branch (main `relations` table untouched)."""
+    from app.services.rwf_service import create_relation_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    payload = {
+        "id": None,
+        "type": body.type,
+        "source_id": body.source_id,
+        "target_id": body.target_id,
+        "attributes": body.attributes or {},
+    }
+    result = await create_relation_in_branch(db, branch, payload)
+    await db.commit()
+    return result
+
+
+@router.delete("/branches/{branch_id}/relations/{relation_id}")
+async def branch_relation_delete(
+    branch_id: uuid.UUID,
+    relation_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Mark a main relation as deleted in the branch (main table untouched)."""
+    from app.services.rwf_service import delete_relation_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    ok = await delete_relation_in_branch(db, branch, relation_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Relation not found")
+    await db.commit()
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Workspace — branch-scoped diagram reads and writes
+# ---------------------------------------------------------------------------
+
+
+@router.get("/branches/{branch_id}/diagrams/{diagram_id}")
+async def branch_diagram_detail(
+    branch_id: uuid.UUID,
+    diagram_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Return branch-scoped diagram (draft if override exists, else main)."""
+    from app.services.rwf_service import get_branch_diagram
+
+    await PermissionService.require_permission(db, user, "rwf.view")
+    branch = await _get_branch_or_404(db, branch_id)
+    result = await get_branch_diagram(db, branch, diagram_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Diagram not found in this branch")
+    return result
+
+
+class DiagramPatchPayload(BaseModel):
+    name: str | None = None
+    data: dict | None = None
+
+
+@router.patch("/branches/{branch_id}/diagrams/{diagram_id}")
+async def branch_diagram_edit(
+    branch_id: uuid.UUID,
+    diagram_id: uuid.UUID,
+    body: DiagramPatchPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Edit a diagram within the branch (copy-on-write; main table untouched)."""
+    from app.services.rwf_service import edit_diagram_in_branch
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    patch = {k: v for k, v in body.model_dump().items() if v is not None}
+    result = await edit_diagram_in_branch(db, branch, diagram_id, patch)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Diagram not found in this branch")
+    await db.commit()
+    return result
 
 
 # ---------------------------------------------------------------------------
