@@ -170,6 +170,7 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "ppm_enabled": general.get("ppmEnabled", False),
         "archimate_enabled": general.get("archiMateEnabled", False),
         "visualfirst_enabled": general.get("visualFirstEnabled", True),
+        "rwf_enabled": general.get("rwfEnabled", False),
         "turbolens_enabled": general.get("turboLensEnabled", True),
         "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
@@ -1355,6 +1356,37 @@ async def update_principles_display(
     row.general_settings = general
     await db.commit()
 
+    return {"ok": True}
+
+
+class RwfEnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/rwf-enabled")
+async def get_rwf_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the Release Workflow module is enabled."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {"enabled": general.get("rwfEnabled", False)}
+
+
+@router.patch("/rwf-enabled")
+async def update_rwf_enabled(
+    body: RwfEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — enable or disable the Release Workflow module."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["rwfEnabled"] = body.enabled
+    row.general_settings = general
+
+    await db.commit()
     return {"ok": True}
 
 

@@ -454,6 +454,7 @@
   "settings.visualfirst.hidden": "Les fonctionnalités VisualFirst sont masquées",
   "settings.visualfirst.enabledSuccess": "Module VisualFirst activé",
   "settings.visualfirst.disabledSuccess": "Module VisualFirst désactivé",
+
   "settings.fiscal.title": "Exercice fiscal",
   "settings.fiscal.description": "Définissez le mois de début de votre exercice fiscal. Cela affecte la planification budgétaire et les rapports de coûts dans le module PPM.",
   "settings.fiscal.startMonth": "Mois de début de l'exercice fiscal",

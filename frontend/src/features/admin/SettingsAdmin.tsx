@@ -30,6 +30,7 @@ import {
 import { invalidateAppTitle, DEFAULT_APP_TITLE } from "@/hooks/useAppTitle";
 import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
 import { invalidateVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
+import { invalidateRwfEnabled } from "@/hooks/useRwfEnabled";
 import { invalidateLoginBranding } from "@/hooks/useLoginBranding";
 import { useMetamodel } from "@/hooks/useMetamodel";
 import { useEnabledLocales } from "@/hooks/useEnabledLocales";
@@ -188,6 +189,10 @@ function GeneralTab() {
   const [visualfirstEnabled, setVisualfirstEnabled] = useState(true);
   const [savingVisualfirst, setSavingVisualfirst] = useState(false);
 
+  // RWF toggle state
+  const [rwfEnabled, setRwfEnabled] = useState(false);
+  const [savingRwf, setSavingRwf] = useState(false);
+
   // Fiscal year start
   const [fiscalYearStart, setFiscalYearStart] = useState(1);
   const [savingFiscal, setSavingFiscal] = useState(false);
@@ -237,8 +242,9 @@ function GeneralTab() {
          login_help_text: string;
          login_help_link: string;
        }>("/settings/login-branding"),
+       api.get<{ enabled: boolean }>("/settings/rwf-enabled"),
      ])
-     .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData, visualfirstData, loginBrandingData]) => {
+     .then(([emailData, logoData, faviconData, currencyData, bpmData, localesData, ppmData, fiscalData, appTitleData, dateFormatData, grcData, visualfirstData, loginBrandingData, rwfData]) => {
        setSmtpHost(emailData.smtp_host);
        setSmtpPort(emailData.smtp_port);
        setSmtpUser(emailData.smtp_user);
@@ -254,6 +260,7 @@ function GeneralTab() {
        setPpmEnabled(ppmData.enabled);
        setGrcEnabled(grcData.enabled);
        setVisualfirstEnabled(visualfirstData.enabled);
+       setRwfEnabled(rwfData.enabled);
        setFiscalYearStart(fiscalData.month);
        setAppTitle(appTitleData.app_title || DEFAULT_APP_TITLE);
        const fmt = (DATE_FORMAT_OPTIONS as string[]).includes(dateFormatData.date_format)
@@ -447,6 +454,21 @@ function GeneralTab() {
        setSavingVisualfirst(false);
      }
    };
+
+  const handleRwfToggle = async (enabled: boolean) => {
+    setSavingRwf(true);
+    setError("");
+    try {
+      await api.patch("/settings/rwf-enabled", { enabled });
+      setRwfEnabled(enabled);
+      invalidateRwfEnabled(enabled);
+      setSnack(enabled ? t("settings.rwf.enabledSuccess") : t("settings.rwf.disabledSuccess"));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("common:errors.generic"));
+    } finally {
+      setSavingRwf(false);
+    }
+  };
 
   const handleFiscalYearSave = async (month: number) => {
     setSavingFiscal(true);
@@ -1137,6 +1159,35 @@ function GeneralTab() {
             />
           }
           label={visualfirstEnabled ? t("settings.visualfirst.visible") : t("settings.visualfirst.hidden")}
+        />
+      </Paper>
+
+      {/* Release Workflow Module Toggle */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
+          <MaterialSymbol icon="account_tree" size={22} color="#555" />
+          <Typography variant="h6" fontWeight={600}>
+            {t("settings.rwf.title")}
+          </Typography>
+          <Chip
+            label={rwfEnabled ? t("settings.rwf.enabled") : t("settings.rwf.disabled")}
+            size="small"
+            color={rwfEnabled ? "success" : "default"}
+            sx={{ ml: 1 }}
+          />
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("settings.rwf.description")}
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={rwfEnabled}
+              onChange={(e) => handleRwfToggle(e.target.checked)}
+              disabled={savingRwf}
+            />
+          }
+          label={rwfEnabled ? t("settings.rwf.visible") : t("settings.rwf.hidden")}
         />
       </Paper>
 

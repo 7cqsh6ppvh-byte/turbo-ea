@@ -455,6 +455,7 @@
   "settings.visualfirst.hidden": "Функции VisualFirst скрыты",
   "settings.visualfirst.enabledSuccess": "Модуль VisualFirst включён",
   "settings.visualfirst.disabledSuccess": "Модуль VisualFirst отключён",
+
   "settings.fiscal.title": "Финансовый год",
   "settings.fiscal.description": "Установите месяц начала финансового года. Это влияет на планирование бюджета и отчёты по затратам в модуле PPM.",
   "settings.fiscal.startMonth": "Месяц начала финансового года",

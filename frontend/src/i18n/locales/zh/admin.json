@@ -454,6 +454,7 @@
   "settings.visualfirst.hidden": "VisualFirst 功能已隐藏",
   "settings.visualfirst.enabledSuccess": "VisualFirst 模块已启用",
   "settings.visualfirst.disabledSuccess": "VisualFirst 模块已禁用",
+
   "settings.fiscal.title": "财政年度",
   "settings.fiscal.description": "设置财政年度的起始月份。这将影响PPM模块中的预算规划和成本报告。",
   "settings.fiscal.startMonth": "财政年度起始月份",

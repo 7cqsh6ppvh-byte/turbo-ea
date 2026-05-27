@@ -454,6 +454,7 @@
   "settings.visualfirst.hidden": "Recursos VisualFirst estão ocultos",
   "settings.visualfirst.enabledSuccess": "Módulo VisualFirst habilitado",
   "settings.visualfirst.disabledSuccess": "Módulo VisualFirst desabilitado",
+
   "settings.fiscal.title": "Ano fiscal",
   "settings.fiscal.description": "Defina o mês de início do seu ano fiscal. Isso afeta o planejamento orçamentário e os relatórios de custos no módulo PPM.",
   "settings.fiscal.startMonth": "Mês de início do ano fiscal",

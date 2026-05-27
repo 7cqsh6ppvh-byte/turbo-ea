@@ -11,6 +11,7 @@ from app.core.permissions import (
     ADMIN_PERMISSIONS,
     BPM_ADMIN_PERMISSIONS,
     DEFAULT_CARD_PERMISSIONS_BY_ROLE,
+    EA_ARCHITECT_PERMISSIONS,
     MEMBER_PERMISSIONS,
     VIEWER_PERMISSIONS,
 )
@@ -5234,6 +5235,16 @@ async def seed_metamodel(db: AsyncSession) -> None:
             "sort_order": 2,
         },
         {
+            "key": "ea_architect",
+            "label": "EA Architect",
+            "description": "Full EA access including Release Workflow approve rights.",
+            "is_system": False,
+            "is_default": False,
+            "color": "#5c6bc0",
+            "permissions": EA_ARCHITECT_PERMISSIONS,
+            "sort_order": 3,
+        },
+        {
             "key": "viewer",
             "label": "Viewer",
             "description": "Read-only access to the EA landscape.",
@@ -5241,7 +5252,7 @@ async def seed_metamodel(db: AsyncSession) -> None:
             "is_default": False,
             "color": "#757575",
             "permissions": VIEWER_PERMISSIONS,
-            "sort_order": 3,
+            "sort_order": 4,
         },
     ]
 

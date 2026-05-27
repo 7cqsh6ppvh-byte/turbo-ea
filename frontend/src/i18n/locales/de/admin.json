@@ -455,6 +455,7 @@
   "settings.visualfirst.hidden": "VisualFirst-Funktionen sind ausgeblendet",
   "settings.visualfirst.enabledSuccess": "VisualFirst-Modul aktiviert",
   "settings.visualfirst.disabledSuccess": "VisualFirst-Modul deaktiviert",
+
   "settings.fiscal.title": "Geschäftsjahr",
   "settings.fiscal.description": "Legen Sie den Startmonat Ihres Geschäftsjahres fest. Dies wirkt sich auf die Budgetplanung und Kostenberichte im PPM-Modul aus.",
   "settings.fiscal.startMonth": "Startmonat Geschäftsjahr",

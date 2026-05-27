@@ -36,6 +36,13 @@ from app.models.risk_mitigation_task import (
     RiskMitigationTaskOccurrence,
 )
 from app.models.role import Role
+from app.models.rwf import (
+    EaSnapshot,
+    RwfBranch,
+    RwfBranchCardOverride,
+    RwfBranchDiagramOverride,
+    RwfBranchRelationOverride,
+)
 from app.models.saved_report import SavedReport
 from app.models.servicenow import (
     SnowConnection,
@@ -133,4 +140,9 @@ __all__ = [
     "SnowStagedRecord",
     "SnowIdentityMap",
     "UserFavorite",
+    "EaSnapshot",
+    "RwfBranch",
+    "RwfBranchCardOverride",
+    "RwfBranchDiagramOverride",
+    "RwfBranchRelationOverride",
 ]
