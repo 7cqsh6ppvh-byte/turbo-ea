@@ -1,7 +1,6 @@
 {
   "page.title": "Releases",
   "page.subtitle": "Verzweigungsbasierte Änderungsverwaltung für Ihre EA-Landschaft",
-
   "dashboard.title": "Release-Dashboard",
   "dashboard.openBranches": "Offene Branches",
   "dashboard.pendingReview": "Ausstehende Prüfung",
@@ -13,21 +12,18 @@
   "dashboard.noReviewQueue": "Keine Branches warten auf Prüfung.",
   "dashboard.newBranch": "Neuer Branch",
   "dashboard.viewAll": "Alle anzeigen",
-
   "branch.status.open": "Offen",
   "branch.status.in_review": "In Prüfung",
   "branch.status.approved": "Genehmigt",
   "branch.status.merged": "Zusammengeführt",
   "branch.status.rejected": "Abgelehnt",
   "branch.status.abandoned": "Abgebrochen",
-
   "branch.cards_one": "{{count}} Karte",
   "branch.cards_other": "{{count}} Karten",
   "branch.relations_one": "{{count}} Beziehung",
   "branch.relations_other": "{{count}} Beziehungen",
   "branch.diagrams_one": "{{count}} Diagramm",
   "branch.diagrams_other": "{{count}} Diagramme",
-
   "branches.title": "Branches",
   "branches.create": "Neuer Branch",
   "branches.empty": "Keine Branches entsprechen Ihren Filtern.",
@@ -41,14 +37,12 @@
   "branches.col.changes": "Änderungen",
   "branches.col.createdBy": "Erstellt von",
   "branches.col.createdAt": "Erstellt",
-
   "createBranch.title": "Neuer Branch",
   "createBranch.name": "Branch-Name",
   "createBranch.description": "Beschreibung (optional)",
   "createBranch.submit": "Branch erstellen",
   "createBranch.nameRequired": "Branch-Name ist erforderlich",
   "createBranch.cancel": "Abbrechen",
-
   "branchDetail.workspace": "Arbeitsbereich öffnen",
   "branchDetail.diff": "Änderungen anzeigen",
   "branchDetail.submit": "Zur Prüfung einreichen",
@@ -70,7 +64,6 @@
   "branchDetail.notFound": "Branch nicht gefunden.",
   "branchDetail.actions": "Aktionen",
   "branchDetail.rolledBackBy": "Zurückgesetzt von",
-
   "rollback.title": "Merge rückgängig machen",
   "rollback.description": "Diesen Merge rückgängig machen und alle betroffenen Karten, Beziehungen und Diagramme auf den Zustand vor dem Merge zurücksetzen. Dies kann nicht rückgängig gemacht werden.",
   "rollback.action": "Merge rückgängig machen",
@@ -78,9 +71,7 @@
   "rollback.inProgress": "Wird rückgesetzt...",
   "rollback.unavailable": "Rollback ist für diesen Branch nicht verfügbar. Er wurde vor der Einführung der Rollback-Funktion gemergt. Wenden Sie sich an Ihren Administrator für eine manuelle Wiederherstellung.",
   "rollback.done": "Dieser Branch wurde zurückgesetzt. Alle Änderungen aus diesem Branch wurden aus dem Live-Landscape entfernt.",
-
   "branch.status.rolled_back": "Zurückgesetzt",
-
   "workspace.title": "Arbeitsbereich",
   "workspace.back": "Zurück zum Branch",
   "workspace.tabs.cards": "Karten",
@@ -100,7 +91,6 @@
   "workspace.operation.created": "Neu",
   "workspace.operation.deleted": "Gelöscht",
   "workspace.operation.main": "Unverändert",
-
   "diff.title": "Branch-Änderungen",
   "diff.back": "Zurück zum Branch",
   "diff.cards": "Karten ({{count}})",
@@ -123,7 +113,6 @@
   "diff.operation.deleted": "Gelöscht",
   "diff.cardName": "Karte",
   "diff.diagramName": "Diagramm",
-
   "merge.title": "Branch in Main zusammenführen",
   "merge.subtitle": "Alle Konflikte lösen und dann bestätigen.",
   "merge.noConflicts": "Keine Konflikte. Bereit zum Zusammenführen.",
@@ -134,14 +123,12 @@
   "merge.chooseMain": "Main-Wert verwenden",
   "merge.chooseBranch": "Branch-Wert verwenden",
   "merge.conflictFor": "Konflikt in \"{{name}}\"",
-
   "sync.title": "Von Main synchronisieren",
   "sync.subtitle": "Neueste Main-Änderungen in diesen Branch ziehen.",
   "sync.noConflicts": "Keine Konflikte — Branch ist aktuell.",
   "sync.confirm": "Synchronisation anwenden",
   "sync.success": "Branch mit Main synchronisiert.",
   "sync.cancel": "Abbrechen",
-
   "snapshots.title": "Snapshots",
   "snapshots.create": "Neuer Snapshot",
   "snapshots.empty": "Noch keine Snapshots.",
@@ -154,7 +141,6 @@
   "snapshots.col.capturedAt": "Erfasst am",
   "snapshots.col.createdBy": "Erfasst von",
   "snapshots.col.actions": "Aktionen",
-
   "createSnapshot.title": "Neuer Snapshot",
   "createSnapshot.name": "Snapshot-Name",
   "createSnapshot.description": "Beschreibung (optional)",
@@ -162,7 +148,6 @@
   "createSnapshot.nameRequired": "Snapshot-Name ist erforderlich",
   "createSnapshot.cancel": "Abbrechen",
   "createSnapshot.hint": "Ein Snapshot erfasst den aktuellen Zustand aller Karten, Beziehungen und Diagramme.",
-
   "snapshotDiff.title": "Änderungen seit Snapshot",
   "snapshotDiff.back": "Zurück zu Snapshots",
   "snapshotDiff.snapshotAt": "Snapshot erstellt",
@@ -191,11 +176,13 @@
   "snapshotDiff.section.diagramsAdded": "Diagramme hinzugefügt",
   "snapshotDiff.section.diagramsRemoved": "Diagramme entfernt",
   "snapshotDiff.section.diagramsModified": "Diagramme geändert",
-
   "badge.pendingReview_one": "{{count}} Branch wartet auf Prüfung",
   "badge.pendingReview_other": "{{count}} Branches warten auf Prüfung",
-
   "error.loadFailed": "Daten konnten nicht geladen werden.",
   "error.saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-  "error.notFound": "Nicht gefunden."
+  "error.notFound": "Nicht gefunden.",
+  "panel.description": "Beschreibung",
+  "panel.attributes": "Attribute",
+  "panel.save": "Speichern",
+  "panel.saving": "Speichern…"
 }

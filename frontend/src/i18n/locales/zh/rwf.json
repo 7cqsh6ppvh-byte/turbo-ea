@@ -64,7 +64,6 @@
   "branchDetail.notFound": "未找到分支。",
   "branchDetail.actions": "操作",
   "branchDetail.rolledBackBy": "回滚执行者",
-
   "rollback.title": "回滚合并",
   "rollback.description": "撤销此次合并，将所有受影响的卡片、关系和图表恢复到合并前的状态。此操作不可撤销。",
   "rollback.action": "回滚合并",
@@ -72,9 +71,7 @@
   "rollback.inProgress": "正在回滚...",
   "rollback.unavailable": "此分支不支持回滚。该分支在回滚功能添加之前已合并。请联系管理员进行手动恢复。",
   "rollback.done": "此分支已回滚。该分支的所有更改已从实时架构中删除。",
-
   "branch.status.rolled_back": "已回滚",
-
   "workspace.title": "工作区",
   "workspace.back": "返回分支",
   "workspace.tabs.cards": "卡片",
@@ -183,5 +180,9 @@
   "badge.pendingReview_other": "{{count}} 个分支待审核",
   "error.loadFailed": "加载数据失败。",
   "error.saveFailed": "保存失败，请重试。",
-  "error.notFound": "未找到。"
+  "error.notFound": "未找到。",
+  "panel.description": "描述",
+  "panel.attributes": "属性",
+  "panel.save": "保存",
+  "panel.saving": "保存中…"
 }

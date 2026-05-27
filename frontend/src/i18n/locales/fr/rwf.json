@@ -64,7 +64,6 @@
   "branchDetail.notFound": "Branche introuvable.",
   "branchDetail.actions": "Actions",
   "branchDetail.rolledBackBy": "Annulé par",
-
   "rollback.title": "Annuler la fusion",
   "rollback.description": "Annuler cette fusion et restaurer toutes les cartes, relations et diagrammes affectés à leur état avant la fusion. Cette opération est irréversible.",
   "rollback.action": "Annuler la fusion",
@@ -72,9 +71,7 @@
   "rollback.inProgress": "Annulation en cours...",
   "rollback.unavailable": "L'annulation n'est pas disponible pour cette branche. Elle a été fusionnée avant l'ajout de la fonctionnalité d'annulation. Contactez votre administrateur pour une restauration manuelle.",
   "rollback.done": "Cette branche a été annulée. Toutes les modifications de cette branche ont été supprimées du paysage en direct.",
-
   "branch.status.rolled_back": "Annulé",
-
   "workspace.title": "Espace de travail",
   "workspace.back": "Retour à la branche",
   "workspace.tabs.cards": "Cartes",
@@ -183,5 +180,9 @@
   "badge.pendingReview_other": "{{count}} branches en attente",
   "error.loadFailed": "Échec du chargement.",
   "error.saveFailed": "Échec de la sauvegarde.",
-  "error.notFound": "Introuvable."
+  "error.notFound": "Introuvable.",
+  "panel.description": "Description",
+  "panel.attributes": "Attributs",
+  "panel.save": "Enregistrer",
+  "panel.saving": "Enregistrement…"
 }

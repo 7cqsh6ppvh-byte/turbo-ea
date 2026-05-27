@@ -197,5 +197,9 @@
 
   "error.loadFailed": "Failed to load release workflow data.",
   "error.saveFailed": "Failed to save. Please try again.",
-  "error.notFound": "Not found."
+  "error.notFound": "Not found.",
+  "panel.description": "Description",
+  "panel.attributes": "Attributes",
+  "panel.save": "Save",
+  "panel.saving": "Saving…"
 }

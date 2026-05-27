@@ -23,6 +23,7 @@ import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { api } from "@/api/client";
 import type { BranchCard, BranchRelation, RwfBranch } from "./rwf.types";
+import RwfCardDetailPanel from "./RwfCardDetailPanel";
 
 const OPERATION_COLOR: Record<string, "default" | "success" | "error" | "warning"> = {
   modified: "warning",
@@ -44,6 +45,8 @@ export default function RwfWorkspace() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"cards" | "relations" | "diagrams">("cards");
   const [error, setError] = useState("");
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!branchId) return;
@@ -144,7 +147,17 @@ export default function RwfWorkspace() {
               </TableHead>
               <TableBody>
                 {cards.map((c) => (
-                  <TableRow key={c.id || c._override_id} hover>
+                  <TableRow
+                    key={c.id || c._override_id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => {
+                      if (c.id) {
+                        setSelectedCardId(c.id);
+                        setPanelOpen(true);
+                      }
+                    }}
+                  >
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>{c.name}</Typography>
                     </TableCell>
@@ -259,6 +272,20 @@ export default function RwfWorkspace() {
             </Table>
           </Paper>
         )
+      )}
+
+      {/* Branch-scoped card detail panel */}
+      {branchId && (
+        <RwfCardDetailPanel
+          open={panelOpen}
+          branchId={branchId}
+          cardId={selectedCardId}
+          readOnly={isReadOnly}
+          onClose={() => { setPanelOpen(false); setSelectedCardId(null); }}
+          onSaved={(updated) => {
+            setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+          }}
+        />
       )}
     </Box>
   );

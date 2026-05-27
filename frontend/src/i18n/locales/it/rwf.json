@@ -64,7 +64,6 @@
   "branchDetail.notFound": "Branch non trovato.",
   "branchDetail.actions": "Azioni",
   "branchDetail.rolledBackBy": "Ripristinato da",
-
   "rollback.title": "Annulla merge",
   "rollback.description": "Annullare questo merge e ripristinare tutte le schede, relazioni e diagrammi interessati allo stato precedente al merge. Questa operazione non può essere annullata.",
   "rollback.action": "Annulla merge",
@@ -72,9 +71,7 @@
   "rollback.inProgress": "Annullamento in corso...",
   "rollback.unavailable": "Il rollback non è disponibile per questo branch. È stato unito prima dell'aggiunta della funzionalità di rollback. Contatta il tuo amministratore per un ripristino manuale.",
   "rollback.done": "Questo branch è stato ripristinato. Tutte le modifiche di questo branch sono state rimosse dal landscape in produzione.",
-
   "branch.status.rolled_back": "Ripristinato",
-
   "workspace.title": "Area di lavoro",
   "workspace.back": "Torna al branch",
   "workspace.tabs.cards": "Schede",
@@ -183,5 +180,9 @@
   "badge.pendingReview_other": "{{count}} branch in attesa",
   "error.loadFailed": "Caricamento dati non riuscito.",
   "error.saveFailed": "Salvataggio non riuscito.",
-  "error.notFound": "Non trovato."
+  "error.notFound": "Non trovato.",
+  "panel.description": "Descrizione",
+  "panel.attributes": "Attributi",
+  "panel.save": "Salva",
+  "panel.saving": "Salvataggio…"
 }

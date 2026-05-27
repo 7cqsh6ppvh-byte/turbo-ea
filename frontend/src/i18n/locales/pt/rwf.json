@@ -64,7 +64,6 @@
   "branchDetail.notFound": "Branch não encontrada.",
   "branchDetail.actions": "Ações",
   "branchDetail.rolledBackBy": "Revertido por",
-
   "rollback.title": "Reverter fusão",
   "rollback.description": "Desfazer esta fusão e restaurar todos os cartões, relações e diagramas afetados ao seu estado anterior à fusão. Esta ação não pode ser desfeita.",
   "rollback.action": "Reverter fusão",
@@ -72,9 +71,7 @@
   "rollback.inProgress": "Revertendo...",
   "rollback.unavailable": "O rollback não está disponível para esta branch. Ela foi mesclada antes da adição da funcionalidade de rollback. Entre em contato com seu administrador para restauração manual.",
   "rollback.done": "Esta branch foi revertida. Todas as alterações desta branch foram removidas do landscape ao vivo.",
-
   "branch.status.rolled_back": "Revertido",
-
   "workspace.title": "Área de trabalho",
   "workspace.back": "Voltar à branch",
   "workspace.tabs.cards": "Cartões",
@@ -183,5 +180,9 @@
   "badge.pendingReview_other": "{{count}} branches aguardando revisão",
   "error.loadFailed": "Falha ao carregar os dados.",
   "error.saveFailed": "Falha ao salvar. Tente novamente.",
-  "error.notFound": "Não encontrado."
+  "error.notFound": "Não encontrado.",
+  "panel.description": "Descrição",
+  "panel.attributes": "Atributos",
+  "panel.save": "Guardar",
+  "panel.saving": "Guardando…"
 }
