@@ -588,3 +588,359 @@ def compute_field_diff(base: dict, main: dict, branch: dict) -> dict[str, str]:
             result[path] = "branch_only"
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Merge (Phase 6)
+# ---------------------------------------------------------------------------
+
+
+async def execute_merge(
+    db: AsyncSession,
+    branch: "RwfBranch",
+    resolutions: dict[str, dict[str, str]],
+    merged_by_id: "uuid.UUID",
+) -> dict:
+    """Execute merge of branch into main tables in a single transaction.
+
+    Args:
+        branch: The RwfBranch ORM object (must be 'approved').
+        resolutions: { override_id_str: { deepdiff_path: "main" | "branch" | <value> } }
+        merged_by_id: User ID of the reviewer executing the merge.
+
+    Returns:
+        Summary dict with counts of applied changes.
+
+    Raises:
+        ValueError: If any 'modified' override has unresolved conflicts.
+    """
+    from datetime import datetime, timezone
+
+    card_overrides = (
+        await db.execute(
+            select(RwfBranchCardOverride).where(RwfBranchCardOverride.branch_id == branch.id)
+        )
+    ).scalars().all()
+
+    rel_overrides = (
+        await db.execute(
+            select(RwfBranchRelationOverride).where(
+                RwfBranchRelationOverride.branch_id == branch.id
+            )
+        )
+    ).scalars().all()
+
+    diag_overrides = (
+        await db.execute(
+            select(RwfBranchDiagramOverride).where(
+                RwfBranchDiagramOverride.branch_id == branch.id
+            )
+        )
+    ).scalars().all()
+
+    # --- Phase 1: conflict check ---
+    conflicts_pending: list[str] = []
+    for ov in card_overrides:
+        if ov.operation != "modified" or not ov.base_snapshot or not ov.card_id:
+            continue
+        card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+        main_card = card_result.scalar_one_or_none()
+        if not main_card:
+            continue
+        if main_card.updated_at and main_card.updated_at > branch.base_snapshot_at:
+            main_dict = card_to_dict(main_card)
+            field_conflicts = compute_field_diff(ov.base_snapshot, main_dict, ov.draft)
+            conflict_fields = {k for k, v in field_conflicts.items() if v == "conflict"}
+            ov_resolutions = resolutions.get(str(ov.id), {})
+            unresolved = conflict_fields - set(ov_resolutions.keys())
+            if unresolved:
+                conflicts_pending.append(str(ov.id))
+
+    if conflicts_pending:
+        raise ValueError(
+            f"Unresolved conflicts in overrides: {conflicts_pending}. "
+            "Provide resolutions for all conflicting fields."
+        )
+
+    now = datetime.now(timezone.utc)
+    stats = {"cards_modified": 0, "cards_created": 0, "cards_deleted": 0,
+             "relations_created": 0, "relations_deleted": 0,
+             "diagrams_modified": 0, "diagrams_created": 0}
+
+    # --- Phase 2: apply card overrides ---
+    for ov in card_overrides:
+        if ov.operation == "modified" and ov.card_id:
+            card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+            main_card = card_result.scalar_one_or_none()
+            if not main_card:
+                continue
+            # Build final values: start from draft, apply any "main" resolutions
+            draft = dict(ov.draft)
+            ov_resolutions = resolutions.get(str(ov.id), {})
+            if ov.base_snapshot and main_card.updated_at and \
+                    main_card.updated_at > branch.base_snapshot_at:
+                main_dict = card_to_dict(main_card)
+                field_conflicts = compute_field_diff(ov.base_snapshot, main_dict, draft)
+                for field_path, resolution in ov_resolutions.items():
+                    if resolution == "main" and field_path in field_conflicts:
+                        # Apply main value by reverting to main_dict value
+                        _apply_resolution(draft, field_path, main_dict, resolution)
+                    elif resolution == "branch":
+                        pass  # keep draft value
+                    elif resolution not in ("main", "branch"):
+                        _apply_custom_resolution(draft, field_path, resolution)
+
+            # Apply draft fields to main card
+            _apply_draft_to_card(main_card, draft, now)
+            stats["cards_modified"] += 1
+
+        elif ov.operation == "created":
+            new_card = _draft_to_new_card(ov.draft, now)
+            db.add(new_card)
+            stats["cards_created"] += 1
+
+        elif ov.operation == "deleted" and ov.card_id:
+            card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+            main_card = card_result.scalar_one_or_none()
+            if main_card:
+                main_card.status = "ARCHIVED"
+                main_card.updated_at = now
+            stats["cards_deleted"] += 1
+
+    # --- Phase 3: apply relation overrides ---
+    for ov in rel_overrides:
+        if ov.operation == "created":
+            new_rel = Relation(
+                id=uuid.uuid4(),
+                type=ov.draft["type"],
+                source_id=uuid.UUID(ov.draft["source_id"]),
+                target_id=uuid.UUID(ov.draft["target_id"]),
+                attributes=ov.draft.get("attributes") or {},
+                created_at=now,
+                updated_at=now,
+            )
+            db.add(new_rel)
+            stats["relations_created"] += 1
+
+        elif ov.operation == "deleted" and ov.relation_id:
+            rel_result = await db.execute(select(Relation).where(Relation.id == ov.relation_id))
+            main_rel = rel_result.scalar_one_or_none()
+            if main_rel:
+                await db.delete(main_rel)
+            stats["relations_deleted"] += 1
+
+    # --- Phase 4: apply diagram overrides ---
+    for ov in diag_overrides:
+        if ov.operation == "modified" and ov.diagram_id:
+            diag_result = await db.execute(
+                select(Diagram).where(Diagram.id == ov.diagram_id)
+            )
+            main_diag = diag_result.scalar_one_or_none()
+            if main_diag:
+                draft = dict(ov.draft)
+                if "name" in draft:
+                    main_diag.name = draft["name"]
+                if "data" in draft:
+                    main_diag.data = draft["data"]
+                main_diag.updated_at = now
+            stats["diagrams_modified"] += 1
+
+        elif ov.operation == "created":
+            new_diag = Diagram(
+                id=uuid.uuid4(),
+                name=ov.draft.get("name", "Untitled"),
+                type=ov.draft.get("type", "drawio"),
+                data=ov.draft.get("data") or {},
+                created_at=now,
+                updated_at=now,
+            )
+            db.add(new_diag)
+            stats["diagrams_created"] += 1
+
+    # --- Phase 5: finalise branch ---
+    branch.status = "merged"
+    branch.reviewed_by = merged_by_id
+    branch.reviewed_at = now
+    branch.updated_at = now
+
+    await db.flush()
+    return stats
+
+
+def _apply_draft_to_card(card: "Card", draft: dict, now: "datetime") -> None:
+    """Apply draft fields to an existing Card row."""
+
+    if "name" in draft:
+        card.name = draft["name"]
+    if "description" in draft:
+        card.description = draft["description"]
+    if "subtype" in draft:
+        card.subtype = draft["subtype"]
+    if "status" in draft:
+        card.status = draft["status"]
+    if "approval_status" in draft:
+        card.approval_status = draft["approval_status"]
+    if "attributes" in draft:
+        card.attributes = draft["attributes"]
+    if "lifecycle" in draft:
+        card.lifecycle = draft["lifecycle"]
+    if "alias" in draft:
+        card.alias = draft["alias"]
+    card.updated_at = now
+
+
+def _draft_to_new_card(draft: dict, now: "datetime") -> "Card":
+    """Create a new Card ORM object from a branch draft dict."""
+    return Card(
+        id=uuid.uuid4(),
+        type=draft.get("type", "Application"),
+        subtype=draft.get("subtype"),
+        name=draft.get("name", "Untitled"),
+        description=draft.get("description"),
+        attributes=draft.get("attributes") or {},
+        lifecycle=draft.get("lifecycle") or {},
+        status=draft.get("status", "ACTIVE"),
+        approval_status=draft.get("approval_status", "DRAFT"),
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def _apply_resolution(draft: dict, field_path: str, main_dict: dict, resolution: str) -> None:
+    """Apply a deepdiff field path resolution to the draft dict."""
+    # field_path looks like "root['name']" or "root['attributes']['cost']"
+    # We extract the key sequence and apply it
+    keys = _parse_deepdiff_path(field_path)
+    if not keys:
+        return
+    # Navigate to parent
+    target = draft
+    source = main_dict
+    for k in keys[:-1]:
+        if k not in target or not isinstance(target[k], dict):
+            return
+        target = target[k]
+        source = source.get(k, {}) if isinstance(source, dict) else {}
+    last_key = keys[-1]
+    # Apply main value
+    if isinstance(source, dict) and last_key in source:
+        target[last_key] = source[last_key]
+    elif last_key in target:
+        del target[last_key]
+
+
+def _apply_custom_resolution(draft: dict, field_path: str, value: str) -> None:
+    """Apply a custom (non-main/non-branch) resolution value to draft."""
+    keys = _parse_deepdiff_path(field_path)
+    if not keys:
+        return
+    target = draft
+    for k in keys[:-1]:
+        if k not in target or not isinstance(target[k], dict):
+            return
+        target = target[k]
+    target[keys[-1]] = value
+
+
+def _parse_deepdiff_path(path: str) -> list[str]:
+    """Parse a deepdiff path like "root['name']" → ["name"]."""
+    import re  # noqa: PLC0415
+
+    parts = re.findall(r"\['([^']+)'\]|\[(\d+)\]", path)
+    result = []
+    for str_key, int_key in parts:
+        if str_key:
+            result.append(str_key)
+        elif int_key:
+            result.append(int(int_key))  # type: ignore[arg-type]
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Sync (Phase 6)
+# ---------------------------------------------------------------------------
+
+
+async def execute_sync(
+    db: AsyncSession,
+    branch: "RwfBranch",
+    resolutions: dict[str, dict[str, str]],
+) -> dict:
+    """Pull main changes into branch overrides (non-destructive update).
+
+    For each 'modified' card override:
+    - If no conflict: update base_snapshot to current main state.
+    - If conflict: report it (or apply resolution if provided).
+
+    Returns: { "conflicts": [...], "resolved": N, "no_conflict": N }
+    """
+    from datetime import datetime, timezone
+
+    card_overrides = (
+        await db.execute(
+            select(RwfBranchCardOverride).where(
+                RwfBranchCardOverride.branch_id == branch.id,
+                RwfBranchCardOverride.operation == "modified",
+            )
+        )
+    ).scalars().all()
+
+    now = datetime.now(timezone.utc)
+    conflicts = []
+    resolved = 0
+    no_conflict = 0
+
+    for ov in card_overrides:
+        if not ov.base_snapshot or not ov.card_id:
+            continue
+        card_result = await db.execute(select(Card).where(Card.id == ov.card_id))
+        main_card = card_result.scalar_one_or_none()
+        if not main_card:
+            continue
+
+        main_dict = card_to_dict(main_card)
+
+        if main_card.updated_at and main_card.updated_at > branch.base_snapshot_at:
+            field_conflicts = compute_field_diff(ov.base_snapshot, main_dict, ov.draft)
+            conflict_fields = {k for k, v in field_conflicts.items() if v == "conflict"}
+
+            if not conflict_fields:
+                # Safe to absorb main changes — update base_snapshot
+                ov.base_snapshot = main_dict
+                ov.updated_at = now
+                no_conflict += 1
+            else:
+                ov_resolutions = resolutions.get(str(ov.id), {})
+                unresolved = conflict_fields - set(ov_resolutions.keys())
+                if unresolved:
+                    conflicts.append({
+                        "override_id": str(ov.id),
+                        "card_id": str(ov.card_id),
+                        "conflict_fields": list(conflict_fields),
+                        "field_diff": field_conflicts,
+                    })
+                else:
+                    # Apply resolutions then update base_snapshot
+                    draft = dict(ov.draft)
+                    for field_path, resolution in ov_resolutions.items():
+                        if resolution == "main":
+                            _apply_resolution(draft, field_path, main_dict, resolution)
+                        elif resolution not in ("main", "branch"):
+                            _apply_custom_resolution(draft, field_path, resolution)
+                    ov.draft = draft
+                    ov.base_snapshot = main_dict
+                    ov.updated_at = now
+                    resolved += 1
+        else:
+            # Main hasn't moved — still update base_snapshot to latest
+            ov.base_snapshot = main_dict
+            ov.updated_at = now
+            no_conflict += 1
+
+    # Advance branch anchor if no outstanding conflicts
+    if not conflicts:
+        branch.base_snapshot_at = now
+        branch.updated_at = now
+
+    await db.flush()
+    return {"conflicts": conflicts, "resolved": resolved, "no_conflict": no_conflict}

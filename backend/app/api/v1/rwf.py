@@ -416,6 +416,75 @@ async def get_branch_diff(
 
 
 # ---------------------------------------------------------------------------
+# Branches — merge and sync
+# ---------------------------------------------------------------------------
+
+
+class MergePayload(BaseModel):
+    resolutions: dict = {}  # { override_id: { deepdiff_path: "main" | "branch" | value } }
+
+
+@router.post("/branches/{branch_id}/merge")
+async def merge_branch(
+    branch_id: uuid.UUID,
+    body: MergePayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Execute merge of all overrides into main tables in a single atomic transaction.
+
+    Only callable on 'approved' branches. Requires rwf.approve.
+    """
+    from app.services.rwf_service import execute_merge
+
+    await PermissionService.require_permission(db, user, "rwf.approve")
+    branch = await _get_branch_or_404(db, branch_id)
+
+    if branch.status != "approved":
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Branch is '{branch.status}'. "
+                "Only 'approved' branches can be merged."
+            ),
+        )
+
+    try:
+        stats = await execute_merge(db, branch, body.resolutions, user.id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    await db.commit()
+    c, r, d = await _change_counts(db, branch.id)
+    return {**_branch_out(branch, card_count=c, rel_count=r, diag_count=d), "merge_stats": stats}
+
+
+class SyncPayload(BaseModel):
+    resolutions: dict = {}
+
+
+@router.post("/branches/{branch_id}/sync")
+async def sync_branch(
+    branch_id: uuid.UUID,
+    body: SyncPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = RwfEnabled,
+):
+    """Pull main changes into branch (non-destructive). Returns conflict list if any."""
+    from app.services.rwf_service import execute_sync
+
+    await PermissionService.require_permission(db, user, "rwf.contribute")
+    branch = await _get_branch_or_404(db, branch_id)
+    _require_open_branch(branch)
+
+    result = await execute_sync(db, branch, body.resolutions)
+    await db.commit()
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Workspace — branch-scoped card reads and writes
 # ---------------------------------------------------------------------------
 
