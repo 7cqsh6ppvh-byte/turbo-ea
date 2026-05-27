@@ -234,6 +234,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     });
   }, []);
   const [badgeCounts, setBadgeCounts] = useState<BadgeCounts>({ open_todos: 0, pending_surveys: 0 });
+  const [rwfReviewCount, setRwfReviewCount] = useState(0);
 
   const handleLanguageChange = useCallback(
     async (locale: SupportedLocale) => {
@@ -294,6 +295,24 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     fetchBadgeCounts();
   }, [location.pathname, fetchBadgeCounts]);
 
+  // Fetch RWF pending-review count for architects — shown as a badge on the "Releases" nav item
+  const fetchRwfReviewCount = useCallback(async () => {
+    if (!rwfEnabled || !can("rwf.approve")) return;
+    try {
+      const res = await api.get<{ items: unknown[]; total: number }>("/rwf/branches?status=in_review&page_size=1");
+      setRwfReviewCount(res.total ?? 0);
+    } catch {
+      // ignore — badge is non-critical
+    }
+  }, [rwfEnabled, can]);
+
+  useEffect(() => { fetchRwfReviewCount(); }, [fetchRwfReviewCount]);
+
+  // Re-check RWF review count when navigating away from /rwf (branch status may have changed)
+  useEffect(() => {
+    if (!location.pathname.startsWith("/rwf")) fetchRwfReviewCount();
+  }, [location.pathname, fetchRwfReviewCount]);
+
   // Global Cmd/Ctrl+K keyboard shortcut to open search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -329,8 +348,11 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     setDrawerOpen(false);
   };
 
-  const hasBadge = (path?: string) =>
-    path === "/todos" && (badgeCounts.open_todos > 0 || badgeCounts.pending_surveys > 0);
+  const hasBadge = (path?: string) => {
+    if (path === "/todos") return badgeCounts.open_todos > 0 || badgeCounts.pending_surveys > 0;
+    if (path === "/rwf") return rwfReviewCount > 0;
+    return false;
+  };
 
   // ── Mobile drawer ───────────────────────────────────────────────────────
 

@@ -444,10 +444,7 @@ async def merge_branch(
     if branch.status != "approved":
         raise HTTPException(
             status_code=422,
-            detail=(
-                f"Branch is '{branch.status}'. "
-                "Only 'approved' branches can be merged."
-            ),
+            detail=(f"Branch is '{branch.status}'. Only 'approved' branches can be merged."),
         )
 
     try:

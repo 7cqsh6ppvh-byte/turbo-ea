@@ -617,26 +617,38 @@ async def execute_merge(
     from datetime import datetime, timezone
 
     card_overrides = (
-        await db.execute(
-            select(RwfBranchCardOverride).where(RwfBranchCardOverride.branch_id == branch.id)
+        (
+            await db.execute(
+                select(RwfBranchCardOverride).where(RwfBranchCardOverride.branch_id == branch.id)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     rel_overrides = (
-        await db.execute(
-            select(RwfBranchRelationOverride).where(
-                RwfBranchRelationOverride.branch_id == branch.id
+        (
+            await db.execute(
+                select(RwfBranchRelationOverride).where(
+                    RwfBranchRelationOverride.branch_id == branch.id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     diag_overrides = (
-        await db.execute(
-            select(RwfBranchDiagramOverride).where(
-                RwfBranchDiagramOverride.branch_id == branch.id
+        (
+            await db.execute(
+                select(RwfBranchDiagramOverride).where(
+                    RwfBranchDiagramOverride.branch_id == branch.id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     # --- Phase 1: conflict check ---
     conflicts_pending: list[str] = []
@@ -663,9 +675,15 @@ async def execute_merge(
         )
 
     now = datetime.now(timezone.utc)
-    stats = {"cards_modified": 0, "cards_created": 0, "cards_deleted": 0,
-             "relations_created": 0, "relations_deleted": 0,
-             "diagrams_modified": 0, "diagrams_created": 0}
+    stats = {
+        "cards_modified": 0,
+        "cards_created": 0,
+        "cards_deleted": 0,
+        "relations_created": 0,
+        "relations_deleted": 0,
+        "diagrams_modified": 0,
+        "diagrams_created": 0,
+    }
 
     # --- Phase 2: apply card overrides ---
     for ov in card_overrides:
@@ -677,8 +695,11 @@ async def execute_merge(
             # Build final values: start from draft, apply any "main" resolutions
             draft = dict(ov.draft)
             ov_resolutions = resolutions.get(str(ov.id), {})
-            if ov.base_snapshot and main_card.updated_at and \
-                    main_card.updated_at > branch.base_snapshot_at:
+            if (
+                ov.base_snapshot
+                and main_card.updated_at
+                and main_card.updated_at > branch.base_snapshot_at
+            ):
                 main_dict = card_to_dict(main_card)
                 field_conflicts = compute_field_diff(ov.base_snapshot, main_dict, draft)
                 for field_path, resolution in ov_resolutions.items():
@@ -732,9 +753,7 @@ async def execute_merge(
     # --- Phase 4: apply diagram overrides ---
     for ov in diag_overrides:
         if ov.operation == "modified" and ov.diagram_id:
-            diag_result = await db.execute(
-                select(Diagram).where(Diagram.id == ov.diagram_id)
-            )
+            diag_result = await db.execute(select(Diagram).where(Diagram.id == ov.diagram_id))
             main_diag = diag_result.scalar_one_or_none()
             if main_diag:
                 draft = dict(ov.draft)
@@ -877,13 +896,17 @@ async def execute_sync(
     from datetime import datetime, timezone
 
     card_overrides = (
-        await db.execute(
-            select(RwfBranchCardOverride).where(
-                RwfBranchCardOverride.branch_id == branch.id,
-                RwfBranchCardOverride.operation == "modified",
+        (
+            await db.execute(
+                select(RwfBranchCardOverride).where(
+                    RwfBranchCardOverride.branch_id == branch.id,
+                    RwfBranchCardOverride.operation == "modified",
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     now = datetime.now(timezone.utc)
     conflicts = []
@@ -913,12 +936,14 @@ async def execute_sync(
                 ov_resolutions = resolutions.get(str(ov.id), {})
                 unresolved = conflict_fields - set(ov_resolutions.keys())
                 if unresolved:
-                    conflicts.append({
-                        "override_id": str(ov.id),
-                        "card_id": str(ov.card_id),
-                        "conflict_fields": list(conflict_fields),
-                        "field_diff": field_conflicts,
-                    })
+                    conflicts.append(
+                        {
+                            "override_id": str(ov.id),
+                            "card_id": str(ov.card_id),
+                            "conflict_fields": list(conflict_fields),
+                            "field_diff": field_conflicts,
+                        }
+                    )
                 else:
                     # Apply resolutions then update base_snapshot
                     draft = dict(ov.draft)

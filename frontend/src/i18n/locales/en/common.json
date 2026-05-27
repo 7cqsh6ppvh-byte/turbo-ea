@@ -10,7 +10,6 @@
   "actions.search": "Search",
   "actions.export": "Export",
   "actions.import": "Import",
-  "actions.add": "Add",
   "actions.remove": "Remove",
   "actions.archive": "Archive",
   "actions.restore": "Restore",
@@ -348,5 +347,6 @@
   "dashboard.workspace.andMore_one": "and {{count}} more",
   "dashboard.workspace.andMore_other": "and {{count}} more",
   "actions.undo": "Undo",
-  "dashboard.workspace.favoriteRemoved": "Removed «{{name}}» from favorites"
+  "dashboard.workspace.favoriteRemoved": "Removed «{{name}}» from favorites",
+  "modules.rwf": "Releases"
 }

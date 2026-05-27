@@ -18,6 +18,7 @@ import grcEn from "./locales/en/grc.json";
 import notificationsEn from "./locales/en/notifications.json";
 import validationEn from "./locales/en/validation.json";
 import visualfirstEn from "./locales/en/visualfirst.json";
+import rwfEn from "./locales/en/rwf.json";
 
 // French
 import commonFr from "./locales/fr/common.json";
@@ -35,6 +36,7 @@ import grcFr from "./locales/fr/grc.json";
 import notificationsFr from "./locales/fr/notifications.json";
 import validationFr from "./locales/fr/validation.json";
 import visualfirstFr from "./locales/fr/visualfirst.json";
+import rwfFr from "./locales/fr/rwf.json";
 
 // Spanish
 import commonEs from "./locales/es/common.json";
@@ -52,6 +54,7 @@ import grcEs from "./locales/es/grc.json";
 import notificationsEs from "./locales/es/notifications.json";
 import validationEs from "./locales/es/validation.json";
 import visualfirstEs from "./locales/es/visualfirst.json";
+import rwfEs from "./locales/es/rwf.json";
 
 // Italian
 import commonIt from "./locales/it/common.json";
@@ -69,6 +72,7 @@ import grcIt from "./locales/it/grc.json";
 import notificationsIt from "./locales/it/notifications.json";
 import validationIt from "./locales/it/validation.json";
 import visualfirstIt from "./locales/it/visualfirst.json";
+import rwfIt from "./locales/it/rwf.json";
 
 // Portuguese
 import commonPt from "./locales/pt/common.json";
@@ -86,6 +90,7 @@ import grcPt from "./locales/pt/grc.json";
 import notificationsPt from "./locales/pt/notifications.json";
 import validationPt from "./locales/pt/validation.json";
 import visualfirstPt from "./locales/pt/visualfirst.json";
+import rwfPt from "./locales/pt/rwf.json";
 
 // Chinese
 import commonZh from "./locales/zh/common.json";
@@ -103,6 +108,7 @@ import grcZh from "./locales/zh/grc.json";
 import notificationsZh from "./locales/zh/notifications.json";
 import validationZh from "./locales/zh/validation.json";
 import visualfirstZh from "./locales/zh/visualfirst.json";
+import rwfZh from "./locales/zh/rwf.json";
 
 // German
 import commonDe from "./locales/de/common.json";
@@ -120,6 +126,7 @@ import grcDe from "./locales/de/grc.json";
 import notificationsDe from "./locales/de/notifications.json";
 import validationDe from "./locales/de/validation.json";
 import visualfirstDe from "./locales/de/visualfirst.json";
+import rwfDe from "./locales/de/rwf.json";
 
 // Russian
 import commonRu from "./locales/ru/common.json";
@@ -137,6 +144,7 @@ import grcRu from "./locales/ru/grc.json";
 import notificationsRu from "./locales/ru/notifications.json";
 import validationRu from "./locales/ru/validation.json";
 import visualfirstRu from "./locales/ru/visualfirst.json";
+import rwfRu from "./locales/ru/rwf.json";
 
 export const SUPPORTED_LOCALES = ["en", "de", "fr", "es", "it", "pt", "zh", "ru"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -171,7 +179,9 @@ i18n
         delivery: deliveryEn,
         grc: grcEn,
         notifications: notificationsEn,
-        validation: validationEn,        visualfirst: visualfirstEn,
+        validation: validationEn,
+        visualfirst: visualfirstEn,
+        rwf: rwfEn,
       },
       fr: {
         common: commonFr,
@@ -187,7 +197,9 @@ i18n
         delivery: deliveryFr,
         grc: grcFr,
         notifications: notificationsFr,
-        validation: validationFr,        visualfirst: visualfirstFr,
+        validation: validationFr,
+        visualfirst: visualfirstFr,
+        rwf: rwfFr,
       },
       es: {
         common: commonEs,
@@ -203,7 +215,9 @@ i18n
         delivery: deliveryEs,
         grc: grcEs,
         notifications: notificationsEs,
-        validation: validationEs,        visualfirst: visualfirstEs,
+        validation: validationEs,
+        visualfirst: visualfirstEs,
+        rwf: rwfEs,
       },
       it: {
         common: commonIt,
@@ -219,7 +233,9 @@ i18n
         delivery: deliveryIt,
         grc: grcIt,
         notifications: notificationsIt,
-        validation: validationIt,        visualfirst: visualfirstIt,
+        validation: validationIt,
+        visualfirst: visualfirstIt,
+        rwf: rwfIt,
       },
       pt: {
         common: commonPt,
@@ -235,7 +251,9 @@ i18n
         delivery: deliveryPt,
         grc: grcPt,
         notifications: notificationsPt,
-        validation: validationPt,        visualfirst: visualfirstPt,
+        validation: validationPt,
+        visualfirst: visualfirstPt,
+        rwf: rwfPt,
       },
       zh: {
         common: commonZh,
@@ -251,7 +269,9 @@ i18n
         delivery: deliveryZh,
         grc: grcZh,
         notifications: notificationsZh,
-        validation: validationZh,        visualfirst: visualfirstZh,
+        validation: validationZh,
+        visualfirst: visualfirstZh,
+        rwf: rwfZh,
       },
       de: {
         common: commonDe,
@@ -267,7 +287,9 @@ i18n
         delivery: deliveryDe,
         grc: grcDe,
         notifications: notificationsDe,
-        validation: validationDe,        visualfirst: visualfirstDe,
+        validation: validationDe,
+        visualfirst: visualfirstDe,
+        rwf: rwfDe,
       },
       ru: {
         common: commonRu,
@@ -283,7 +305,9 @@ i18n
         delivery: deliveryRu,
         grc: grcRu,
         notifications: notificationsRu,
-        validation: validationRu,        visualfirst: visualfirstRu,
+        validation: validationRu,
+        visualfirst: visualfirstRu,
+        rwf: rwfRu,
       },
     },
     fallbackLng: "en",

@@ -75,6 +75,12 @@ const ProcessCataloguePage = lazy(
 const ValueStreamCataloguePage = lazy(
   () => import("@/features/value-stream-catalogue/ValueStreamCataloguePage"),
 );
+const RwfDashboard = lazy(() => import("@/features/rwf/RwfDashboard"));
+const RwfBranchesPage = lazy(() => import("@/features/rwf/RwfBranchesPage"));
+const RwfBranchDetail = lazy(() => import("@/features/rwf/RwfBranchDetail"));
+const RwfWorkspace = lazy(() => import("@/features/rwf/RwfWorkspace"));
+const RwfBranchDiffPage = lazy(() => import("@/features/rwf/RwfBranchDiffPage"));
+const RwfSnapshotDiff = lazy(() => import("@/features/rwf/RwfSnapshotDiff"));
 const PrinciplesCataloguePage = lazy(
   () => import("@/features/principles-catalogue/PrinciplesCataloguePage"),
 );
@@ -188,6 +194,12 @@ function AppRoutes() {
                 <Route path="/ea-delivery/risks/:id" element={<LegacyRiskDetailRedirect />} />
                 <Route path="/grc" element={<ModuleGate module="grc"><GrcPage /></ModuleGate>} />
                 <Route path="/grc/risks/:id" element={<ModuleGate module="grc"><RiskDetailPage /></ModuleGate>} />
+                <Route path="/rwf" element={<ModuleGate module="rwf"><RwfDashboard /></ModuleGate>} />
+                <Route path="/rwf/branches" element={<ModuleGate module="rwf"><RwfBranchesPage /></ModuleGate>} />
+                <Route path="/rwf/branches/:id" element={<ModuleGate module="rwf"><RwfBranchDetail /></ModuleGate>} />
+                <Route path="/rwf/branches/:id/workspace" element={<ModuleGate module="rwf"><RwfWorkspace /></ModuleGate>} />
+                <Route path="/rwf/branches/:id/diff" element={<ModuleGate module="rwf"><RwfBranchDiffPage /></ModuleGate>} />
+                <Route path="/rwf/snapshots/:id/diff" element={<ModuleGate module="rwf"><RwfSnapshotDiff /></ModuleGate>} />
                 <Route path="/todos" element={<TodosPage />} />
                 <Route path="/surveys" element={<Navigate to="/todos?tab=surveys" />} />
                 <Route path="/surveys/:surveyId/respond/:cardId" element={<SurveyRespond />} />

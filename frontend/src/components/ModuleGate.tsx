@@ -1,6 +1,6 @@
 /**
  * ModuleGate — wraps a route element for an optional module (BPM, PPM,
- * TurboLens) and renders a friendly "module disabled" placeholder when the
+ * TurboLens, RWF) and renders a friendly "module disabled" placeholder when the
  * admin has turned the module off, instead of letting the page load and
  * issue API calls that would fail or render an empty shell.
  */
@@ -16,10 +16,11 @@ import MaterialSymbol from "@/components/MaterialSymbol";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
+import { useRwfEnabled } from "@/hooks/useRwfEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 import { useVisualFirstEnabled } from "@/hooks/useVisualFirstEnabled";
 
-type ModuleKey = "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst";
+type ModuleKey = "bpm" | "ppm" | "turbolens" | "grc" | "visualfirst" | "rwf";
 
 interface Props {
   module: ModuleKey;
@@ -32,6 +33,7 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
   turbolens: "/admin/settings?tab=turbolens",
   grc: "/admin/settings",
   visualfirst: "/admin/settings",
+  rwf: "/admin/settings?tab=rwf",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
@@ -40,6 +42,7 @@ const MODULE_ICON: Record<ModuleKey, string> = {
   turbolens: "psychology",
   grc: "policy",
   visualfirst: "layers",
+  rwf: "account_tree",
 };
 
 export default function ModuleGate({ module, children }: Props) {
@@ -50,6 +53,7 @@ export default function ModuleGate({ module, children }: Props) {
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
   const { grcEnabled, grcLoaded } = useGrcEnabled();
   const { visualFirstEnabled, visualFirstLoaded } = useVisualFirstEnabled();
+  const { rwfEnabled, rwfLoaded } = useRwfEnabled();
 
   const enabled =
     module === "bpm"
@@ -60,7 +64,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? grcEnabled
           : module === "visualfirst"
             ? visualFirstEnabled
-            : turboLensEnabled;
+            : module === "rwf"
+              ? rwfEnabled
+              : turboLensEnabled;
   const loaded =
     module === "bpm"
       ? bpmLoaded
@@ -70,7 +76,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? grcLoaded
           : module === "visualfirst"
             ? visualFirstLoaded
-            : turboLensLoaded;
+            : module === "rwf"
+              ? rwfLoaded
+              : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.

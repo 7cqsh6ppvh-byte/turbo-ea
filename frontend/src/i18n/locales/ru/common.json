@@ -10,7 +10,6 @@
   "actions.search": "Поиск",
   "actions.export": "Экспорт",
   "actions.import": "Импорт",
-  "actions.add": "Добавить",
   "actions.remove": "Удалить",
   "actions.archive": "Архивировать",
   "actions.restore": "Восстановить",
@@ -348,5 +347,6 @@
   "dashboard.workspace.andMore_one": "и ещё {{count}}",
   "dashboard.workspace.andMore_other": "и ещё {{count}}",
   "actions.undo": "Отменить",
-  "dashboard.workspace.favoriteRemoved": "«{{name}}» удалено из избранного"
+  "dashboard.workspace.favoriteRemoved": "«{{name}}» удалено из избранного",
+  "modules.rwf": "Релизы"
 }

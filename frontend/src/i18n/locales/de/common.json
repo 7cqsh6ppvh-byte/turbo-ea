@@ -10,7 +10,6 @@
   "actions.search": "Suchen",
   "actions.export": "Exportieren",
   "actions.import": "Importieren",
-  "actions.add": "Hinzufügen",
   "actions.remove": "Entfernen",
   "actions.archive": "Archivieren",
   "actions.restore": "Wiederherstellen",
@@ -348,5 +347,6 @@
   "dashboard.workspace.andMore_one": "und {{count}} weitere",
   "dashboard.workspace.andMore_other": "und {{count}} weitere",
   "actions.undo": "Rückgängig",
-  "dashboard.workspace.favoriteRemoved": "«{{name}}» aus Favoriten entfernt"
+  "dashboard.workspace.favoriteRemoved": "«{{name}}» aus Favoriten entfernt",
+  "modules.rwf": "Releases"
 }

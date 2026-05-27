@@ -77,9 +77,7 @@ async def open_branch(db, merge_env):
 
 
 class TestMergeBranch:
-    async def test_merge_modified_card_updates_main(
-        self, client, db, merge_env, approved_branch
-    ):
+    async def test_merge_modified_card_updates_main(self, client, db, merge_env, approved_branch):
         """Merging a 'modified' card override updates the main cards table."""
         from datetime import datetime, timezone
 
@@ -110,18 +108,14 @@ class TestMergeBranch:
         assert resp.status_code == 200
 
         # Main card now has the branch value
-        refreshed = (
-            await db.execute(select(Card).where(Card.id == card.id))
-        ).scalar_one()
+        refreshed = (await db.execute(select(Card).where(Card.id == card.id))).scalar_one()
         assert refreshed.name == "After Merge"
 
         # Branch is now merged
         from app.models.rwf import RwfBranch as RwfBranchModel
 
         branch_row = (
-            await db.execute(
-                select(RwfBranchModel).where(RwfBranchModel.id == approved_branch.id)
-            )
+            await db.execute(select(RwfBranchModel).where(RwfBranchModel.id == approved_branch.id))
         ).scalar_one()
         assert branch_row.status == "merged"
 
@@ -164,8 +158,8 @@ class TestMergeBranch:
 
         # New card now exists in main
         cards = (
-            await db.execute(select(Card).where(Card.name == "Brand New Card"))
-        ).scalars().all()
+            (await db.execute(select(Card).where(Card.name == "Brand New Card"))).scalars().all()
+        )
         assert len(cards) == 1
         assert cards[0].type == "Application"
 
@@ -202,9 +196,7 @@ class TestMergeBranch:
         assert resp.status_code == 200
 
         # Card is now archived in main
-        archived = (
-            await db.execute(select(Card).where(Card.id == card.id))
-        ).scalar_one()
+        archived = (await db.execute(select(Card).where(Card.id == card.id))).scalar_one()
         assert archived.status == "ARCHIVED"
 
     async def test_merge_created_relation_inserts_into_main(
@@ -246,13 +238,17 @@ class TestMergeBranch:
 
         # Relation now exists in main
         rels = (
-            await db.execute(
-                select(Relation).where(
-                    Relation.source_id == src.id,
-                    Relation.target_id == tgt.id,
+            (
+                await db.execute(
+                    select(Relation).where(
+                        Relation.source_id == src.id,
+                        Relation.target_id == tgt.id,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(rels) == 1
         assert rels[0].type == "uses"
 
@@ -387,9 +383,7 @@ class TestMergeBranch:
         assert resp.status_code == 200
 
         # Card should have DRAFT status (branch resolution chosen)
-        refreshed = (
-            await db.execute(select(Card).where(Card.id == card.id))
-        ).scalar_one()
+        refreshed = (await db.execute(select(Card).where(Card.id == card.id))).scalar_one()
         assert refreshed.status == "DRAFT"
 
     async def test_member_cannot_merge(self, client, db, merge_env, approved_branch):
@@ -415,7 +409,6 @@ class TestMergeBranch:
     async def test_merge_is_atomic(self, client, db, merge_env, approved_branch):
         """Partial failure must roll back all changes (atomicity)."""
         from datetime import datetime, timezone
-
 
         # Create two overrides: one valid, one referencing a non-existent card_id
         card = await create_card(db, name="Valid Card", card_type="Application")
@@ -493,15 +486,11 @@ class TestSyncBranch:
         from app.models.rwf import RwfBranch as RwfBranchModel
 
         refreshed_branch = (
-            await db.execute(
-                select(RwfBranchModel).where(RwfBranchModel.id == open_branch.id)
-            )
+            await db.execute(select(RwfBranchModel).where(RwfBranchModel.id == open_branch.id))
         ).scalar_one()
         assert refreshed_branch.base_snapshot_at > open_branch.base_snapshot_at
 
-    async def test_sync_returns_conflicts_when_main_moved(
-        self, client, db, merge_env, open_branch
-    ):
+    async def test_sync_returns_conflicts_when_main_moved(self, client, db, merge_env, open_branch):
         """Sync detects conflicts when same field changed in main and branch."""
         from datetime import datetime, timedelta, timezone
 
@@ -566,11 +555,7 @@ class TestSyncBranch:
         member = merge_env["member"]
         resp = await client.post(
             f"/api/v1/rwf/branches/{open_branch.id}/sync",
-            json={
-                "resolutions": {
-                    str(override_id): {"root['status']": "main"}
-                }
-            },
+            json={"resolutions": {str(override_id): {"root['status']": "main"}}},
             headers=auth_headers(member),
         )
         assert resp.status_code == 200
