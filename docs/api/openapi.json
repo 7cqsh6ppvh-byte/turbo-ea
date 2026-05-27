@@ -517,6 +517,17 @@
         "title": "ArchiMateEnabledPayload",
         "type": "object"
       },
+      "ArchimateMigratePayload": {
+        "properties": {
+          "seed_demo": {
+            "default": false,
+            "title": "Seed Demo",
+            "type": "boolean"
+          }
+        },
+        "title": "ArchimateMigratePayload",
+        "type": "object"
+      },
       "ArchiveImpactCardRef": {
         "properties": {
           "id": {
@@ -1058,6 +1069,30 @@
           "row_order"
         ],
         "title": "BpmRowOrderPayload",
+        "type": "object"
+      },
+      "BranchCreate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "BranchCreate",
         "type": "object"
       },
       "CalculationCreate": {
@@ -2004,6 +2039,70 @@
         "title": "CardCreate",
         "type": "object"
       },
+      "CardCreatePayload": {
+        "properties": {
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subtype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtype"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "CardCreatePayload",
+        "type": "object"
+      },
       "CardDeleteRequest": {
         "properties": {
           "cascade_all_related": {
@@ -2100,6 +2199,69 @@
           "page_size"
         ],
         "title": "CardListResponse",
+        "type": "object"
+      },
+      "CardPatchPayload": {
+        "properties": {
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "subtype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtype"
+          }
+        },
+        "title": "CardPatchPayload",
         "type": "object"
       },
       "CardRef": {
@@ -3598,6 +3760,67 @@
         "title": "ConnectionUpdate",
         "type": "object"
       },
+      "CreateRelationTypeRequest": {
+        "properties": {
+          "relation_name": {
+            "title": "Relation Name",
+            "type": "string"
+          },
+          "source_type_key": {
+            "title": "Source Type Key",
+            "type": "string"
+          },
+          "target_type_key": {
+            "title": "Target Type Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type_key",
+          "target_type_key",
+          "relation_name"
+        ],
+        "title": "CreateRelationTypeRequest",
+        "type": "object"
+      },
+      "CreateRelationTypeResponse": {
+        "properties": {
+          "cardinality": {
+            "title": "Cardinality",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reverse_label": {
+            "title": "Reverse Label",
+            "type": "string"
+          },
+          "source_type_key": {
+            "title": "Source Type Key",
+            "type": "string"
+          },
+          "target_type_key": {
+            "title": "Target Type Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "source_type_key",
+          "target_type_key",
+          "reverse_label",
+          "cardinality"
+        ],
+        "title": "CreateRelationTypeResponse",
+        "type": "object"
+      },
       "CurrencyPayload": {
         "properties": {
           "currency": {
@@ -3673,6 +3896,35 @@
           "name"
         ],
         "title": "DiagramCreate",
+        "type": "object"
+      },
+      "DiagramPatchPayload": {
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "DiagramPatchPayload",
         "type": "object"
       },
       "DiagramSave": {
@@ -4763,6 +5015,18 @@
           }
         },
         "title": "McpSettingsPayload",
+        "type": "object"
+      },
+      "MergePayload": {
+        "properties": {
+          "resolutions": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Resolutions",
+            "type": "object"
+          }
+        },
+        "title": "MergePayload",
         "type": "object"
       },
       "MigrationOut": {
@@ -8273,6 +8537,23 @@
         "title": "RegistrationPayload",
         "type": "object"
       },
+      "RejectPayload": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "title": "RejectPayload",
+        "type": "object"
+      },
       "RejectRequest": {
         "properties": {
           "comment": {
@@ -8494,6 +8775,41 @@
           "target_id"
         ],
         "title": "RelationCreate",
+        "type": "object"
+      },
+      "RelationCreatePayload": {
+        "properties": {
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "target_id": {
+            "title": "Target Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "source_id",
+          "target_id"
+        ],
+        "title": "RelationCreatePayload",
         "type": "object"
       },
       "RelationRefInput": {
@@ -9689,6 +10005,19 @@
         "title": "RollbackBody",
         "type": "object"
       },
+      "RwfEnabledPayload": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "RwfEnabledPayload",
+        "type": "object"
+      },
       "SavedReportCreate": {
         "properties": {
           "config": {
@@ -10008,6 +10337,30 @@
           "user_ids"
         ],
         "title": "SignatureRequest",
+        "type": "object"
+      },
+      "SnapshotCreate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SnapshotCreate",
         "type": "object"
       },
       "SoAWCreate": {
@@ -10634,6 +10987,18 @@
           }
         },
         "title": "SurveyUpdate",
+        "type": "object"
+      },
+      "SyncPayload": {
+        "properties": {
+          "resolutions": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Resolutions",
+            "type": "object"
+          }
+        },
+        "title": "SyncPayload",
         "type": "object"
       },
       "SyncRunOut": {
@@ -12070,6 +12435,19 @@
         "title": "VendorHierarchyOut",
         "type": "object"
       },
+      "VisualFirstEnabledPayload": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "VisualFirstEnabledPayload",
+        "type": "object"
+      },
       "WebPortalCreate": {
         "properties": {
           "card_config": {
@@ -13428,6 +13806,48 @@
           }
         },
         "summary": "Import Archimate Model",
+        "tags": [
+          "archimate"
+        ]
+      }
+    },
+    "/api/v1/archimate/relation-types": {
+      "post": {
+        "description": "Create a new ArchiMate relation type in the metamodel.\n\nValidates that:\n- User has archimate.manage permission\n- Both source and target card types exist\n- The relation is valid per ArchiMate 3.2 specification\n\nThe relation type key is generated as arch_rel_{Source}_{Target}_{Relation}.",
+        "operationId": "create_archimate_relation_type_api_v1_archimate_relation_types_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRelationTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRelationTypeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Archimate Relation Type",
         "tags": [
           "archimate"
         ]
@@ -26167,6 +26587,1283 @@
         ]
       }
     },
+    "/api/v1/rwf/branches": {
+      "get": {
+        "operationId": "list_branches_api_v1_rwf_branches_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Branches",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "post": {
+        "operationId": "create_branch_api_v1_rwf_branches_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}": {
+      "delete": {
+        "operationId": "abandon_branch_api_v1_rwf_branches__branch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Abandon Branch",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "get": {
+        "operationId": "get_branch_api_v1_rwf_branches__branch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/approve": {
+      "post": {
+        "operationId": "approve_branch_api_v1_rwf_branches__branch_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/cards": {
+      "get": {
+        "description": "Return the branch-overlay card list (main + overrides applied).",
+        "operationId": "branch_card_list_api_v1_rwf_branches__branch_id__cards_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card List",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "post": {
+        "description": "Create a card exclusively in the branch (main `cards` table untouched).",
+        "operationId": "branch_card_create_api_v1_rwf_branches__branch_id__cards_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardCreatePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card Create",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/cards/override/{override_id}": {
+      "delete": {
+        "description": "Remove a branch-created card override (no main row to touch).",
+        "operationId": "branch_card_override_delete_api_v1_rwf_branches__branch_id__cards_override__override_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "override_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Override Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card Override Delete",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/cards/{card_id}": {
+      "delete": {
+        "description": "Mark a main card as deleted in the branch (main table untouched).",
+        "operationId": "branch_card_delete_api_v1_rwf_branches__branch_id__cards__card_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card Delete",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "get": {
+        "description": "Return branch-scoped card detail (draft if override exists, else main).",
+        "operationId": "branch_card_detail_api_v1_rwf_branches__branch_id__cards__card_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card Detail",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "patch": {
+        "description": "Edit a card within the branch (copy-on-write; main table untouched).",
+        "operationId": "branch_card_edit_api_v1_rwf_branches__branch_id__cards__card_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardPatchPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Card Edit",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/diagrams/{diagram_id}": {
+      "get": {
+        "description": "Return branch-scoped diagram (draft if override exists, else main).",
+        "operationId": "branch_diagram_detail_api_v1_rwf_branches__branch_id__diagrams__diagram_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "diagram_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Diagram Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Diagram Detail",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "patch": {
+        "description": "Edit a diagram within the branch (copy-on-write; main table untouched).",
+        "operationId": "branch_diagram_edit_api_v1_rwf_branches__branch_id__diagrams__diagram_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "diagram_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Diagram Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiagramPatchPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Diagram Edit",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/diff": {
+      "get": {
+        "operationId": "get_branch_diff_api_v1_rwf_branches__branch_id__diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Branch Diff",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/merge": {
+      "post": {
+        "description": "Execute merge of all overrides into main tables in a single atomic transaction.\n\nOnly callable on 'approved' branches. Requires rwf.approve.",
+        "operationId": "merge_branch_api_v1_rwf_branches__branch_id__merge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/reject": {
+      "post": {
+        "operationId": "reject_branch_api_v1_rwf_branches__branch_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/relations": {
+      "get": {
+        "description": "Return branch-scoped relations (main + overrides applied).",
+        "operationId": "branch_relation_list_api_v1_rwf_branches__branch_id__relations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Relation List",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "post": {
+        "description": "Add a relation exclusively in the branch (main `relations` table untouched).",
+        "operationId": "branch_relation_create_api_v1_rwf_branches__branch_id__relations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationCreatePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Relation Create",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/relations/{relation_id}": {
+      "delete": {
+        "description": "Mark a main relation as deleted in the branch (main table untouched).",
+        "operationId": "branch_relation_delete_api_v1_rwf_branches__branch_id__relations__relation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "relation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Relation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Branch Relation Delete",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/rollback": {
+      "post": {
+        "description": "Roll back a merged branch, restoring all main-table records to their\npre-merge state.\n\n- Only callable on branches with status='merged'.\n- Requires rwf.approve.\n- Branches merged before migration 099 (no pre_merge_snapshot) cannot be\n  rolled back automatically \u2014 returns 422 with a clear explanation.\n- Idempotent protection: attempting to roll back a 'rolled_back' branch\n  returns 422 so accidental double-rollback is blocked.",
+        "operationId": "rollback_branch_api_v1_rwf_branches__branch_id__rollback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rollback Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/submit": {
+      "post": {
+        "operationId": "submit_branch_api_v1_rwf_branches__branch_id__submit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/branches/{branch_id}/sync": {
+      "post": {
+        "description": "Pull main changes into branch (non-destructive). Returns conflict list if any.",
+        "operationId": "sync_branch_api_v1_rwf_branches__branch_id__sync_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "branch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Branch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sync Branch",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/snapshots": {
+      "get": {
+        "operationId": "list_snapshots_api_v1_rwf_snapshots_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Snapshots",
+        "tags": [
+          "rwf"
+        ]
+      },
+      "post": {
+        "operationId": "create_snapshot_api_v1_rwf_snapshots_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnapshotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Snapshot",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/snapshots/{snapshot_id}": {
+      "delete": {
+        "operationId": "delete_snapshot_api_v1_rwf_snapshots__snapshot_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Snapshot",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
+    "/api/v1/rwf/snapshots/{snapshot_id}/diff": {
+      "get": {
+        "description": "Compare stored snapshot payload against current live state using deepdiff.",
+        "operationId": "get_snapshot_diff_api_v1_rwf_snapshots__snapshot_id__diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Snapshot Diff",
+        "tags": [
+          "rwf"
+        ]
+      }
+    },
     "/api/v1/saved-reports": {
       "get": {
         "description": "List saved reports visible to the current user.",
@@ -27515,6 +29212,45 @@
         ]
       }
     },
+    "/api/v1/settings/archimate-migrate-unique": {
+      "post": {
+        "description": "Admin endpoint \u2014 migrate instance to ArchiMate-only.\n\nFirst runs migrate_archimate_unique (strips all non-ArchiMate card types,\nrelation types, cards, and relations), then optionally seeds the ArchiMate demo\ndataset (NexaTech Industries mapped to ArchiMate 3.2) if seed_demo is true.\n\nRequires archimate.manage permission.",
+        "operationId": "migrate_archimate_unique_api_v1_settings_archimate_migrate_unique_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchimateMigratePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Migrate Archimate Unique",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/v1/settings/bootstrap": {
       "get": {
         "description": "Public endpoint \u2014 returns all small boot-time settings in one round-trip.\n\nThe frontend calls this once on app boot to prime its module-level caches\nso each individual settings hook (currency, date format, BPM/PPM/TurboLens\ntoggles, locales, etc.) doesn't have to fire its own GET. Replaces what\nused to be ~8 sequential round-trips with one query against the singleton\nAppSettings row. Per-endpoint reads remain available for selective\nrefresh after admin edits.",
@@ -28345,6 +30081,26 @@
         ]
       }
     },
+    "/api/v1/settings/modules": {
+      "get": {
+        "description": "Public endpoint \u2014 returns the enabled/disabled state of every optional\nfeature module in a single response.\n\nThis is the canonical discovery endpoint for the module registry.  The\nfrontend bootstrap already returns the same values individually; this\nendpoint exists for external tooling, admin UIs, and future modules that\nwant to self-register without touching the bootstrap handler.\n\nAdding a new module requires only:\n  1. Storing its flag in general_settings (e.g. ``general[\"fooEnabled\"]``).\n  2. Adding it to this response dict.\n  3. Adding it to the /settings/bootstrap response.\n  No schema migration needed \u2014 JSONB keys are data.",
+        "operationId": "get_all_modules_api_v1_settings_modules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get All Modules",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/v1/settings/ppm-enabled": {
       "get": {
         "description": "Public endpoint \u2014 returns whether the PPM module is enabled.",
@@ -28521,6 +30277,64 @@
         ]
       }
     },
+    "/api/v1/settings/rwf-enabled": {
+      "get": {
+        "description": "Public endpoint \u2014 returns whether the Release Workflow module is enabled.",
+        "operationId": "get_rwf_enabled_api_v1_settings_rwf_enabled_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Rwf Enabled",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "description": "Admin endpoint \u2014 enable or disable the Release Workflow module.",
+        "operationId": "update_rwf_enabled_api_v1_settings_rwf_enabled_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RwfEnabledPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Rwf Enabled",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/v1/settings/sso": {
       "get": {
         "description": "Admin endpoint \u2014 get SSO configuration.",
@@ -28652,6 +30466,64 @@
           }
         },
         "summary": "Update Turbolens Enabled",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/visualfirst-enabled": {
+      "get": {
+        "description": "Public endpoint \u2014 returns whether the VisualFirst Canvas module is enabled.",
+        "operationId": "get_visualfirst_enabled_api_v1_settings_visualfirst_enabled_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Visualfirst Enabled",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "description": "Admin endpoint \u2014 enable or disable the VisualFirst Canvas module.\n\nThe VisualFirst Canvas is the ReactFlow diagram editor. Disabling it hides\nthe nav item and blocks access to /visualfirst routes. It does not affect\nthe ArchiMate metamodel types.",
+        "operationId": "update_visualfirst_enabled_api_v1_settings_visualfirst_enabled_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisualFirstEnabledPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Visualfirst Enabled",
         "tags": [
           "settings"
         ]

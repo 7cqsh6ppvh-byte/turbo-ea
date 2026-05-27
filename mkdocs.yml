@@ -77,6 +77,7 @@ plugins:
             Card Details: Detalles de ficha
             Reports: Informes
             Saved Reports: Informes guardados
+            Release Workflow: Flujo de publicación
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens IA
@@ -130,6 +131,7 @@ plugins:
             Card Details: Kartendetails
             Reports: Berichte
             Saved Reports: Gespeicherte Berichte
+            Release Workflow: Release-Workflow
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens KI
@@ -183,6 +185,7 @@ plugins:
             Card Details: Détails de la fiche
             Reports: Rapports
             Saved Reports: Rapports enregistrés
+            Release Workflow: Workflow de publication
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens IA
@@ -236,6 +239,7 @@ plugins:
             Card Details: Dettagli della card
             Reports: Report
             Saved Reports: Report salvati
+            Release Workflow: Flusso di pubblicazione
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens IA
@@ -289,6 +293,7 @@ plugins:
             Card Details: Detalhes do card
             Reports: Relatórios
             Saved Reports: Relatórios salvos
+            Release Workflow: Fluxo de publicação
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens IA
@@ -342,6 +347,7 @@ plugins:
             Card Details: 卡片详情
             Reports: 报告
             Saved Reports: 已保存的报告
+            Release Workflow: 发布工作流
             PPM: 项目组合管理
             BPM: 业务流程管理
             TurboLens AI: TurboLens AI 智能
@@ -395,6 +401,7 @@ plugins:
             Card Details: Детали карточки
             Reports: Отчёты
             Saved Reports: Сохранённые отчёты
+            Release Workflow: Рабочий процесс выпусков
             PPM: PPM
             BPM: BPM
             TurboLens AI: TurboLens ИИ
@@ -474,6 +481,7 @@ nav:
           - Diagrams: guide/diagrams.md
           - TurboLens AI: guide/turbolens.md
       - Modules:
+          - Release Workflow: guide/rwf.md
           - PPM: guide/ppm.md
           - BPM: guide/bpm.md
           - EA Delivery: guide/delivery.md

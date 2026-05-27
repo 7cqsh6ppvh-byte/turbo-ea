@@ -5,6 +5,36 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.30.0] - 2026-05-27
+
+### Added
+- **Release Workflow (RWF)** — branch-based change governance for the EA
+  landscape. Users with `rwf.contribute` can create named branches, edit
+  cards, relations, and VisualFirst diagrams in full isolation from the live
+  landscape, and submit the branch for review. Users with `rwf.approve` can
+  approve, reject, or merge. Merging applies a conflict-resolution pass
+  (3-way field-level diff via deepdiff) so concurrent main-branch edits are
+  never silently overwritten.
+- **Branch workspace** with Cards, Relations, and Diagrams tabs. The Diagrams
+  tab links directly into the VisualFirst editor in branch-scoped mode — all
+  diagram saves and palette-drop card creates route through branch endpoints,
+  never touching main tables.
+- **Branch diff view** with per-field conflict detection and a merge dialog
+  for resolving conflicts before merging into main.
+- **Named snapshots** (like git tags) — pin the full landscape state at a
+  moment in time and diff it against the current live landscape.
+- **Rollback** — undo a merged branch, restoring all affected cards,
+  relations, and diagrams to their pre-merge state (available for branches
+  merged after this release).
+- **Notifications** — branch submitted triggers an in-app notification to all
+  users with `rwf.approve`; approve/reject/merge/rollback notify the branch
+  author and contributors.
+- **Review queue badge** in the nav bar for users with `rwf.approve` when
+  branches are awaiting review.
+- **"EA Architect" role** seeded with all `rwf.*` permissions.
+- **Admin settings tab** — "Release Workflow" panel to enable/disable the
+  module and configure it.
+
 ## [1.29.4] - 2026-05-26
 
 ### Fixed
