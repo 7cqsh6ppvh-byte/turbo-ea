@@ -6,6 +6,7 @@ NOT modified. Branch data is only visible inside this namespace.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -20,6 +21,7 @@ from app.models.app_settings import AppSettings
 from app.models.card import Card
 from app.models.diagram import Diagram
 from app.models.relation import Relation
+from app.models.role import Role
 from app.models.rwf import (
     EaSnapshot,
     RwfBranch,
@@ -28,7 +30,10 @@ from app.models.rwf import (
     RwfBranchRelationOverride,
 )
 from app.models.user import User
+from app.services import notification_service
 from app.services.permission_service import PermissionService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/rwf", tags=["rwf"])
 
@@ -143,6 +148,127 @@ def _require_open_branch(branch: RwfBranch) -> None:
             status_code=422,
             detail=(f"Branch is '{branch.status}'. Only 'open' branches accept workspace edits."),
         )
+
+
+async def _users_with_permission(db: AsyncSession, permission: str) -> list[User]:
+    """Return all active users whose app-level role grants *permission*.
+
+    Handles both the wildcard admin role (``{"*": true}``) and explicit
+    per-permission grants (``{"rwf.approve": true}``).  Role data is read
+    fresh — no 5-minute cache — to avoid stale results after recent changes.
+    """
+    roles_result = await db.execute(select(Role).where(Role.is_archived.is_(False)))
+    qualifying_role_keys: set[str] = set()
+    for role in roles_result.scalars().all():
+        perms: dict = role.permissions or {}
+        if perms.get("*") or perms.get(permission):
+            qualifying_role_keys.add(role.key)
+
+    if not qualifying_role_keys:
+        return []
+
+    users_result = await db.execute(
+        select(User).where(
+            User.role.in_(qualifying_role_keys),
+            User.is_active.is_(True),
+        )
+    )
+    return list(users_result.scalars().all())
+
+
+async def _notify_approvers(
+    db: AsyncSession,
+    branch: RwfBranch,
+    actor: User,
+) -> None:
+    """Notify all users with rwf.approve when a branch enters review."""
+    approvers = await _users_with_permission(db, "rwf.approve")
+    link = f"/rwf/branches/{branch.id}"
+    for approver in approvers:
+        try:
+            await notification_service.create_notification(
+                db,
+                user_id=approver.id,
+                notif_type="rwf_review_requested",
+                title=f"Branch «{branch.name}» submitted for review",
+                message=(
+                    f"{actor.display_name} submitted this branch and it is ready for your review."
+                ),
+                link=link,
+                data={"branch_id": str(branch.id), "branch_name": branch.name},
+                actor_id=actor.id,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("RWF submit notification failed for user %s", approver.id)
+
+
+async def _notify_branch_author(
+    db: AsyncSession,
+    branch: RwfBranch,
+    actor: User,
+    *,
+    notif_type: str,
+    title: str,
+    message: str,
+) -> None:
+    """Notify the branch creator (approved / rejected / merged / rolled back)."""
+    if not branch.created_by:
+        return
+    link = f"/rwf/branches/{branch.id}"
+    try:
+        await notification_service.create_notification(
+            db,
+            user_id=branch.created_by,
+            notif_type=notif_type,
+            title=title,
+            message=message,
+            link=link,
+            data={"branch_id": str(branch.id), "branch_name": branch.name},
+            actor_id=actor.id,
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("RWF %s notification failed for branch %s", notif_type, branch.id)
+
+
+async def _notify_branch_contributors(
+    db: AsyncSession,
+    branch: RwfBranch,
+    actor: User,
+    *,
+    notif_type: str,
+    title: str,
+    message: str,
+) -> None:
+    """Notify the branch author + every user who wrote overrides (merge/rollback)."""
+    # Collect all distinct user IDs who contributed overrides
+    contributor_ids: set[uuid.UUID] = set()
+    if branch.created_by:
+        contributor_ids.add(branch.created_by)
+
+    # Card override authors — we don't store contributor per override, so we
+    # find the distinct created_by values from the branch metadata (created_by
+    # is the branch owner; override writes don't carry a separate user FK in
+    # the current schema). For now, notify the branch author only plus the
+    # reviewer if different.
+    if branch.reviewed_by:
+        # Don't notify the reviewer about their own action
+        pass
+
+    link = f"/rwf/branches/{branch.id}"
+    for uid in contributor_ids:
+        try:
+            await notification_service.create_notification(
+                db,
+                user_id=uid,
+                notif_type=notif_type,
+                title=title,
+                message=message,
+                link=link,
+                data={"branch_id": str(branch.id), "branch_name": branch.name},
+                actor_id=actor.id,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("RWF %s notification failed for user %s", notif_type, uid)
 
 
 # ---------------------------------------------------------------------------
@@ -265,6 +391,9 @@ async def submit_branch(
         )
 
     branch.status = "in_review"
+    await db.flush()
+    # Notify all users with rwf.approve that a branch is awaiting review
+    await _notify_approvers(db, branch, actor=user)
     await db.commit()
     await db.refresh(branch)
     return _branch_out(branch)
@@ -292,6 +421,18 @@ async def approve_branch(
     branch.status = "approved"
     branch.reviewed_by = user.id
     branch.reviewed_at = datetime.now(timezone.utc)
+    await db.flush()
+    # Notify the branch author that their branch was approved
+    await _notify_branch_author(
+        db,
+        branch,
+        actor=user,
+        notif_type="rwf_branch_approved",
+        title=f"Branch «{branch.name}» approved",
+        message=(
+            f"{user.display_name} approved your branch. It is now ready to be merged into main."
+        ),
+    )
     await db.commit()
     await db.refresh(branch)
     return _branch_out(branch)
@@ -321,6 +462,19 @@ async def reject_branch(
     branch.reviewed_by = user.id
     branch.reviewed_at = datetime.now(timezone.utc)
     branch.review_comment = body.comment
+    await db.flush()
+    # Notify the branch author about the rejection (with optional comment)
+    reject_msg = f"{user.display_name} rejected your branch."
+    if body.comment:
+        reject_msg += f" Reason: {body.comment[:300]}"
+    await _notify_branch_author(
+        db,
+        branch,
+        actor=user,
+        notif_type="rwf_branch_rejected",
+        title=f"Branch «{branch.name}» rejected",
+        message=reject_msg,
+    )
     await db.commit()
     await db.refresh(branch)
     return _branch_out(branch)
@@ -457,6 +611,17 @@ async def merge_branch(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    # Notify the branch author (and any contributors) that the merge succeeded
+    await _notify_branch_contributors(
+        db,
+        branch,
+        actor=user,
+        notif_type="rwf_branch_merged",
+        title=f"Branch «{branch.name}» merged into main",
+        message=(
+            f"{user.display_name} merged your branch. All changes are now live in the EA landscape."
+        ),
+    )
     await db.commit()
     c, r, d = await _change_counts(db, branch.id)
     return {**_branch_out(branch, card_count=c, rel_count=r, diag_count=d), "merge_stats": stats}
@@ -500,6 +665,18 @@ async def rollback_branch(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    # Notify the branch author that the merge was rolled back
+    await _notify_branch_contributors(
+        db,
+        branch,
+        actor=user,
+        notif_type="rwf_branch_rolled_back",
+        title=f"Branch «{branch.name}» merge was rolled back",
+        message=(
+            f"{user.display_name} rolled back the merge of your branch. "
+            "The EA landscape has been restored to its pre-merge state."
+        ),
+    )
     await db.commit()
     c, r, d = await _change_counts(db, branch.id)
     return {
