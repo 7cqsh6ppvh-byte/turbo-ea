@@ -50,5 +50,6 @@
   "userMenu.referenceCatalogues": "Catálogos de referência",
   "userMenu.processCatalogue": "Catálogo de processos",
   "userMenu.valueStreamCatalogue": "Catálogo de cadeias de valor",
-  "archimate": "ArchiMate"
+  "archimate": "ArchiMate",
+  "c4": "C4 Model"
 }

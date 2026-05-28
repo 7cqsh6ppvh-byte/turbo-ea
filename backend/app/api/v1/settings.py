@@ -168,6 +168,7 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "bpm_enabled": general.get("bpmEnabled", True),
         "ppm_enabled": general.get("ppmEnabled", False),
         "archimate_enabled": general.get("archiMateEnabled", False),
+        "c4_enabled": general.get("c4Enabled", False),
         "turbolens_enabled": general.get("turboLensEnabled", True),
         "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
@@ -613,6 +614,163 @@ async def update_archimate_enabled(
 
     await db.commit()
     return {"ok": True}
+
+
+class C4EnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/c4-enabled")
+async def get_c4_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the C4 Model module is enabled."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {"enabled": general.get("c4Enabled", False)}
+
+
+@router.patch("/c4-enabled")
+async def update_c4_enabled(
+    body: C4EnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — enable or disable the C4 Model module.
+
+    Enabling triggers the C4 metamodel seed. Disabling sets is_hidden on all
+    c4_* card and relation types so they disappear platform-wide.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["c4Enabled"] = body.enabled
+    row.general_settings = general
+
+    hide = not body.enabled
+
+    if body.enabled:
+        from app.plugins.c4.seed import seed_c4_metamodel
+
+        await seed_c4_metamodel(db)
+
+    c4_ct_result = await db.execute(select(CardType).where(CardType.plugin_id == "c4"))
+    for ct in c4_ct_result.scalars().all():
+        ct.is_hidden = hide
+
+    c4_rt_result = await db.execute(select(RelationType).where(RelationType.plugin_id == "c4"))
+    for rt in c4_rt_result.scalars().all():
+        rt.is_hidden = hide
+
+    await db.commit()
+    return {"ok": True}
+
+
+@router.delete("/c4-enabled")
+async def rollback_c4(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — permanently delete all C4 metamodel types and data."""
+    from sqlalchemy import delete, or_
+
+    from app.models.card import Card
+    from app.models.diagram import Diagram
+    from app.models.relation import Relation
+
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["c4Enabled"] = False
+    row.general_settings = general
+
+    diag_result = await db.execute(
+        delete(Diagram).where(Diagram.type.like("c4-%")).returning(Diagram.id)
+    )
+    deleted_diagrams = len(diag_result.all())
+
+    c4_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("c4_%")))
+    c4_card_ids = [row_[0] for row_ in c4_card_ids_result.all()]
+
+    deleted_relations = 0
+    if c4_card_ids:
+        rel_result = await db.execute(
+            delete(Relation)
+            .where(
+                or_(
+                    Relation.source_id.in_(c4_card_ids),
+                    Relation.target_id.in_(c4_card_ids),
+                )
+            )
+            .returning(Relation.id)
+        )
+        deleted_relations = len(rel_result.all())
+
+    cards_result = await db.execute(delete(Card).where(Card.type.like("c4_%")).returning(Card.id))
+    deleted_cards = len(cards_result.all())
+
+    rt_result = await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "c4").returning(RelationType.key)
+    )
+    deleted_relation_types = len(rt_result.all())
+
+    ct_result = await db.execute(
+        delete(CardType).where(CardType.plugin_id == "c4").returning(CardType.key)
+    )
+    deleted_card_types = len(ct_result.all())
+
+    await db.commit()
+    return {
+        "deleted_cards": deleted_cards,
+        "deleted_relations": deleted_relations,
+        "deleted_diagrams": deleted_diagrams,
+        "deleted_card_types": deleted_card_types,
+        "deleted_relation_types": deleted_relation_types,
+    }
+
+
+@router.get("/c4-status")
+async def get_c4_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — returns C4 installation statistics."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    from sqlalchemy import func
+
+    from app.models.card import Card
+    from app.models.diagram import Diagram
+
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+
+    ct_count = (
+        await db.execute(
+            select(func.count()).select_from(CardType).where(CardType.plugin_id == "c4")
+        )
+    ).scalar_one()
+    rt_count = (
+        await db.execute(
+            select(func.count()).select_from(RelationType).where(RelationType.plugin_id == "c4")
+        )
+    ).scalar_one()
+    card_count = (
+        await db.execute(select(func.count()).select_from(Card).where(Card.type.like("c4_%")))
+    ).scalar_one()
+    diag_count = (
+        await db.execute(select(func.count()).select_from(Diagram).where(Diagram.type.like("c4-%")))
+    ).scalar_one()
+
+    return {
+        "enabled": general.get("c4Enabled", False),
+        "card_types_count": ct_count,
+        "relation_types_count": rt_count,
+        "cards_count": card_count,
+        "diagrams_count": diag_count,
+    }
 
 
 class TurboLensEnabledPayload(BaseModel):

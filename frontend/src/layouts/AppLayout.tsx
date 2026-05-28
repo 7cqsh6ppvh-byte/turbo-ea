@@ -29,6 +29,7 @@ import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 import { useArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
+import { useC4Enabled } from "@/hooks/useC4Enabled";
 import { useThemeMode } from "@/hooks/useThemeMode";
 import { useAppTitle } from "@/hooks/useAppTitle";
 import { SUPPORTED_LOCALES, LOCALE_LABELS, type SupportedLocale } from "@/i18n";
@@ -79,6 +80,7 @@ const NAV_ITEM_DEFS: NavItemDef[] = [
   { labelKey: "bpm", icon: "route", path: "/bpm", permission: "bpm.view" },
   { labelKey: "ppm", icon: "view_timeline", path: "/ppm", permission: "ppm.view" },
   { labelKey: "archimate", icon: "account_tree", path: "/archimate", permission: "archimate.view" },
+  { labelKey: "c4", icon: "account_tree", path: "/c4", permission: "c4.view" },
   { labelKey: "diagrams", icon: "schema", path: "/diagrams", permission: "diagrams.view" },
   { labelKey: "grc", icon: "policy", path: "/grc", permission: "grc.view" },
   { labelKey: "todos", icon: "checklist", path: "/todos" },
@@ -113,6 +115,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
   const { grcEnabled } = useGrcEnabled();
   const { turboLensReady } = useTurboLensReady();
   const { archiMateEnabled } = useArchiMateEnabled();
+  const { c4Enabled } = useC4Enabled();
   const { enabledLocales } = useEnabledLocales();
   const { mode, toggleMode } = useThemeMode();
   const appTitle = useAppTitle();
@@ -135,6 +138,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     if (!ppmEnabled) items = items.filter((item) => item.labelKey !== "ppm");
     if (!grcEnabled) items = items.filter((item) => item.labelKey !== "grc");
     if (!archiMateEnabled) items = items.filter((item) => item.labelKey !== "archimate");
+    if (!c4Enabled) items = items.filter((item) => item.labelKey !== "c4");
 
     // When PPM is disabled, EA Delivery has no parent tab to live under —
     // promote it to a top-level nav item, sitting in PPM's old slot (between
@@ -181,7 +185,7 @@ export default function AppLayout({ children, user, onLogout }: Props) {
     });
 
     return items.filter((item) => hasPerm(item.permission)).map(resolve);
-  }, [bpmEnabled, ppmEnabled, grcEnabled, archiMateEnabled, turboLensReady, can, t]);
+  }, [bpmEnabled, ppmEnabled, grcEnabled, archiMateEnabled, c4Enabled, turboLensReady, can, t]);
 
   // Resolve admin item labels via i18n and filter based on permissions
   const adminItems = useMemo(() => {

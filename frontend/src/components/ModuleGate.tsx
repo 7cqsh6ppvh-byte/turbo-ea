@@ -1,8 +1,7 @@
 /**
  * ModuleGate — wraps a route element for an optional module (BPM, PPM,
- * TurboLens) and renders a friendly "module disabled" placeholder when the
- * admin has turned the module off, instead of letting the page load and
- * issue API calls that would fail or render an empty shell.
+ * TurboLens, ArchiMate, C4, AWS, Azure, GCP) and renders a friendly
+ * "module disabled" placeholder when the admin has turned the module off.
  */
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -15,11 +14,12 @@ import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { useArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
+import { useC4Enabled } from "@/hooks/useC4Enabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 
-type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc";
+type ModuleKey = "archimate" | "bpm" | "c4" | "grc" | "ppm" | "turbolens";
 
 interface Props {
   module: ModuleKey;
@@ -29,17 +29,19 @@ interface Props {
 const SETTINGS_TAB: Record<ModuleKey, string> = {
   archimate: "/admin/settings?tab=archimate",
   bpm: "/admin/settings?tab=bpm",
+  c4: "/admin/settings?tab=c4",
+  grc: "/admin/settings",
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
-  grc: "/admin/settings",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
   archimate: "schema",
   bpm: "schema",
+  c4: "account_tree",
+  grc: "policy",
   ppm: "rocket_launch",
   turbolens: "psychology",
-  grc: "policy",
 };
 
 export default function ModuleGate({ module, children }: Props) {
@@ -47,6 +49,7 @@ export default function ModuleGate({ module, children }: Props) {
   const navigate = useNavigate();
   const { archiMateEnabled, archiMateLoaded } = useArchiMateEnabled();
   const { bpmEnabled, bpmLoaded } = useBpmEnabled();
+  const { c4Enabled, c4Loaded } = useC4Enabled();
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
   const { grcEnabled, grcLoaded } = useGrcEnabled();
@@ -56,24 +59,27 @@ export default function ModuleGate({ module, children }: Props) {
       ? archiMateEnabled
       : module === "bpm"
         ? bpmEnabled
-        : module === "ppm"
-          ? ppmEnabled
-          : module === "grc"
-            ? grcEnabled
-            : turboLensEnabled;
+        : module === "c4"
+          ? c4Enabled
+          : module === "ppm"
+            ? ppmEnabled
+            : module === "grc"
+              ? grcEnabled
+              : turboLensEnabled;
+
   const loaded =
     module === "archimate"
       ? archiMateLoaded
       : module === "bpm"
         ? bpmLoaded
-        : module === "ppm"
-          ? ppmLoaded
-          : module === "grc"
-            ? grcLoaded
-            : turboLensLoaded;
+        : module === "c4"
+          ? c4Loaded
+          : module === "ppm"
+            ? ppmLoaded
+            : module === "grc"
+              ? grcLoaded
+              : turboLensLoaded;
 
-  // Wait for the first fetch to resolve before deciding — prevents the
-  // disabled placeholder from flashing while the status request is in flight.
   if (!loaded) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>

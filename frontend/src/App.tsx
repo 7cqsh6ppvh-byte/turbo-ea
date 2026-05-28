@@ -66,6 +66,12 @@ const ArchimateDiagramsPage = lazy(
 const ArchimateDiagramEditor = lazy(
   () => import("@/features/archimate/ArchimateDiagramEditor").then((m) => ({ default: m.ArchimateDiagramEditor })),
 );
+const C4DiagramsPage = lazy(
+  () => import("@/features/c4/C4DiagramsPage").then((m) => ({ default: m.C4DiagramsPage })),
+);
+const C4DiagramEditor = lazy(
+  () => import("@/features/c4/C4DiagramEditor").then((m) => ({ default: m.C4DiagramEditor })),
+);
 const CapabilityCataloguePage = lazy(
   () => import("@/features/capability-catalogue/CapabilityCataloguePage"),
 );
@@ -205,6 +211,8 @@ function AppRoutes() {
                 <Route path="/turbolens/assessments/:id" element={<ModuleGate module="turbolens"><AssessmentViewer /></ModuleGate>} />
                 <Route path="/archimate" element={<ModuleGate module="archimate"><ArchimateDiagramsPage /></ModuleGate>} />
                 <Route path="/archimate/:id/edit" element={<ModuleGate module="archimate"><ArchimateDiagramEditor /></ModuleGate>} />
+                <Route path="/c4" element={<ModuleGate module="c4"><C4DiagramsPage /></ModuleGate>} />
+                <Route path="/c4/:id/edit" element={<ModuleGate module="c4"><C4DiagramEditor /></ModuleGate>} />
                 <Route path="/admin/turbolens" element={<Navigate to="/admin/settings?tab=turbolens" />} />
                 <Route path="/admin/archimate" element={<Navigate to="/admin/settings?tab=archimate" />} />
                 <Route path="/capability-catalogue" element={<CapabilityCataloguePage />} />

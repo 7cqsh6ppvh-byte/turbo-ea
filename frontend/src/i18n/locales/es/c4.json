@@ -1,0 +1,65 @@
+{
+  "pageTitle": "Diagramas C4",
+  "newDiagram": "Nuevo diagrama C4",
+  "noDiagrams": "Todavía no hay diagramas C4",
+  "noDiagramsHint": "Cree su primer diagrama para modelar su arquitectura de software.",
+  "diagramTypes": {
+    "c4-context": "Contexto del sistema",
+    "c4-container": "Contenedor",
+    "c4-component": "Componente",
+    "c4-code": "Código"
+  },
+  "diagramCategories": {
+    "context": "Contexto",
+    "container": "Contenedor",
+    "component": "Componente",
+    "code": "Código"
+  },
+  "elements": {
+    "c4_Person": "Persona",
+    "c4_SoftwareSystem": "Sistema de software",
+    "c4_ExternalSystem": "Sistema externo",
+    "c4_Container": "Contenedor",
+    "c4_Component": "Componente",
+    "c4_EnterpriseBoundary": "Límite empresarial",
+    "c4_SystemBoundary": "Límite del sistema",
+    "c4_ContainerBoundary": "Límite del contenedor"
+  },
+  "elementCategories": {
+    "C4:Context": "Contexto",
+    "C4:Container": "Contenedor",
+    "C4:Component": "Componente",
+    "C4:Boundary": "Límites"
+  },
+  "relations": {
+    "c4_rel_uses": "Usa",
+    "c4_rel_callsSync": "Llama (sync)",
+    "c4_rel_callsAsync": "Llama (async)",
+    "c4_rel_readsFrom": "Lee desde",
+    "c4_rel_writesTo": "Escribe en",
+    "c4_rel_deployedIn": "Desplegado en"
+  },
+  "nodeFields": {
+    "technology": "Tecnología",
+    "description": "Descripción",
+    "external": "Externo"
+  },
+  "admin": {
+    "title": "Modelo C4",
+    "description": "Modele la arquitectura de software en cuatro niveles de abstracción: Contexto del sistema, Contenedor, Componente y Código. Basado en el modelo C4 de Simon Brown (c4model.com).",
+    "activate": "Activar modelo C4",
+    "deactivate": "Desactivar modelo C4",
+    "statusTitle": "Estado de instalación",
+    "statusCardTypes": "{{count}} tipos de elementos",
+    "statusRelationTypes": "{{count}} tipos de relaciones",
+    "statusCards": "{{count}} tarjetas",
+    "statusDiagrams": "{{count}} diagramas",
+    "dangerZone": "Zona de peligro",
+    "rollbackButton": "Desinstalar plugin C4",
+    "rollbackConfirmTitle": "¿Desinstalar plugin C4?",
+    "rollbackConfirmBody": "Esto eliminará permanentemente todos los tipos de tarjetas, tipos de relaciones, tarjetas y diagramas de C4. Esta acción no se puede deshacer.",
+    "rollbackConfirm": "Desinstalar",
+    "rollbackCancel": "Cancelar",
+    "rollbackSuccess": "Plugin C4 desinstalado correctamente."
+  }
+}

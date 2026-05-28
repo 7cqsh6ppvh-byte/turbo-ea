@@ -1,0 +1,65 @@
+{
+  "pageTitle": "C4-Diagramme",
+  "newDiagram": "Neues C4-Diagramm",
+  "noDiagrams": "Noch keine C4-Diagramme",
+  "noDiagramsHint": "Erstellen Sie Ihr erstes Diagramm zur Modellierung Ihrer Softwarearchitektur.",
+  "diagramTypes": {
+    "c4-context": "Systemkontext",
+    "c4-container": "Container",
+    "c4-component": "Komponente",
+    "c4-code": "Code"
+  },
+  "diagramCategories": {
+    "context": "Kontext",
+    "container": "Container",
+    "component": "Komponente",
+    "code": "Code"
+  },
+  "elements": {
+    "c4_Person": "Person",
+    "c4_SoftwareSystem": "Softwaresystem",
+    "c4_ExternalSystem": "Externes System",
+    "c4_Container": "Container",
+    "c4_Component": "Komponente",
+    "c4_EnterpriseBoundary": "Unternehmensgrenze",
+    "c4_SystemBoundary": "Systemgrenze",
+    "c4_ContainerBoundary": "Containergrenze"
+  },
+  "elementCategories": {
+    "C4:Context": "Kontext",
+    "C4:Container": "Container",
+    "C4:Component": "Komponente",
+    "C4:Boundary": "Grenzen"
+  },
+  "relations": {
+    "c4_rel_uses": "Verwendet",
+    "c4_rel_callsSync": "Ruft auf (sync)",
+    "c4_rel_callsAsync": "Ruft auf (async)",
+    "c4_rel_readsFrom": "Liest von",
+    "c4_rel_writesTo": "Schreibt nach",
+    "c4_rel_deployedIn": "Eingesetzt in"
+  },
+  "nodeFields": {
+    "technology": "Technologie",
+    "description": "Beschreibung",
+    "external": "Extern"
+  },
+  "admin": {
+    "title": "C4-Modell",
+    "description": "Modellieren Sie Softwarearchitektur auf vier Abstraktionsebenen: Systemkontext, Container, Komponente und Code. Basiert auf Simon Browns C4-Modell (c4model.com).",
+    "activate": "C4-Modell aktivieren",
+    "deactivate": "C4-Modell deaktivieren",
+    "statusTitle": "Installationsstatus",
+    "statusCardTypes": "{{count}} Elementtypen",
+    "statusRelationTypes": "{{count}} Beziehungstypen",
+    "statusCards": "{{count}} Karten",
+    "statusDiagrams": "{{count}} Diagramme",
+    "dangerZone": "Gefahrenzone",
+    "rollbackButton": "C4-Plugin deinstallieren",
+    "rollbackConfirmTitle": "C4-Plugin deinstallieren?",
+    "rollbackConfirmBody": "Dadurch werden alle C4-Kartentypen, Beziehungstypen, Karten und Diagramme dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "rollbackConfirm": "Deinstallieren",
+    "rollbackCancel": "Abbrechen",
+    "rollbackSuccess": "C4-Plugin erfolgreich deinstalliert."
+  }
+}

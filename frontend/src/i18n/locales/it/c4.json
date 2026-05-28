@@ -1,0 +1,65 @@
+{
+  "pageTitle": "Diagrammi C4",
+  "newDiagram": "Nuovo diagramma C4",
+  "noDiagrams": "Nessun diagramma C4",
+  "noDiagramsHint": "Crea il tuo primo diagramma per modellare la tua architettura software.",
+  "diagramTypes": {
+    "c4-context": "Contesto di sistema",
+    "c4-container": "Contenitore",
+    "c4-component": "Componente",
+    "c4-code": "Codice"
+  },
+  "diagramCategories": {
+    "context": "Contesto",
+    "container": "Contenitore",
+    "component": "Componente",
+    "code": "Codice"
+  },
+  "elements": {
+    "c4_Person": "Persona",
+    "c4_SoftwareSystem": "Sistema software",
+    "c4_ExternalSystem": "Sistema esterno",
+    "c4_Container": "Contenitore",
+    "c4_Component": "Componente",
+    "c4_EnterpriseBoundary": "Confine aziendale",
+    "c4_SystemBoundary": "Confine del sistema",
+    "c4_ContainerBoundary": "Confine del contenitore"
+  },
+  "elementCategories": {
+    "C4:Context": "Contesto",
+    "C4:Container": "Contenitore",
+    "C4:Component": "Componente",
+    "C4:Boundary": "Confini"
+  },
+  "relations": {
+    "c4_rel_uses": "Usa",
+    "c4_rel_callsSync": "Chiama (sync)",
+    "c4_rel_callsAsync": "Chiama (async)",
+    "c4_rel_readsFrom": "Legge da",
+    "c4_rel_writesTo": "Scrive su",
+    "c4_rel_deployedIn": "Distribuito in"
+  },
+  "nodeFields": {
+    "technology": "Tecnologia",
+    "description": "Descrizione",
+    "external": "Esterno"
+  },
+  "admin": {
+    "title": "Modello C4",
+    "description": "Modella l'architettura software a quattro livelli di astrazione: Contesto di sistema, Contenitore, Componente e Codice. Basato sul modello C4 di Simon Brown (c4model.com).",
+    "activate": "Attiva modello C4",
+    "deactivate": "Disattiva modello C4",
+    "statusTitle": "Stato installazione",
+    "statusCardTypes": "{{count}} tipi di elementi",
+    "statusRelationTypes": "{{count}} tipi di relazioni",
+    "statusCards": "{{count}} schede",
+    "statusDiagrams": "{{count}} diagrammi",
+    "dangerZone": "Zona pericolosa",
+    "rollbackButton": "Disinstalla plugin C4",
+    "rollbackConfirmTitle": "Disinstallare il plugin C4?",
+    "rollbackConfirmBody": "Verranno eliminati definitivamente tutti i tipi di schede, tipi di relazioni, schede e diagrammi C4. Questa azione non può essere annullata.",
+    "rollbackConfirm": "Disinstalla",
+    "rollbackCancel": "Annulla",
+    "rollbackSuccess": "Plugin C4 disinstallato correttamente."
+  }
+}

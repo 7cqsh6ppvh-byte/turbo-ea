@@ -1,0 +1,65 @@
+{
+  "pageTitle": "Диаграммы C4",
+  "newDiagram": "Новая диаграмма C4",
+  "noDiagrams": "Диаграмм C4 пока нет",
+  "noDiagramsHint": "Создайте первую диаграмму для моделирования архитектуры программного обеспечения.",
+  "diagramTypes": {
+    "c4-context": "Системный контекст",
+    "c4-container": "Контейнер",
+    "c4-component": "Компонент",
+    "c4-code": "Код"
+  },
+  "diagramCategories": {
+    "context": "Контекст",
+    "container": "Контейнер",
+    "component": "Компонент",
+    "code": "Код"
+  },
+  "elements": {
+    "c4_Person": "Пользователь",
+    "c4_SoftwareSystem": "Программная система",
+    "c4_ExternalSystem": "Внешняя система",
+    "c4_Container": "Контейнер",
+    "c4_Component": "Компонент",
+    "c4_EnterpriseBoundary": "Граница предприятия",
+    "c4_SystemBoundary": "Граница системы",
+    "c4_ContainerBoundary": "Граница контейнера"
+  },
+  "elementCategories": {
+    "C4:Context": "Контекст",
+    "C4:Container": "Контейнер",
+    "C4:Component": "Компонент",
+    "C4:Boundary": "Границы"
+  },
+  "relations": {
+    "c4_rel_uses": "Использует",
+    "c4_rel_callsSync": "Вызывает (синх.)",
+    "c4_rel_callsAsync": "Вызывает (асинх.)",
+    "c4_rel_readsFrom": "Читает из",
+    "c4_rel_writesTo": "Записывает в",
+    "c4_rel_deployedIn": "Развёрнут в"
+  },
+  "nodeFields": {
+    "technology": "Технология",
+    "description": "Описание",
+    "external": "Внешний"
+  },
+  "admin": {
+    "title": "Модель C4",
+    "description": "Моделируйте архитектуру программного обеспечения на четырёх уровнях абстракции: системный контекст, контейнер, компонент и код. Основано на модели C4 Саймона Брауна (c4model.com).",
+    "activate": "Включить модель C4",
+    "deactivate": "Отключить модель C4",
+    "statusTitle": "Статус установки",
+    "statusCardTypes": "{{count}} типов элементов",
+    "statusRelationTypes": "{{count}} типов связей",
+    "statusCards": "{{count}} карточек",
+    "statusDiagrams": "{{count}} диаграмм",
+    "dangerZone": "Опасная зона",
+    "rollbackButton": "Удалить плагин C4",
+    "rollbackConfirmTitle": "Удалить плагин C4?",
+    "rollbackConfirmBody": "Это навсегда удалит все типы карточек, типы связей, карточки и диаграммы C4. Это действие нельзя отменить.",
+    "rollbackConfirm": "Удалить",
+    "rollbackCancel": "Отмена",
+    "rollbackSuccess": "Плагин C4 успешно удалён."
+  }
+}
