@@ -70,3 +70,31 @@ export async function disableArchiMate(
     throw new Error(`Failed to disable ArchiMate: ${resp.status()}`);
   }
 }
+
+export async function enableUml(
+  request: APIRequestContext,
+  baseURL: string,
+  token: string,
+): Promise<void> {
+  const resp = await request.patch(`${baseURL}/api/v1/settings/uml-enabled`, {
+    data: { enabled: true },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok()) {
+    throw new Error(`Failed to enable UML: ${resp.status()} ${await resp.text()}`);
+  }
+}
+
+export async function disableUml(
+  request: APIRequestContext,
+  baseURL: string,
+  token: string,
+): Promise<void> {
+  const resp = await request.patch(`${baseURL}/api/v1/settings/uml-enabled`, {
+    data: { enabled: false },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok()) {
+    throw new Error(`Failed to disable UML: ${resp.status()} ${await resp.text()}`);
+  }
+}
