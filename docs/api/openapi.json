@@ -730,6 +730,20 @@
         "title": "Body_import_bpmn_api_v1_bpm_processes__process_id__diagram_import_post",
         "type": "object"
       },
+      "Body_import_uml_model_api_v1_uml_import_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_uml_model_api_v1_uml_import_post",
+        "type": "object"
+      },
       "Body_upload_favicon_api_v1_settings_favicon_post": {
         "properties": {
           "file": {
@@ -11545,6 +11559,47 @@
         "title": "UiPreferencesUpdate",
         "type": "object"
       },
+      "UmlDiagramTypeItem": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "label",
+          "icon",
+          "category"
+        ],
+        "title": "UmlDiagramTypeItem",
+        "type": "object"
+      },
+      "UmlEnabledPayload": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "UmlEnabledPayload",
+        "type": "object"
+      },
       "UserBulkDelete": {
         "properties": {
           "ids": {
@@ -12240,6 +12295,31 @@
           }
         },
         "title": "WebPortalUpdate",
+        "type": "object"
+      },
+      "XmiExportRequest": {
+        "properties": {
+          "card_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Ids"
+          },
+          "name": {
+            "default": "UML Model",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "XmiExportRequest",
         "type": "object"
       },
       "app__api__v1__migration__StagedRecordOut": {
@@ -28657,6 +28737,102 @@
         ]
       }
     },
+    "/api/v1/settings/uml-enabled": {
+      "delete": {
+        "description": "Admin endpoint \u2014 DESTRUCTIVE full uninstall of the UML plugin.\n\nWARNING: This operation is irreversible. It permanently deletes:\n- All diagrams whose type starts with \"uml-\"\n- All relations where the source or target card has a uml_* type\n- All cards with type_key starting with \"uml_\"\n- All relation_types with plugin_id=\"uml\"\n- All card_types with plugin_id=\"uml\"\n\nThe umlEnabled flag is set to False in general_settings.\n\nReturns a summary of how many rows were deleted in each category.",
+        "operationId": "rollback_uml_api_v1_settings_uml_enabled_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Rollback Uml",
+        "tags": [
+          "settings"
+        ]
+      },
+      "get": {
+        "description": "Public endpoint \u2014 returns whether the UML module is enabled.",
+        "operationId": "get_uml_enabled_api_v1_settings_uml_enabled_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Uml Enabled",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "description": "Admin endpoint \u2014 activate or deactivate the UML module.\n\n**Activate** (enabled=true): Seeds the UML 2.5 metamodel (card types and\nrelation types with plugin_id=\"uml\") then unhides them platform-wide.\n\n**Deactivate** (enabled=false): Sets is_hidden=True on all uml_* card types\nand relation types so they disappear from the UI, but all cards, diagrams,\nand relations are fully preserved \u2014 the module can be re-activated later\nwithout data loss.",
+        "operationId": "update_uml_enabled_api_v1_settings_uml_enabled_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UmlEnabledPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Uml Enabled",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/uml-status": {
+      "get": {
+        "description": "Admin endpoint \u2014 returns a full picture of the UML plugin installation.\n\nReturns counts of uml_* card types, relation types, cards, and uml-* diagrams\nso the administrator can assess the impact before deciding to rollback.",
+        "operationId": "get_uml_status_api_v1_settings_uml_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Uml Status",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/api/v1/soaw": {
       "get": {
         "operationId": "list_soaws_api_v1_soaw_get",
@@ -31245,6 +31421,112 @@
         "summary": "Trigger Vendor Resolution",
         "tags": [
           "TurboLens"
+        ]
+      }
+    },
+    "/api/v1/uml/diagram-types": {
+      "get": {
+        "description": "Return all supported UML diagram types with labels and icons.",
+        "operationId": "list_uml_diagram_types_api_v1_uml_diagram_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UmlDiagramTypeItem"
+                  },
+                  "title": "Response List Uml Diagram Types Api V1 Uml Diagram Types Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Uml Diagram Types",
+        "tags": [
+          "uml"
+        ]
+      }
+    },
+    "/api/v1/uml/export": {
+      "post": {
+        "description": "Export UML elements as XMI 2.1 XML.\n\nReturns the XMI file as a download. Optionally restrict to specific\ncard IDs via the card_ids list; omit to export all uml_* cards.",
+        "operationId": "export_uml_model_api_v1_uml_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/XmiExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Uml Model",
+        "tags": [
+          "uml"
+        ]
+      }
+    },
+    "/api/v1/uml/import": {
+      "post": {
+        "description": "Import an XMI file, creating uml_* cards and relations.\n\nRequires uml.manage permission.\nPhase 4 will implement full XMI parsing.",
+        "operationId": "import_uml_model_api_v1_uml_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_uml_model_api_v1_uml_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Uml Model",
+        "tags": [
+          "uml"
         ]
       }
     },

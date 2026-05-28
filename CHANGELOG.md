@@ -5,6 +5,21 @@ All notable changes to Turbo EA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.30.0] - 2026-05-28
+
+### Added
+- **UML 2.5 plugin** — opt-in module that extends Turbo EA with a full UML 2.5 modelling capability. Enable it in **Admin → Settings → UML**. When active:
+  - 59 UML card types (Class, Interface, Enumeration, AbstractClass, Component, Node, Artifact, Package, Model, Actor, UseCase, Action, InitialNode, ActivityFinalNode, State, PseudostateInitial, Lifeline, CombinedFragment, and more) are registered in the metamodel under the `uml_` prefix.
+  - 31 UML relation types (association, generalization, realization, dependency, composition, aggregation, include, extend, transition, control flow, object flow, message, information flow, …) are registered under `uml_rel_`.
+  - A new **/uml** gallery page lists all UML diagrams; the UML nav link appears automatically when the module is enabled.
+  - A visual-first React Flow canvas editor supports all 14 UML 2.5 diagram categories (Class, Object, Component, Package, Composite Structure, Deployment, Use Case, Activity, State Machine, Sequence, Communication, Interaction Overview, Timing, Profile). Each diagram type filters its element palette and available relation types automatically.
+  - Drag-and-drop from the element palette creates cards in the EA metamodel at the same time; ELK-powered auto-layout with 7 algorithm options (layered, stress, mrtree, force, disco, rectpacking, radial).
+  - Custom SVG edge renderers for all 31 relation types (hollow triangles for generalisation, filled/hollow diamonds for composition/aggregation, dashed lines for dependency/realization, etc.).
+  - XMI 2.5 export stub (`POST /api/v1/uml/export`) — returns a placeholder response; full export will ship in a follow-up.
+  - Disabling the module hides all UML types and diagrams without deleting data; re-enabling restores them. A hard **Rollback** button in Admin → Settings → UML permanently deletes all UML cards, relations, diagrams, and type registrations.
+  - All UML types carry `plugin_id = "uml"` for clean isolation from core EA and ArchiMate types.
+  - Fully translated into all 8 supported locales (en, de, fr, es, it, pt, zh, ru).
+
 ## [1.29.3] - 2026-05-26
 
 ### Fixed
