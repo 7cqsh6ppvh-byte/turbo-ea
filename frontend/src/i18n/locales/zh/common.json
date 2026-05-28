@@ -264,6 +264,7 @@
   "modules.ppm": "PPM",
   "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
+  "modules.uml": "UML",
   "moduleDisabled.title": "{{module}} 已停用",
   "moduleDisabled.body": "{{module}} 模块当前已被管理员停用。请在管理员设置中启用以访问此区域。",
   "moduleDisabled.backToDashboard": "返回仪表板",

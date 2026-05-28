@@ -264,6 +264,7 @@
   "modules.ppm": "PPM",
   "modules.grc": "GRC",
   "modules.turbolens": "TurboLens",
+  "modules.uml": "UML",
   "moduleDisabled.title": "{{module}} è disabilitato",
   "moduleDisabled.body": "Il modulo {{module}} è attualmente disabilitato da un amministratore. Abilitalo dalle impostazioni di amministrazione per accedere a questa sezione.",
   "moduleDisabled.backToDashboard": "Torna alla dashboard",

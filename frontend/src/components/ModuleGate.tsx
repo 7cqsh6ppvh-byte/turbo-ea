@@ -18,8 +18,9 @@ import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
+import { useUmlEnabled } from "@/hooks/useUmlEnabled";
 
-type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc";
+type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc" | "uml";
 
 interface Props {
   module: ModuleKey;
@@ -32,6 +33,7 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
   grc: "/admin/settings",
+  uml: "/admin/settings?tab=uml",
 };
 
 const MODULE_ICON: Record<ModuleKey, string> = {
@@ -40,6 +42,7 @@ const MODULE_ICON: Record<ModuleKey, string> = {
   ppm: "rocket_launch",
   turbolens: "psychology",
   grc: "policy",
+  uml: "schema",
 };
 
 export default function ModuleGate({ module, children }: Props) {
@@ -50,6 +53,7 @@ export default function ModuleGate({ module, children }: Props) {
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
   const { grcEnabled, grcLoaded } = useGrcEnabled();
+  const { umlEnabled, umlLoaded } = useUmlEnabled();
 
   const enabled =
     module === "archimate"
@@ -60,7 +64,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? ppmEnabled
           : module === "grc"
             ? grcEnabled
-            : turboLensEnabled;
+            : module === "uml"
+              ? umlEnabled
+              : turboLensEnabled;
   const loaded =
     module === "archimate"
       ? archiMateLoaded
@@ -70,7 +76,9 @@ export default function ModuleGate({ module, children }: Props) {
           ? ppmLoaded
           : module === "grc"
             ? grcLoaded
-            : turboLensLoaded;
+            : module === "uml"
+              ? umlLoaded
+              : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.

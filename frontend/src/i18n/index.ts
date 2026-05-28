@@ -18,6 +18,7 @@ import grcEn from "./locales/en/grc.json";
 import notificationsEn from "./locales/en/notifications.json";
 import validationEn from "./locales/en/validation.json";
 import archimateEn from "./locales/en/archimate.json";
+import umlEn from "./locales/en/uml.json";
 
 // French
 import commonFr from "./locales/fr/common.json";
@@ -35,6 +36,7 @@ import grcFr from "./locales/fr/grc.json";
 import notificationsFr from "./locales/fr/notifications.json";
 import validationFr from "./locales/fr/validation.json";
 import archimateFr from "./locales/fr/archimate.json";
+import umlFr from "./locales/fr/uml.json";
 
 // Spanish
 import commonEs from "./locales/es/common.json";
@@ -52,6 +54,7 @@ import grcEs from "./locales/es/grc.json";
 import notificationsEs from "./locales/es/notifications.json";
 import validationEs from "./locales/es/validation.json";
 import archimateEs from "./locales/es/archimate.json";
+import umlEs from "./locales/es/uml.json";
 
 // Italian
 import commonIt from "./locales/it/common.json";
@@ -69,6 +72,7 @@ import grcIt from "./locales/it/grc.json";
 import notificationsIt from "./locales/it/notifications.json";
 import validationIt from "./locales/it/validation.json";
 import archimateIt from "./locales/it/archimate.json";
+import umlIt from "./locales/it/uml.json";
 
 // Portuguese
 import commonPt from "./locales/pt/common.json";
@@ -86,6 +90,7 @@ import grcPt from "./locales/pt/grc.json";
 import notificationsPt from "./locales/pt/notifications.json";
 import validationPt from "./locales/pt/validation.json";
 import archimatePt from "./locales/pt/archimate.json";
+import umlPt from "./locales/pt/uml.json";
 
 // Chinese
 import commonZh from "./locales/zh/common.json";
@@ -103,6 +108,7 @@ import grcZh from "./locales/zh/grc.json";
 import notificationsZh from "./locales/zh/notifications.json";
 import validationZh from "./locales/zh/validation.json";
 import archimateZh from "./locales/zh/archimate.json";
+import umlZh from "./locales/zh/uml.json";
 
 // German
 import commonDe from "./locales/de/common.json";
@@ -120,6 +126,7 @@ import grcDe from "./locales/de/grc.json";
 import notificationsDe from "./locales/de/notifications.json";
 import validationDe from "./locales/de/validation.json";
 import archimateDe from "./locales/de/archimate.json";
+import umlDe from "./locales/de/uml.json";
 
 // Russian
 import commonRu from "./locales/ru/common.json";
@@ -137,6 +144,7 @@ import grcRu from "./locales/ru/grc.json";
 import notificationsRu from "./locales/ru/notifications.json";
 import validationRu from "./locales/ru/validation.json";
 import archimateRu from "./locales/ru/archimate.json";
+import umlRu from "./locales/ru/uml.json";
 
 export const SUPPORTED_LOCALES = ["en", "de", "fr", "es", "it", "pt", "zh", "ru"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -173,6 +181,7 @@ i18n
         notifications: notificationsEn,
         validation: validationEn,
         archimate: archimateEn,
+        uml: umlEn,
       },
       fr: {
         common: commonFr,
@@ -190,6 +199,7 @@ i18n
         notifications: notificationsFr,
         validation: validationFr,
         archimate: archimateFr,
+        uml: umlFr,
       },
       es: {
         common: commonEs,
@@ -207,6 +217,7 @@ i18n
         notifications: notificationsEs,
         validation: validationEs,
         archimate: archimateEs,
+        uml: umlEs,
       },
       it: {
         common: commonIt,
@@ -224,6 +235,7 @@ i18n
         notifications: notificationsIt,
         validation: validationIt,
         archimate: archimateIt,
+        uml: umlIt,
       },
       pt: {
         common: commonPt,
@@ -241,6 +253,7 @@ i18n
         notifications: notificationsPt,
         validation: validationPt,
         archimate: archimatePt,
+        uml: umlPt,
       },
       zh: {
         common: commonZh,
@@ -258,6 +271,7 @@ i18n
         notifications: notificationsZh,
         validation: validationZh,
         archimate: archimateZh,
+        uml: umlZh,
       },
       de: {
         common: commonDe,
@@ -275,6 +289,7 @@ i18n
         notifications: notificationsDe,
         validation: validationDe,
         archimate: archimateDe,
+        uml: umlDe,
       },
       ru: {
         common: commonRu,
@@ -292,6 +307,7 @@ i18n
         notifications: notificationsRu,
         validation: validationRu,
         archimate: archimateRu,
+        uml: umlRu,
       },
     },
     fallbackLng: "en",

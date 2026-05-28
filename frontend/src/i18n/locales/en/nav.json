@@ -50,5 +50,6 @@
   "userMenu.referenceCatalogues": "Reference Catalogues",
   "userMenu.processCatalogue": "Process Catalogue",
   "userMenu.valueStreamCatalogue": "Value Stream Catalogue",
-  "archimate": "ArchiMate"
+  "archimate": "ArchiMate",
+  "uml": "UML"
 }

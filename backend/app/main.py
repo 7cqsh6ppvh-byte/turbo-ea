@@ -621,6 +621,25 @@ async def lifespan(app: FastAPI):
             else:
                 print(f"[seed_archimate] Skipped: {result['cards_skipped']} cards already exist")
 
+    # Re-seed UML metamodel if module is enabled (ensures types are present after upgrades)
+    async with async_session() as db:
+        from sqlalchemy import select as _select
+
+        from app.models.app_settings import AppSettings as _AppSettings
+
+        _res = await db.execute(_select(_AppSettings).where(_AppSettings.id == "default"))
+        _row = _res.scalar_one_or_none()
+        _general = (_row.general_settings if _row else None) or {}
+        if _general.get("umlEnabled", False):
+            from app.plugins.uml.seed import seed_uml_metamodel
+
+            _uml_result = await seed_uml_metamodel(db)
+            if _uml_result["card_types_created"] or _uml_result["relation_types_created"]:
+                print(
+                    f"[seed_uml] Seeded {_uml_result['card_types_created']} UML card types, "
+                    f"{_uml_result['relation_types_created']} relation types"
+                )
+
     # Auto-configure bundled Ollama AI when AI_AUTO_CONFIGURE=true
     ollama_task = None
     if settings.AI_AUTO_CONFIGURE:

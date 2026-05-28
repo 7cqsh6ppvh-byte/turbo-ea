@@ -80,6 +80,13 @@ APP_PERMISSIONS: dict[str, dict] = {
             "archimate.manage": "Create, edit, and delete ArchiMate diagrams and elements",
         },
     },
+    "uml": {
+        "label": "UML",
+        "permissions": {
+            "uml.view": "View UML diagrams and elements",
+            "uml.manage": "Create, edit, and delete UML diagrams",
+        },
+    },
     "reports": {
         "label": "Reports",
         "permissions": {
@@ -360,6 +367,8 @@ BPM_ADMIN_PERMISSIONS: dict[str, bool] = {
     "grc.manage": True,
     "archimate.view": True,
     "archimate.manage": True,
+    "uml.view": True,
+    "uml.manage": True,
     "ai.suggest": True,
     "ai.portfolio_insights": True,
     "costs.view": True,
@@ -435,6 +444,8 @@ MEMBER_PERMISSIONS: dict[str, bool] = {
     "grc.manage": True,
     "archimate.view": True,
     "archimate.manage": True,
+    "uml.view": True,
+    "uml.manage": True,
     "ai.suggest": True,
     "ai.portfolio_insights": True,
     "costs.view": True,
@@ -510,6 +521,8 @@ VIEWER_PERMISSIONS: dict[str, bool] = {
     "grc.manage": False,
     "archimate.view": True,
     "archimate.manage": False,
+    "uml.view": True,
+    "uml.manage": False,
     "ai.suggest": False,
     "ai.portfolio_insights": False,
     "costs.view": False,

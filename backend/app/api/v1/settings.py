@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -13,8 +13,11 @@ from app.config import settings as app_config
 from app.core.encryption import decrypt_value, encrypt_value
 from app.database import get_db
 from app.models.app_settings import AppSettings
+from app.models.card import Card
 from app.models.card_type import CardType
 from app.models.compliance_regulation import ComplianceRegulation
+from app.models.diagram import Diagram
+from app.models.relation import Relation
 from app.models.relation_type import RelationType
 from app.models.user import User
 from app.services.permission_service import PermissionService
@@ -168,6 +171,7 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "bpm_enabled": general.get("bpmEnabled", True),
         "ppm_enabled": general.get("ppmEnabled", False),
         "archimate_enabled": general.get("archiMateEnabled", False),
+        "uml_enabled": general.get("umlEnabled", False),
         "turbolens_enabled": general.get("turboLensEnabled", True),
         "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
@@ -613,6 +617,183 @@ async def update_archimate_enabled(
 
     await db.commit()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# UML module — enable / disable / rollback / status
+# ---------------------------------------------------------------------------
+
+
+class UmlEnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/uml-status")
+async def get_uml_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — returns a full picture of the UML plugin installation.
+
+    Returns counts of uml_* card types, relation types, cards, and uml-* diagrams
+    so the administrator can assess the impact before deciding to rollback.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    ct_result = await db.execute(select(CardType).where(CardType.plugin_id == "uml"))
+    card_types_count = len(ct_result.scalars().all())
+
+    rt_result = await db.execute(select(RelationType).where(RelationType.plugin_id == "uml"))
+    relation_types_count = len(rt_result.scalars().all())
+
+    # Cards whose type_key starts with "uml_"
+    cards_result = await db.execute(select(Card).where(Card.type.like("uml_%")))
+    cards_count = len(cards_result.scalars().all())
+
+    # Diagrams whose type starts with "uml-"
+    diagrams_result = await db.execute(select(Diagram).where(Diagram.type.like("uml-%")))
+    diagrams_count = len(diagrams_result.scalars().all())
+
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+
+    return {
+        "enabled": general.get("umlEnabled", False),
+        "card_types_count": card_types_count,
+        "relation_types_count": relation_types_count,
+        "cards_count": cards_count,
+        "diagrams_count": diagrams_count,
+    }
+
+
+@router.get("/uml-enabled")
+async def get_uml_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the UML module is enabled."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    return {"enabled": general.get("umlEnabled", False)}
+
+
+@router.patch("/uml-enabled")
+async def update_uml_enabled(
+    body: UmlEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — activate or deactivate the UML module.
+
+    **Activate** (enabled=true): Seeds the UML 2.5 metamodel (card types and
+    relation types with plugin_id="uml") then unhides them platform-wide.
+
+    **Deactivate** (enabled=false): Sets is_hidden=True on all uml_* card types
+    and relation types so they disappear from the UI, but all cards, diagrams,
+    and relations are fully preserved — the module can be re-activated later
+    without data loss.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["umlEnabled"] = body.enabled
+    row.general_settings = general
+
+    hide = not body.enabled
+
+    if body.enabled:
+        from app.plugins.uml.seed import seed_uml_metamodel
+
+        await seed_uml_metamodel(db)
+
+    uml_ct_result = await db.execute(select(CardType).where(CardType.plugin_id == "uml"))
+    for ct in uml_ct_result.scalars().all():
+        ct.is_hidden = hide
+
+    uml_rt_result = await db.execute(select(RelationType).where(RelationType.plugin_id == "uml"))
+    for rt in uml_rt_result.scalars().all():
+        rt.is_hidden = hide
+
+    await db.commit()
+    return {"ok": True}
+
+
+@router.delete("/uml-enabled")
+async def rollback_uml(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint — DESTRUCTIVE full uninstall of the UML plugin.
+
+    WARNING: This operation is irreversible. It permanently deletes:
+    - All diagrams whose type starts with "uml-"
+    - All relations where the source or target card has a uml_* type
+    - All cards with type_key starting with "uml_"
+    - All relation_types with plugin_id="uml"
+    - All card_types with plugin_id="uml"
+
+    The umlEnabled flag is set to False in general_settings.
+
+    Returns a summary of how many rows were deleted in each category.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+
+    # 1. Disable the flag first.
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["umlEnabled"] = False
+    row.general_settings = general
+
+    # 2. Delete all uml-* diagrams.
+    diag_result = await db.execute(
+        delete(Diagram).where(Diagram.type.like("uml-%")).returning(Diagram.id)
+    )
+    deleted_diagrams = len(diag_result.all())
+
+    # 3. Collect uml_* card ids to cascade-delete their relations.
+    uml_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("uml_%")))
+    uml_card_ids = [row[0] for row in uml_card_ids_result.all()]
+
+    # 4. Delete all relations where either endpoint is a uml_* card.
+    deleted_relations = 0
+    if uml_card_ids:
+        rel_result = await db.execute(
+            delete(Relation)
+            .where(
+                or_(
+                    Relation.source_id.in_(uml_card_ids),
+                    Relation.target_id.in_(uml_card_ids),
+                )
+            )
+            .returning(Relation.id)
+        )
+        deleted_relations = len(rel_result.all())
+
+    # 5. Delete all uml_* cards.
+    cards_result = await db.execute(delete(Card).where(Card.type.like("uml_%")).returning(Card.id))
+    deleted_cards = len(cards_result.all())
+
+    # 6. Delete all uml relation types.
+    rt_result = await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "uml").returning(RelationType.key)
+    )
+    deleted_relation_types = len(rt_result.all())
+
+    # 7. Delete all uml card types.
+    ct_result = await db.execute(
+        delete(CardType).where(CardType.plugin_id == "uml").returning(CardType.key)
+    )
+    deleted_card_types = len(ct_result.all())
+
+    await db.commit()
+
+    return {
+        "deleted_cards": deleted_cards,
+        "deleted_relations": deleted_relations,
+        "deleted_diagrams": deleted_diagrams,
+        "deleted_card_types": deleted_card_types,
+        "deleted_relation_types": deleted_relation_types,
+    }
 
 
 class TurboLensEnabledPayload(BaseModel):
