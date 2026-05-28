@@ -66,6 +66,14 @@ const ArchimateDiagramsPage = lazy(
 const ArchimateDiagramEditor = lazy(
   () => import("@/features/archimate/ArchimateDiagramEditor").then((m) => ({ default: m.ArchimateDiagramEditor })),
 );
+const AwsDiagramsPage = lazy(() => import("@/features/aws/AwsDiagramsPage"));
+const AwsDiagramEditor = lazy(() => import("@/features/aws/AwsDiagramEditor"));
+const AzureDiagramsPage = lazy(() => import("@/features/azure/AzureDiagramsPage"));
+const AzureDiagramEditor = lazy(() => import("@/features/azure/AzureDiagramEditor"));
+const GcpDiagramsPage = lazy(() => import("@/features/gcp/GcpDiagramsPage"));
+const GcpDiagramEditor = lazy(() => import("@/features/gcp/GcpDiagramEditor"));
+const C4DiagramsPage = lazy(() => import("@/features/c4/C4DiagramsPage"));
+const C4DiagramEditor = lazy(() => import("@/features/c4/C4DiagramEditor"));
 const CapabilityCataloguePage = lazy(
   () => import("@/features/capability-catalogue/CapabilityCataloguePage"),
 );
@@ -205,8 +213,20 @@ function AppRoutes() {
                 <Route path="/turbolens/assessments/:id" element={<ModuleGate module="turbolens"><AssessmentViewer /></ModuleGate>} />
                 <Route path="/archimate" element={<ModuleGate module="archimate"><ArchimateDiagramsPage /></ModuleGate>} />
                 <Route path="/archimate/:id/edit" element={<ModuleGate module="archimate"><ArchimateDiagramEditor /></ModuleGate>} />
+                <Route path="/aws" element={<ModuleGate module="aws"><AwsDiagramsPage /></ModuleGate>} />
+                <Route path="/aws/:id/edit" element={<ModuleGate module="aws"><AwsDiagramEditor /></ModuleGate>} />
+                <Route path="/azure" element={<ModuleGate module="azure"><AzureDiagramsPage /></ModuleGate>} />
+                <Route path="/azure/:id/edit" element={<ModuleGate module="azure"><AzureDiagramEditor /></ModuleGate>} />
+                <Route path="/gcp" element={<ModuleGate module="gcp"><GcpDiagramsPage /></ModuleGate>} />
+                <Route path="/gcp/:id/edit" element={<ModuleGate module="gcp"><GcpDiagramEditor /></ModuleGate>} />
+                <Route path="/c4" element={<ModuleGate module="c4"><C4DiagramsPage /></ModuleGate>} />
+                <Route path="/c4/:id/edit" element={<ModuleGate module="c4"><C4DiagramEditor /></ModuleGate>} />
                 <Route path="/admin/turbolens" element={<Navigate to="/admin/settings?tab=turbolens" />} />
                 <Route path="/admin/archimate" element={<Navigate to="/admin/settings?tab=archimate" />} />
+                <Route path="/admin/aws" element={<Navigate to="/admin/settings?tab=aws" />} />
+                <Route path="/admin/azure" element={<Navigate to="/admin/settings?tab=azure" />} />
+                <Route path="/admin/gcp" element={<Navigate to="/admin/settings?tab=gcp" />} />
+                <Route path="/admin/c4" element={<Navigate to="/admin/settings?tab=c4" />} />
                 <Route path="/capability-catalogue" element={<CapabilityCataloguePage />} />
                 <Route path="/process-catalogue" element={<ProcessCataloguePage />} />
                 <Route path="/value-stream-catalogue" element={<ValueStreamCataloguePage />} />

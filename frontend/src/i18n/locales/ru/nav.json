@@ -50,5 +50,9 @@
   "userMenu.referenceCatalogues": "Справочные каталоги",
   "userMenu.processCatalogue": "Каталог процессов",
   "userMenu.valueStreamCatalogue": "Каталог потоков создания ценности",
-  "archimate": "ArchiMate"
+  "archimate": "ArchiMate",
+  "aws": "AWS",
+  "azure": "Azure",
+  "gcp": "Google Cloud",
+  "c4": "Модель C4"
 }

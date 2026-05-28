@@ -1,0 +1,35 @@
+{
+  "pageTitle": "Diagramas de arquitectura AWS",
+  "newDiagram": "Nuevo diagrama AWS",
+  "noDiagrams": "No hay diagramas AWS aún",
+  "noDiagramsHint": "Cree su primer diagrama de arquitectura AWS.",
+  "elementCategories": {
+    "AWS:Grouping": "Agrupación",
+    "AWS:Compute": "Cómputo",
+    "AWS:Storage": "Almacenamiento",
+    "AWS:Database": "Base de datos",
+    "AWS:Networking": "Redes",
+    "AWS:Analytics": "Analítica",
+    "AWS:Security": "Seguridad",
+    "AWS:Management": "Gestión"
+  },
+  "admin": {
+    "title": "Modelado de arquitectura AWS",
+    "description": "Modele la infraestructura de Amazon Web Services con 52 tipos de servicios.",
+    "activate": "Habilitar modelado AWS",
+    "deactivate": "Deshabilitar modelado AWS",
+    "statusTitle": "Estado de instalación",
+    "statusCardTypes": "{{count}} tipos de elementos",
+    "statusRelationTypes": "{{count}} tipos de relaciones",
+    "statusCards": "{{count}} tarjetas",
+    "statusDiagrams": "{{count}} diagramas",
+    "dangerZone": "Zona de peligro",
+    "rollbackButton": "Desinstalar plugin AWS",
+    "rollbackConfirmTitle": "¿Desinstalar plugin AWS?",
+    "rollbackConfirmBody": "Se eliminarán permanentemente todos los tipos de tarjetas, tipos de relaciones, tarjetas y diagramas de AWS.",
+    "rollbackConfirm": "Desinstalar",
+    "rollbackCancel": "Cancelar",
+    "rollbackSuccess": "Plugin AWS desinstalado correctamente."
+  },
+  "diagramName": "Diagram name"
+}

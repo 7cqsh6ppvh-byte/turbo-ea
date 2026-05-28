@@ -14,12 +14,16 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MaterialSymbol from "@/components/MaterialSymbol";
 import { useArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
+import { useAwsEnabled } from "@/hooks/useAwsEnabled";
+import { useAzureEnabled } from "@/hooks/useAzureEnabled";
+import { useGcpEnabled } from "@/hooks/useGcpEnabled";
+import { useC4Enabled } from "@/hooks/useC4Enabled";
 import { useBpmEnabled } from "@/hooks/useBpmEnabled";
 import { useGrcEnabled } from "@/hooks/useGrcEnabled";
 import { usePpmEnabled } from "@/hooks/usePpmEnabled";
 import { useTurboLensReady } from "@/hooks/useTurboLensReady";
 
-type ModuleKey = "archimate" | "bpm" | "ppm" | "turbolens" | "grc";
+type ModuleKey = "archimate" | "aws" | "azure" | "gcp" | "c4" | "bpm" | "ppm" | "turbolens" | "grc";
 
 interface Props {
   module: ModuleKey;
@@ -28,6 +32,10 @@ interface Props {
 
 const SETTINGS_TAB: Record<ModuleKey, string> = {
   archimate: "/admin/settings?tab=archimate",
+  aws: "/admin/settings?tab=aws",
+  azure: "/admin/settings?tab=azure",
+  gcp: "/admin/settings?tab=gcp",
+  c4: "/admin/settings?tab=c4",
   bpm: "/admin/settings?tab=bpm",
   ppm: "/admin/settings?tab=ppm",
   turbolens: "/admin/settings?tab=turbolens",
@@ -36,6 +44,10 @@ const SETTINGS_TAB: Record<ModuleKey, string> = {
 
 const MODULE_ICON: Record<ModuleKey, string> = {
   archimate: "schema",
+  aws: "cloud",
+  azure: "cloud",
+  gcp: "cloud",
+  c4: "account_tree",
   bpm: "schema",
   ppm: "rocket_launch",
   turbolens: "psychology",
@@ -46,6 +58,10 @@ export default function ModuleGate({ module, children }: Props) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
   const { archiMateEnabled, archiMateLoaded } = useArchiMateEnabled();
+  const { awsEnabled, awsLoaded } = useAwsEnabled();
+  const { azureEnabled, azureLoaded } = useAzureEnabled();
+  const { gcpEnabled, gcpLoaded } = useGcpEnabled();
+  const { c4Enabled, c4Loaded } = useC4Enabled();
   const { bpmEnabled, bpmLoaded } = useBpmEnabled();
   const { ppmEnabled, ppmLoaded } = usePpmEnabled();
   const { turboLensEnabled, turboLensLoaded } = useTurboLensReady();
@@ -54,23 +70,39 @@ export default function ModuleGate({ module, children }: Props) {
   const enabled =
     module === "archimate"
       ? archiMateEnabled
-      : module === "bpm"
-        ? bpmEnabled
-        : module === "ppm"
-          ? ppmEnabled
-          : module === "grc"
-            ? grcEnabled
-            : turboLensEnabled;
+      : module === "aws"
+        ? awsEnabled
+        : module === "azure"
+          ? azureEnabled
+          : module === "gcp"
+            ? gcpEnabled
+            : module === "c4"
+              ? c4Enabled
+              : module === "bpm"
+                ? bpmEnabled
+                : module === "ppm"
+                  ? ppmEnabled
+                  : module === "grc"
+                    ? grcEnabled
+                    : turboLensEnabled;
   const loaded =
     module === "archimate"
       ? archiMateLoaded
-      : module === "bpm"
-        ? bpmLoaded
-        : module === "ppm"
-          ? ppmLoaded
-          : module === "grc"
-            ? grcLoaded
-            : turboLensLoaded;
+      : module === "aws"
+        ? awsLoaded
+        : module === "azure"
+          ? azureLoaded
+          : module === "gcp"
+            ? gcpLoaded
+            : module === "c4"
+              ? c4Loaded
+              : module === "bpm"
+                ? bpmLoaded
+                : module === "ppm"
+                  ? ppmLoaded
+                  : module === "grc"
+                    ? grcLoaded
+                    : turboLensLoaded;
 
   // Wait for the first fetch to resolve before deciding — prevents the
   // disabled placeholder from flashing while the status request is in flight.

@@ -10,7 +10,6 @@
   "actions.search": "Rechercher",
   "actions.export": "Exporter",
   "actions.import": "Importer",
-  "actions.add": "Ajouter",
   "actions.remove": "Retirer",
   "actions.archive": "Archiver",
   "actions.restore": "Restaurer",
@@ -347,5 +346,9 @@
   "dashboard.workspace.andMore_one": "et {{count}} de plus",
   "dashboard.workspace.andMore_other": "et {{count}} de plus",
   "actions.undo": "Annuler",
-  "dashboard.workspace.favoriteRemoved": "« {{name}} » retiré des favoris"
+  "dashboard.workspace.favoriteRemoved": "« {{name}} » retiré des favoris",
+  "modules.aws": "AWS",
+  "modules.azure": "Azure",
+  "modules.gcp": "GCP",
+  "modules.c4": "Modèle C4"
 }

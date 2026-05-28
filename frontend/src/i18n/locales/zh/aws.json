@@ -1,0 +1,35 @@
+{
+  "pageTitle": "AWS架构图",
+  "newDiagram": "新建AWS图",
+  "noDiagrams": "暂无AWS图",
+  "noDiagramsHint": "创建您的第一个AWS架构图。",
+  "elementCategories": {
+    "AWS:Grouping": "分组",
+    "AWS:Compute": "计算",
+    "AWS:Storage": "存储",
+    "AWS:Database": "数据库",
+    "AWS:Networking": "网络",
+    "AWS:Analytics": "分析",
+    "AWS:Security": "安全",
+    "AWS:Management": "管理"
+  },
+  "admin": {
+    "title": "AWS架构建模",
+    "description": "使用52种服务类型对Amazon Web Services基础设施进行建模。",
+    "activate": "启用AWS建模",
+    "deactivate": "禁用AWS建模",
+    "statusTitle": "安装状态",
+    "statusCardTypes": "{{count}} 个元素类型",
+    "statusRelationTypes": "{{count}} 个关系类型",
+    "statusCards": "{{count}} 张卡片",
+    "statusDiagrams": "{{count}} 个图",
+    "dangerZone": "危险区域",
+    "rollbackButton": "卸载AWS插件",
+    "rollbackConfirmTitle": "卸载AWS插件？",
+    "rollbackConfirmBody": "所有AWS卡片类型、关系类型、卡片和图将被永久删除。",
+    "rollbackConfirm": "卸载",
+    "rollbackCancel": "取消",
+    "rollbackSuccess": "AWS插件已成功卸载。"
+  },
+  "diagramName": "Diagram name"
+}

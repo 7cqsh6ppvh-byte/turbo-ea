@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Azure架构图",
+  "newDiagram": "新建Azure图",
+  "noDiagrams": "暂无Azure图",
+  "noDiagramsHint": "创建您的第一个Azure架构图。",
+  "elementCategories": {
+    "Azure:Grouping": "分组",
+    "Azure:Compute": "计算",
+    "Azure:Storage": "存储",
+    "Azure:Database": "数据库",
+    "Azure:Networking": "网络",
+    "Azure:Analytics": "分析",
+    "Azure:Security": "安全",
+    "Azure:Management": "管理"
+  },
+  "admin": {
+    "title": "Azure架构建模",
+    "description": "使用50种服务类型对Microsoft Azure基础设施进行建模。",
+    "activate": "启用Azure建模",
+    "deactivate": "禁用Azure建模",
+    "statusTitle": "安装状态",
+    "statusCardTypes": "{{count}} 个元素类型",
+    "statusRelationTypes": "{{count}} 个关系类型",
+    "statusCards": "{{count}} 张卡片",
+    "statusDiagrams": "{{count}} 个图",
+    "dangerZone": "危险区域",
+    "rollbackButton": "卸载Azure插件",
+    "rollbackConfirmTitle": "卸载Azure插件？",
+    "rollbackConfirmBody": "所有Azure卡片类型、关系类型、卡片和图将被永久删除。",
+    "rollbackConfirm": "卸载",
+    "rollbackCancel": "取消",
+    "rollbackSuccess": "Azure插件已成功卸载。"
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "Azure diagram canvas coming soon."
+}

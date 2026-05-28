@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Azure Architecture Diagrams",
+  "newDiagram": "New Azure Diagram",
+  "noDiagrams": "No Azure diagrams yet",
+  "noDiagramsHint": "Create your first Azure architecture diagram.",
+  "elementCategories": {
+    "Azure:Grouping": "Grouping",
+    "Azure:Compute": "Compute",
+    "Azure:Storage": "Storage",
+    "Azure:Database": "Database",
+    "Azure:Networking": "Networking",
+    "Azure:Analytics": "Analytics",
+    "Azure:Security": "Security",
+    "Azure:Management": "Management"
+  },
+  "admin": {
+    "title": "Azure Architecture Modeling",
+    "description": "Model Microsoft Azure infrastructure with 50 service types across 8 categories including Compute, Storage, Database, Networking, Analytics, Security, and Management.",
+    "activate": "Enable Azure Modeling",
+    "deactivate": "Disable Azure Modeling",
+    "statusTitle": "Installation Status",
+    "statusCardTypes": "{{count}} element types",
+    "statusRelationTypes": "{{count}} relation types",
+    "statusCards": "{{count}} cards",
+    "statusDiagrams": "{{count}} diagrams",
+    "dangerZone": "Danger Zone",
+    "rollbackButton": "Uninstall Azure Plugin",
+    "rollbackConfirmTitle": "Uninstall Azure Plugin?",
+    "rollbackConfirmBody": "This will permanently delete all Azure card types, relation types, cards, and diagrams. This action cannot be undone.",
+    "rollbackConfirm": "Uninstall",
+    "rollbackCancel": "Cancel",
+    "rollbackSuccess": "Azure plugin uninstalled successfully."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "Azure diagram canvas coming soon."
+}

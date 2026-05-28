@@ -1,0 +1,42 @@
+{
+  "pageTitle": "C4 Model架构图",
+  "newDiagram": "新建C4图",
+  "noDiagrams": "暂无C4 Model图",
+  "noDiagramsHint": "创建您的第一个C4 Model架构图。",
+  "elementCategories": {
+    "C4:Grouping": "分组",
+    "C4:Compute": "计算",
+    "C4:Storage": "存储",
+    "C4:Database": "数据库",
+    "C4:Networking": "网络",
+    "C4:Analytics": "分析",
+    "C4:Security": "安全",
+    "C4:Management": "管理"
+  },
+  "admin": {
+    "title": "C4架构建模",
+    "description": "使用8种服务类型对C4 Model (Simon Brown)基础设施进行建模。",
+    "activate": "启用C4建模",
+    "deactivate": "禁用C4建模",
+    "statusTitle": "安装状态",
+    "statusCardTypes": "{{count}} 个元素类型",
+    "statusRelationTypes": "{{count}} 个关系类型",
+    "statusCards": "{{count}} 张卡片",
+    "statusDiagrams": "{{count}} 个图",
+    "dangerZone": "危险区域",
+    "rollbackButton": "卸载C4插件",
+    "rollbackConfirmTitle": "卸载C4插件？",
+    "rollbackConfirmBody": "所有C4卡片类型、关系类型、卡片和图将被永久删除。",
+    "rollbackConfirm": "卸载",
+    "rollbackCancel": "取消",
+    "rollbackSuccess": "C4插件已成功卸载。"
+  },
+  "diagramName": "Diagram name",
+  "diagramType": "Diagram type",
+  "diagramTypes": {
+    "context": "System Context",
+    "container": "Container",
+    "component": "Component"
+  },
+  "editorComingSoon": "C4 diagram canvas coming soon."
+}

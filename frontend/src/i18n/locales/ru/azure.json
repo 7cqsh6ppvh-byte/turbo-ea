@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Диаграммы архитектуры Azure",
+  "newDiagram": "Новая диаграмма Azure",
+  "noDiagrams": "Нет диаграмм Azure",
+  "noDiagramsHint": "Создайте свою первую диаграмму архитектуры Azure.",
+  "elementCategories": {
+    "Azure:Grouping": "Группировка",
+    "Azure:Compute": "Вычисления",
+    "Azure:Storage": "Хранилище",
+    "Azure:Database": "База данных",
+    "Azure:Networking": "Сеть",
+    "Azure:Analytics": "Аналитика",
+    "Azure:Security": "Безопасность",
+    "Azure:Management": "Управление"
+  },
+  "admin": {
+    "title": "Моделирование архитектуры Azure",
+    "description": "Моделируйте инфраструктуру Microsoft Azure с 50 типами сервисов.",
+    "activate": "Включить моделирование Azure",
+    "deactivate": "Отключить моделирование Azure",
+    "statusTitle": "Статус установки",
+    "statusCardTypes": "{{count}} типов элементов",
+    "statusRelationTypes": "{{count}} типов отношений",
+    "statusCards": "{{count}} карточек",
+    "statusDiagrams": "{{count}} диаграмм",
+    "dangerZone": "Опасная зона",
+    "rollbackButton": "Удалить плагин Azure",
+    "rollbackConfirmTitle": "Удалить плагин Azure?",
+    "rollbackConfirmBody": "Все типы карточек, типы отношений, карточки и диаграммы Azure будут удалены без возможности восстановления.",
+    "rollbackConfirm": "Удалить",
+    "rollbackCancel": "Отмена",
+    "rollbackSuccess": "Плагин Azure успешно удалён."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "Azure diagram canvas coming soon."
+}

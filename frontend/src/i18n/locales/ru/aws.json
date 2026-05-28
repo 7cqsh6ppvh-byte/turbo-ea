@@ -1,0 +1,35 @@
+{
+  "pageTitle": "Диаграммы архитектуры AWS",
+  "newDiagram": "Новая диаграмма AWS",
+  "noDiagrams": "Нет диаграмм AWS",
+  "noDiagramsHint": "Создайте свою первую диаграмму архитектуры AWS.",
+  "elementCategories": {
+    "AWS:Grouping": "Группировка",
+    "AWS:Compute": "Вычисления",
+    "AWS:Storage": "Хранилище",
+    "AWS:Database": "База данных",
+    "AWS:Networking": "Сеть",
+    "AWS:Analytics": "Аналитика",
+    "AWS:Security": "Безопасность",
+    "AWS:Management": "Управление"
+  },
+  "admin": {
+    "title": "Моделирование архитектуры AWS",
+    "description": "Моделируйте инфраструктуру Amazon Web Services с 52 типами сервисов.",
+    "activate": "Включить моделирование AWS",
+    "deactivate": "Отключить моделирование AWS",
+    "statusTitle": "Статус установки",
+    "statusCardTypes": "{{count}} типов элементов",
+    "statusRelationTypes": "{{count}} типов отношений",
+    "statusCards": "{{count}} карточек",
+    "statusDiagrams": "{{count}} диаграмм",
+    "dangerZone": "Опасная зона",
+    "rollbackButton": "Удалить плагин AWS",
+    "rollbackConfirmTitle": "Удалить плагин AWS?",
+    "rollbackConfirmBody": "Все типы карточек, типы отношений, карточки и диаграммы AWS будут удалены без возможности восстановления.",
+    "rollbackConfirm": "Удалить",
+    "rollbackCancel": "Отмена",
+    "rollbackSuccess": "Плагин AWS успешно удалён."
+  },
+  "diagramName": "Diagram name"
+}

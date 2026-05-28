@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Diagramas de arquitetura Azure",
+  "newDiagram": "Novo diagrama Azure",
+  "noDiagrams": "Nenhum diagrama Azure ainda",
+  "noDiagramsHint": "Crie o seu primeiro diagrama de arquitetura Azure.",
+  "elementCategories": {
+    "Azure:Grouping": "Agrupamento",
+    "Azure:Compute": "Computação",
+    "Azure:Storage": "Armazenamento",
+    "Azure:Database": "Base de dados",
+    "Azure:Networking": "Rede",
+    "Azure:Analytics": "Análise",
+    "Azure:Security": "Segurança",
+    "Azure:Management": "Gestão"
+  },
+  "admin": {
+    "title": "Modelação de arquitetura Azure",
+    "description": "Modele a infraestrutura da Microsoft Azure com 50 tipos de serviços.",
+    "activate": "Ativar modelação Azure",
+    "deactivate": "Desativar modelação Azure",
+    "statusTitle": "Estado da instalação",
+    "statusCardTypes": "{{count}} tipos de elementos",
+    "statusRelationTypes": "{{count}} tipos de relações",
+    "statusCards": "{{count}} cartões",
+    "statusDiagrams": "{{count}} diagramas",
+    "dangerZone": "Zona de perigo",
+    "rollbackButton": "Desinstalar plugin Azure",
+    "rollbackConfirmTitle": "Desinstalar plugin Azure?",
+    "rollbackConfirmBody": "Todos os tipos de cartões, tipos de relações, cartões e diagramas Azure serão eliminados permanentemente.",
+    "rollbackConfirm": "Desinstalar",
+    "rollbackCancel": "Cancelar",
+    "rollbackSuccess": "Plugin Azure desinstalado com sucesso."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "Azure diagram canvas coming soon."
+}

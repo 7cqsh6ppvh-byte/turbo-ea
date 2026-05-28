@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Diagramas de arquitectura GCP",
+  "newDiagram": "Nuevo diagrama GCP",
+  "noDiagrams": "No hay diagramas GCP aún",
+  "noDiagramsHint": "Cree su primer diagrama de arquitectura GCP.",
+  "elementCategories": {
+    "GCP:Grouping": "Agrupación",
+    "GCP:Compute": "Cómputo",
+    "GCP:Storage": "Almacenamiento",
+    "GCP:Database": "Base de datos",
+    "GCP:Networking": "Redes",
+    "GCP:Analytics": "Analítica",
+    "GCP:Security": "Seguridad",
+    "GCP:Management": "Gestión"
+  },
+  "admin": {
+    "title": "Modelado de arquitectura GCP",
+    "description": "Modele la infraestructura de Google Cloud Platform con 47 tipos de servicios.",
+    "activate": "Habilitar modelado GCP",
+    "deactivate": "Deshabilitar modelado GCP",
+    "statusTitle": "Estado de instalación",
+    "statusCardTypes": "{{count}} tipos de elementos",
+    "statusRelationTypes": "{{count}} tipos de relaciones",
+    "statusCards": "{{count}} tarjetas",
+    "statusDiagrams": "{{count}} diagramas",
+    "dangerZone": "Zona de peligro",
+    "rollbackButton": "Desinstalar plugin GCP",
+    "rollbackConfirmTitle": "¿Desinstalar plugin GCP?",
+    "rollbackConfirmBody": "Se eliminarán permanentemente todos los tipos de tarjetas, tipos de relaciones, tarjetas y diagramas de GCP.",
+    "rollbackConfirm": "Desinstalar",
+    "rollbackCancel": "Cancelar",
+    "rollbackSuccess": "Plugin GCP desinstalado correctamente."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "GCP diagram canvas coming soon."
+}

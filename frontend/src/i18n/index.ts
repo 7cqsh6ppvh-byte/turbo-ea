@@ -18,6 +18,10 @@ import grcEn from "./locales/en/grc.json";
 import notificationsEn from "./locales/en/notifications.json";
 import validationEn from "./locales/en/validation.json";
 import archimateEn from "./locales/en/archimate.json";
+import awsEn from "./locales/en/aws.json";
+import azureEn from "./locales/en/azure.json";
+import gcpEn from "./locales/en/gcp.json";
+import c4En from "./locales/en/c4.json";
 
 // French
 import commonFr from "./locales/fr/common.json";
@@ -35,6 +39,10 @@ import grcFr from "./locales/fr/grc.json";
 import notificationsFr from "./locales/fr/notifications.json";
 import validationFr from "./locales/fr/validation.json";
 import archimateFr from "./locales/fr/archimate.json";
+import awsFr from "./locales/fr/aws.json";
+import azureFr from "./locales/fr/azure.json";
+import gcpFr from "./locales/fr/gcp.json";
+import c4Fr from "./locales/fr/c4.json";
 
 // Spanish
 import commonEs from "./locales/es/common.json";
@@ -52,6 +60,10 @@ import grcEs from "./locales/es/grc.json";
 import notificationsEs from "./locales/es/notifications.json";
 import validationEs from "./locales/es/validation.json";
 import archimateEs from "./locales/es/archimate.json";
+import awsEs from "./locales/es/aws.json";
+import azureEs from "./locales/es/azure.json";
+import gcpEs from "./locales/es/gcp.json";
+import c4Es from "./locales/es/c4.json";
 
 // Italian
 import commonIt from "./locales/it/common.json";
@@ -69,6 +81,10 @@ import grcIt from "./locales/it/grc.json";
 import notificationsIt from "./locales/it/notifications.json";
 import validationIt from "./locales/it/validation.json";
 import archimateIt from "./locales/it/archimate.json";
+import awsIt from "./locales/it/aws.json";
+import azureIt from "./locales/it/azure.json";
+import gcpIt from "./locales/it/gcp.json";
+import c4It from "./locales/it/c4.json";
 
 // Portuguese
 import commonPt from "./locales/pt/common.json";
@@ -86,6 +102,10 @@ import grcPt from "./locales/pt/grc.json";
 import notificationsPt from "./locales/pt/notifications.json";
 import validationPt from "./locales/pt/validation.json";
 import archimatePt from "./locales/pt/archimate.json";
+import awsPt from "./locales/pt/aws.json";
+import azurePt from "./locales/pt/azure.json";
+import gcpPt from "./locales/pt/gcp.json";
+import c4Pt from "./locales/pt/c4.json";
 
 // Chinese
 import commonZh from "./locales/zh/common.json";
@@ -103,6 +123,10 @@ import grcZh from "./locales/zh/grc.json";
 import notificationsZh from "./locales/zh/notifications.json";
 import validationZh from "./locales/zh/validation.json";
 import archimateZh from "./locales/zh/archimate.json";
+import awsZh from "./locales/zh/aws.json";
+import azureZh from "./locales/zh/azure.json";
+import gcpZh from "./locales/zh/gcp.json";
+import c4Zh from "./locales/zh/c4.json";
 
 // German
 import commonDe from "./locales/de/common.json";
@@ -120,6 +144,10 @@ import grcDe from "./locales/de/grc.json";
 import notificationsDe from "./locales/de/notifications.json";
 import validationDe from "./locales/de/validation.json";
 import archimateDe from "./locales/de/archimate.json";
+import awsDe from "./locales/de/aws.json";
+import azureDe from "./locales/de/azure.json";
+import gcpDe from "./locales/de/gcp.json";
+import c4De from "./locales/de/c4.json";
 
 // Russian
 import commonRu from "./locales/ru/common.json";
@@ -137,6 +165,10 @@ import grcRu from "./locales/ru/grc.json";
 import notificationsRu from "./locales/ru/notifications.json";
 import validationRu from "./locales/ru/validation.json";
 import archimateRu from "./locales/ru/archimate.json";
+import awsRu from "./locales/ru/aws.json";
+import azureRu from "./locales/ru/azure.json";
+import gcpRu from "./locales/ru/gcp.json";
+import c4Ru from "./locales/ru/c4.json";
 
 export const SUPPORTED_LOCALES = ["en", "de", "fr", "es", "it", "pt", "zh", "ru"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
@@ -173,6 +205,10 @@ i18n
         notifications: notificationsEn,
         validation: validationEn,
         archimate: archimateEn,
+        aws: awsEn,
+        azure: azureEn,
+        gcp: gcpEn,
+        c4: c4En,
       },
       fr: {
         common: commonFr,
@@ -190,6 +226,10 @@ i18n
         notifications: notificationsFr,
         validation: validationFr,
         archimate: archimateFr,
+        aws: awsFr,
+        azure: azureFr,
+        gcp: gcpFr,
+        c4: c4Fr,
       },
       es: {
         common: commonEs,
@@ -207,6 +247,10 @@ i18n
         notifications: notificationsEs,
         validation: validationEs,
         archimate: archimateEs,
+        aws: awsEs,
+        azure: azureEs,
+        gcp: gcpEs,
+        c4: c4Es,
       },
       it: {
         common: commonIt,
@@ -224,6 +268,10 @@ i18n
         notifications: notificationsIt,
         validation: validationIt,
         archimate: archimateIt,
+        aws: awsIt,
+        azure: azureIt,
+        gcp: gcpIt,
+        c4: c4It,
       },
       pt: {
         common: commonPt,
@@ -241,6 +289,10 @@ i18n
         notifications: notificationsPt,
         validation: validationPt,
         archimate: archimatePt,
+        aws: awsPt,
+        azure: azurePt,
+        gcp: gcpPt,
+        c4: c4Pt,
       },
       zh: {
         common: commonZh,
@@ -258,6 +310,10 @@ i18n
         notifications: notificationsZh,
         validation: validationZh,
         archimate: archimateZh,
+        aws: awsZh,
+        azure: azureZh,
+        gcp: gcpZh,
+        c4: c4Zh,
       },
       de: {
         common: commonDe,
@@ -275,6 +331,10 @@ i18n
         notifications: notificationsDe,
         validation: validationDe,
         archimate: archimateDe,
+        aws: awsDe,
+        azure: azureDe,
+        gcp: gcpDe,
+        c4: c4De,
       },
       ru: {
         common: commonRu,
@@ -292,6 +352,10 @@ i18n
         notifications: notificationsRu,
         validation: validationRu,
         archimate: archimateRu,
+        aws: awsRu,
+        azure: azureRu,
+        gcp: gcpRu,
+        c4: c4Ru,
       },
     },
     fallbackLng: "en",

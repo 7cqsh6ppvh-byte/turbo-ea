@@ -24,6 +24,10 @@ import { invalidateAppTitle } from "@/hooks/useAppTitle";
 import { invalidateCurrency } from "@/hooks/useCurrency";
 import { invalidateBpmEnabled } from "@/hooks/useBpmEnabled";
 import { invalidateArchiMateEnabled } from "@/hooks/useArchiMateEnabled";
+import { invalidateAwsEnabled } from "@/hooks/useAwsEnabled";
+import { invalidateAzureEnabled } from "@/hooks/useAzureEnabled";
+import { invalidateGcpEnabled } from "@/hooks/useGcpEnabled";
+import { invalidateC4Enabled } from "@/hooks/useC4Enabled";
 import { invalidateComplianceRegulations } from "@/hooks/useComplianceRegulations";
 import { invalidateGrcEnabled } from "@/hooks/useGrcEnabled";
 import { invalidatePpmEnabled } from "@/hooks/usePpmEnabled";
@@ -39,6 +43,10 @@ type BootstrapResponse = {
   bpm_enabled: boolean;
   ppm_enabled: boolean;
   archimate_enabled: boolean;
+  aws_enabled: boolean;
+  azure_enabled: boolean;
+  gcp_enabled: boolean;
+  c4_enabled: boolean;
   turbolens_enabled: boolean;
   grc_enabled: boolean;
   enabled_locales: string[];
@@ -80,6 +88,10 @@ export function primeBootstrap(): Promise<void> {
       invalidateBpmEnabled(r.bpm_enabled);
       invalidatePpmEnabled(r.ppm_enabled);
       invalidateArchiMateEnabled(r.archimate_enabled);
+      invalidateAwsEnabled(r.aws_enabled ?? false);
+      invalidateAzureEnabled(r.azure_enabled ?? false);
+      invalidateGcpEnabled(r.gcp_enabled ?? false);
+      invalidateC4Enabled(r.c4_enabled ?? false);
       invalidateGrcEnabled(r.grc_enabled);
 
       const validLocales = r.enabled_locales.filter((l): l is SupportedLocale =>

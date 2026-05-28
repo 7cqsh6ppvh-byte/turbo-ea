@@ -10,7 +10,6 @@
   "actions.search": "搜索",
   "actions.export": "导出",
   "actions.import": "导入",
-  "actions.add": "添加",
   "actions.remove": "移除",
   "actions.archive": "归档",
   "actions.restore": "恢复",
@@ -347,5 +346,9 @@
   "dashboard.workspace.andMore_one": "另外 {{count}} 个",
   "dashboard.workspace.andMore_other": "另外 {{count}} 个",
   "actions.undo": "撤销",
-  "dashboard.workspace.favoriteRemoved": "已将「{{name}}」从收藏中移除"
+  "dashboard.workspace.favoriteRemoved": "已将「{{name}}」从收藏中移除",
+  "modules.aws": "AWS",
+  "modules.azure": "Azure",
+  "modules.gcp": "GCP",
+  "modules.c4": "C4模型"
 }

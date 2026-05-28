@@ -1,0 +1,36 @@
+{
+  "pageTitle": "GCP架构图",
+  "newDiagram": "新建GCP图",
+  "noDiagrams": "暂无GCP图",
+  "noDiagramsHint": "创建您的第一个GCP架构图。",
+  "elementCategories": {
+    "GCP:Grouping": "分组",
+    "GCP:Compute": "计算",
+    "GCP:Storage": "存储",
+    "GCP:Database": "数据库",
+    "GCP:Networking": "网络",
+    "GCP:Analytics": "分析",
+    "GCP:Security": "安全",
+    "GCP:Management": "管理"
+  },
+  "admin": {
+    "title": "GCP架构建模",
+    "description": "使用47种服务类型对Google Cloud Platform基础设施进行建模。",
+    "activate": "启用GCP建模",
+    "deactivate": "禁用GCP建模",
+    "statusTitle": "安装状态",
+    "statusCardTypes": "{{count}} 个元素类型",
+    "statusRelationTypes": "{{count}} 个关系类型",
+    "statusCards": "{{count}} 张卡片",
+    "statusDiagrams": "{{count}} 个图",
+    "dangerZone": "危险区域",
+    "rollbackButton": "卸载GCP插件",
+    "rollbackConfirmTitle": "卸载GCP插件？",
+    "rollbackConfirmBody": "所有GCP卡片类型、关系类型、卡片和图将被永久删除。",
+    "rollbackConfirm": "卸载",
+    "rollbackCancel": "取消",
+    "rollbackSuccess": "GCP插件已成功卸载。"
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "GCP diagram canvas coming soon."
+}

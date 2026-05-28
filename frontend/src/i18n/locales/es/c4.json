@@ -1,0 +1,42 @@
+{
+  "pageTitle": "Diagramas de arquitectura C4 Model",
+  "newDiagram": "Nuevo diagrama C4",
+  "noDiagrams": "No hay diagramas C4 Model aún",
+  "noDiagramsHint": "Cree su primer diagrama de arquitectura C4 Model.",
+  "elementCategories": {
+    "C4:Grouping": "Agrupación",
+    "C4:Compute": "Cómputo",
+    "C4:Storage": "Almacenamiento",
+    "C4:Database": "Base de datos",
+    "C4:Networking": "Redes",
+    "C4:Analytics": "Analítica",
+    "C4:Security": "Seguridad",
+    "C4:Management": "Gestión"
+  },
+  "admin": {
+    "title": "Modelado de arquitectura C4",
+    "description": "Modele la infraestructura de C4 Model (Simon Brown) con 8 tipos de servicios.",
+    "activate": "Habilitar modelado C4",
+    "deactivate": "Deshabilitar modelado C4",
+    "statusTitle": "Estado de instalación",
+    "statusCardTypes": "{{count}} tipos de elementos",
+    "statusRelationTypes": "{{count}} tipos de relaciones",
+    "statusCards": "{{count}} tarjetas",
+    "statusDiagrams": "{{count}} diagramas",
+    "dangerZone": "Zona de peligro",
+    "rollbackButton": "Desinstalar plugin C4",
+    "rollbackConfirmTitle": "¿Desinstalar plugin C4?",
+    "rollbackConfirmBody": "Se eliminarán permanentemente todos los tipos de tarjetas, tipos de relaciones, tarjetas y diagramas de C4.",
+    "rollbackConfirm": "Desinstalar",
+    "rollbackCancel": "Cancelar",
+    "rollbackSuccess": "Plugin C4 desinstalado correctamente."
+  },
+  "diagramName": "Diagram name",
+  "diagramType": "Diagram type",
+  "diagramTypes": {
+    "context": "System Context",
+    "container": "Container",
+    "component": "Component"
+  },
+  "editorComingSoon": "C4 diagram canvas coming soon."
+}

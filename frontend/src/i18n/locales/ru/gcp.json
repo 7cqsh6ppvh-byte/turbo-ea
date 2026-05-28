@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Диаграммы архитектуры GCP",
+  "newDiagram": "Новая диаграмма GCP",
+  "noDiagrams": "Нет диаграмм GCP",
+  "noDiagramsHint": "Создайте свою первую диаграмму архитектуры GCP.",
+  "elementCategories": {
+    "GCP:Grouping": "Группировка",
+    "GCP:Compute": "Вычисления",
+    "GCP:Storage": "Хранилище",
+    "GCP:Database": "База данных",
+    "GCP:Networking": "Сеть",
+    "GCP:Analytics": "Аналитика",
+    "GCP:Security": "Безопасность",
+    "GCP:Management": "Управление"
+  },
+  "admin": {
+    "title": "Моделирование архитектуры GCP",
+    "description": "Моделируйте инфраструктуру Google Cloud Platform с 47 типами сервисов.",
+    "activate": "Включить моделирование GCP",
+    "deactivate": "Отключить моделирование GCP",
+    "statusTitle": "Статус установки",
+    "statusCardTypes": "{{count}} типов элементов",
+    "statusRelationTypes": "{{count}} типов отношений",
+    "statusCards": "{{count}} карточек",
+    "statusDiagrams": "{{count}} диаграмм",
+    "dangerZone": "Опасная зона",
+    "rollbackButton": "Удалить плагин GCP",
+    "rollbackConfirmTitle": "Удалить плагин GCP?",
+    "rollbackConfirmBody": "Все типы карточек, типы отношений, карточки и диаграммы GCP будут удалены без возможности восстановления.",
+    "rollbackConfirm": "Удалить",
+    "rollbackCancel": "Отмена",
+    "rollbackSuccess": "Плагин GCP успешно удалён."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "GCP diagram canvas coming soon."
+}

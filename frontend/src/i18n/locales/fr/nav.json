@@ -50,5 +50,9 @@
   "userMenu.referenceCatalogues": "Catalogues de référence",
   "userMenu.processCatalogue": "Catalogue de processus",
   "userMenu.valueStreamCatalogue": "Catalogue de chaînes de valeur",
-  "archimate": "ArchiMate"
+  "archimate": "ArchiMate",
+  "aws": "AWS",
+  "azure": "Azure",
+  "gcp": "Google Cloud",
+  "c4": "Modèle C4"
 }

@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
@@ -13,8 +13,11 @@ from app.config import settings as app_config
 from app.core.encryption import decrypt_value, encrypt_value
 from app.database import get_db
 from app.models.app_settings import AppSettings
+from app.models.card import Card
 from app.models.card_type import CardType
 from app.models.compliance_regulation import ComplianceRegulation
+from app.models.diagram import Diagram
+from app.models.relation import Relation
 from app.models.relation_type import RelationType
 from app.models.user import User
 from app.services.permission_service import PermissionService
@@ -168,6 +171,10 @@ async def get_bootstrap(db: AsyncSession = Depends(get_db)):
         "bpm_enabled": general.get("bpmEnabled", True),
         "ppm_enabled": general.get("ppmEnabled", False),
         "archimate_enabled": general.get("archiMateEnabled", False),
+        "aws_enabled": general.get("awsEnabled", False),
+        "azure_enabled": general.get("azureEnabled", False),
+        "gcp_enabled": general.get("gcpEnabled", False),
+        "c4_enabled": general.get("c4Enabled", False),
         "turbolens_enabled": general.get("turboLensEnabled", True),
         "grc_enabled": general.get("grcEnabled", True),
         "enabled_locales": general.get("enabledLocales", SUPPORTED_LOCALES),
@@ -1296,4 +1303,436 @@ async def get_mcp_status(db: AsyncSession = Depends(get_db)):
     return {
         "enabled": mcp.get("enabled", False),
         "sso_configured": bool(sso.get("enabled")),
+    }
+
+
+# ---------------------------------------------------------------------------
+# AWS plugin endpoints
+# ---------------------------------------------------------------------------
+
+
+class _PluginEnabledPayload(BaseModel):
+    enabled: bool
+
+
+@router.get("/aws-enabled")
+async def get_aws_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the AWS plugin is enabled."""
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    return {"enabled": general.get("awsEnabled", False)}
+
+
+@router.patch("/aws-enabled")
+async def update_aws_enabled(
+    body: _PluginEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — enable/disable the AWS plugin. Seeding on enable; hiding on disable."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["awsEnabled"] = body.enabled
+    row.general_settings = general
+    if body.enabled:
+        from app.plugins.aws.seed import seed_aws_metamodel  # noqa: PLC0415
+
+        await seed_aws_metamodel(db)
+    aws_ct = await db.execute(select(CardType).where(CardType.plugin_id == "aws"))
+    for ct in aws_ct.scalars().all():
+        ct.is_hidden = not body.enabled
+    aws_rt = await db.execute(select(RelationType).where(RelationType.plugin_id == "aws"))
+    for rt in aws_rt.scalars().all():
+        rt.is_hidden = not body.enabled
+    await db.commit()
+    return {"ok": True, "enabled": body.enabled}
+
+
+@router.delete("/aws-enabled")
+async def rollback_aws(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — permanently uninstall AWS plugin (deletes all AWS data)."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["awsEnabled"] = False
+    row.general_settings = general
+    await db.execute(delete(Diagram).where(Diagram.type == "aws-diagram").returning(Diagram.id))
+    aws_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("aws_%")))
+    aws_card_ids = [r[0] for r in aws_card_ids_result.all()]
+    if aws_card_ids:
+        await db.execute(
+            delete(Relation).where(
+                or_(
+                    Relation.source_id.in_(aws_card_ids),
+                    Relation.target_id.in_(aws_card_ids),
+                )
+            )
+        )
+    await db.execute(delete(Card).where(Card.type.like("aws_%")).returning(Card.id))
+    await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "aws").returning(RelationType.key)
+    )
+    await db.execute(delete(CardType).where(CardType.plugin_id == "aws").returning(CardType.key))
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/aws-status")
+async def get_aws_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — returns installation counts for the AWS plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    ct_count = (
+        await db.execute(
+            select(func.count()).select_from(CardType).where(CardType.plugin_id == "aws")
+        )
+    ).scalar()
+    rt_count = (
+        await db.execute(
+            select(func.count()).select_from(RelationType).where(RelationType.plugin_id == "aws")
+        )
+    ).scalar()
+    card_count = (
+        await db.execute(select(func.count()).select_from(Card).where(Card.type.like("aws_%")))
+    ).scalar()
+    diag_count = (
+        await db.execute(
+            select(func.count()).select_from(Diagram).where(Diagram.type == "aws-diagram")
+        )
+    ).scalar()
+    return {
+        "enabled": general.get("awsEnabled", False),
+        "card_types": ct_count,
+        "relation_types": rt_count,
+        "cards": card_count,
+        "diagrams": diag_count,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Azure plugin endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/azure-enabled")
+async def get_azure_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the Azure plugin is enabled."""
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    return {"enabled": general.get("azureEnabled", False)}
+
+
+@router.patch("/azure-enabled")
+async def update_azure_enabled(
+    body: _PluginEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — enable/disable the Azure plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["azureEnabled"] = body.enabled
+    row.general_settings = general
+    if body.enabled:
+        from app.plugins.azure.seed import seed_azure_metamodel  # noqa: PLC0415
+
+        await seed_azure_metamodel(db)
+    azure_ct = await db.execute(select(CardType).where(CardType.plugin_id == "azure"))
+    for ct in azure_ct.scalars().all():
+        ct.is_hidden = not body.enabled
+    azure_rt = await db.execute(select(RelationType).where(RelationType.plugin_id == "azure"))
+    for rt in azure_rt.scalars().all():
+        rt.is_hidden = not body.enabled
+    await db.commit()
+    return {"ok": True, "enabled": body.enabled}
+
+
+@router.delete("/azure-enabled")
+async def rollback_azure(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — permanently uninstall Azure plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["azureEnabled"] = False
+    row.general_settings = general
+    await db.execute(delete(Diagram).where(Diagram.type == "azure-diagram").returning(Diagram.id))
+    azure_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("azure_%")))
+    azure_card_ids = [r[0] for r in azure_card_ids_result.all()]
+    if azure_card_ids:
+        await db.execute(
+            delete(Relation).where(
+                or_(
+                    Relation.source_id.in_(azure_card_ids),
+                    Relation.target_id.in_(azure_card_ids),
+                )
+            )
+        )
+    await db.execute(delete(Card).where(Card.type.like("azure_%")).returning(Card.id))
+    await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "azure").returning(RelationType.key)
+    )
+    await db.execute(delete(CardType).where(CardType.plugin_id == "azure").returning(CardType.key))
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/azure-status")
+async def get_azure_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — returns installation counts for the Azure plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    ct_count = (
+        await db.execute(
+            select(func.count()).select_from(CardType).where(CardType.plugin_id == "azure")
+        )
+    ).scalar()
+    rt_count = (
+        await db.execute(
+            select(func.count()).select_from(RelationType).where(RelationType.plugin_id == "azure")
+        )
+    ).scalar()
+    card_count = (
+        await db.execute(select(func.count()).select_from(Card).where(Card.type.like("azure_%")))
+    ).scalar()
+    diag_count = (
+        await db.execute(
+            select(func.count()).select_from(Diagram).where(Diagram.type == "azure-diagram")
+        )
+    ).scalar()
+    return {
+        "enabled": general.get("azureEnabled", False),
+        "card_types": ct_count,
+        "relation_types": rt_count,
+        "cards": card_count,
+        "diagrams": diag_count,
+    }
+
+
+# ---------------------------------------------------------------------------
+# GCP plugin endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/gcp-enabled")
+async def get_gcp_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the GCP plugin is enabled."""
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    return {"enabled": general.get("gcpEnabled", False)}
+
+
+@router.patch("/gcp-enabled")
+async def update_gcp_enabled(
+    body: _PluginEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — enable/disable the GCP plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["gcpEnabled"] = body.enabled
+    row.general_settings = general
+    if body.enabled:
+        from app.plugins.gcp.seed import seed_gcp_metamodel  # noqa: PLC0415
+
+        await seed_gcp_metamodel(db)
+    gcp_ct = await db.execute(select(CardType).where(CardType.plugin_id == "gcp"))
+    for ct in gcp_ct.scalars().all():
+        ct.is_hidden = not body.enabled
+    gcp_rt = await db.execute(select(RelationType).where(RelationType.plugin_id == "gcp"))
+    for rt in gcp_rt.scalars().all():
+        rt.is_hidden = not body.enabled
+    await db.commit()
+    return {"ok": True, "enabled": body.enabled}
+
+
+@router.delete("/gcp-enabled")
+async def rollback_gcp(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — permanently uninstall GCP plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["gcpEnabled"] = False
+    row.general_settings = general
+    await db.execute(delete(Diagram).where(Diagram.type == "gcp-diagram").returning(Diagram.id))
+    gcp_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("gcp_%")))
+    gcp_card_ids = [r[0] for r in gcp_card_ids_result.all()]
+    if gcp_card_ids:
+        await db.execute(
+            delete(Relation).where(
+                or_(
+                    Relation.source_id.in_(gcp_card_ids),
+                    Relation.target_id.in_(gcp_card_ids),
+                )
+            )
+        )
+    await db.execute(delete(Card).where(Card.type.like("gcp_%")).returning(Card.id))
+    await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "gcp").returning(RelationType.key)
+    )
+    await db.execute(delete(CardType).where(CardType.plugin_id == "gcp").returning(CardType.key))
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/gcp-status")
+async def get_gcp_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — returns installation counts for the GCP plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    ct_count = (
+        await db.execute(
+            select(func.count()).select_from(CardType).where(CardType.plugin_id == "gcp")
+        )
+    ).scalar()
+    rt_count = (
+        await db.execute(
+            select(func.count()).select_from(RelationType).where(RelationType.plugin_id == "gcp")
+        )
+    ).scalar()
+    card_count = (
+        await db.execute(select(func.count()).select_from(Card).where(Card.type.like("gcp_%")))
+    ).scalar()
+    diag_count = (
+        await db.execute(
+            select(func.count()).select_from(Diagram).where(Diagram.type == "gcp-diagram")
+        )
+    ).scalar()
+    return {
+        "enabled": general.get("gcpEnabled", False),
+        "card_types": ct_count,
+        "relation_types": rt_count,
+        "cards": card_count,
+        "diagrams": diag_count,
+    }
+
+
+# ---------------------------------------------------------------------------
+# C4 plugin endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/c4-enabled")
+async def get_c4_enabled(db: AsyncSession = Depends(get_db)):
+    """Public endpoint — returns whether the C4 plugin is enabled."""
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    return {"enabled": general.get("c4Enabled", False)}
+
+
+@router.patch("/c4-enabled")
+async def update_c4_enabled(
+    body: _PluginEnabledPayload,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — enable/disable the C4 plugin. Seeds c4_* card and relation types so they
+    disappear platform-wide.
+    """
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["c4Enabled"] = body.enabled
+    row.general_settings = general
+    if body.enabled:
+        from app.plugins.c4.seed import seed_c4_metamodel  # noqa: PLC0415
+
+        await seed_c4_metamodel(db)
+    c4_ct_result = await db.execute(select(CardType).where(CardType.plugin_id == "c4"))
+    for ct in c4_ct_result.scalars().all():
+        ct.is_hidden = not body.enabled
+    c4_rt_result = await db.execute(select(RelationType).where(RelationType.plugin_id == "c4"))
+    for rt in c4_rt_result.scalars().all():
+        rt.is_hidden = not body.enabled
+    await db.commit()
+    return {"ok": True, "enabled": body.enabled}
+
+
+@router.delete("/c4-enabled")
+async def rollback_c4(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — permanently uninstall C4 plugin (deletes all C4 data)."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    general["c4Enabled"] = False
+    row.general_settings = general
+    await db.execute(delete(Diagram).where(Diagram.type.like("c4-%")).returning(Diagram.id))
+    c4_card_ids_result = await db.execute(select(Card.id).where(Card.type.like("c4_%")))
+    c4_card_ids = [row_[0] for row_ in c4_card_ids_result.all()]
+    if c4_card_ids:
+        await db.execute(
+            delete(Relation).where(
+                or_(
+                    Relation.source_id.in_(c4_card_ids),
+                    Relation.target_id.in_(c4_card_ids),
+                )
+            )
+        )
+    await db.execute(delete(Card).where(Card.type.like("c4_%")).returning(Card.id))
+    await db.execute(
+        delete(RelationType).where(RelationType.plugin_id == "c4").returning(RelationType.key)
+    )
+    await db.execute(delete(CardType).where(CardType.plugin_id == "c4").returning(CardType.key))
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/c4-status")
+async def get_c4_status(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Admin — returns installation counts for the C4 plugin."""
+    await PermissionService.require_permission(db, user, "admin.settings")
+    row = await _get_or_create_row(db)
+    general = dict(row.general_settings or {})
+    ct_count = (
+        await db.execute(
+            select(func.count()).select_from(CardType).where(CardType.plugin_id == "c4")
+        )
+    ).scalar()
+    rt_count = (
+        await db.execute(
+            select(func.count()).select_from(RelationType).where(RelationType.plugin_id == "c4")
+        )
+    ).scalar()
+    card_count = (
+        await db.execute(select(func.count()).select_from(Card).where(Card.type.like("c4_%")))
+    ).scalar()
+    diag_count = (
+        await db.execute(select(func.count()).select_from(Diagram).where(Diagram.type.like("c4-%")))
+    ).scalar()
+    return {
+        "enabled": general.get("c4Enabled", False),
+        "card_types": ct_count,
+        "relation_types": rt_count,
+        "cards": card_count,
+        "diagrams": diag_count,
     }

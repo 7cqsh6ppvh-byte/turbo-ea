@@ -41,9 +41,12 @@ const ServiceNowAdmin = lazy(() => import("./ServiceNowAdmin"));
 const AiAdmin = lazy(() => import("./AiAdmin"));
 const TurboLensAdmin = lazy(() => import("./TurboLensAdmin"));
 const MigrationAdmin = lazy(() => import("./MigrationAdmin"));
-<<<<<<< HEAD
 const AuditLogAdmin = lazy(() => import("./AuditLogAdmin"));
 const ArchiMateAdmin = lazy(() => import("./ArchiMateAdmin"));
+const AwsAdmin = lazy(() => import("./AwsAdmin"));
+const AzureAdmin = lazy(() => import("./AzureAdmin"));
+const GcpAdmin = lazy(() => import("./GcpAdmin"));
+const C4Admin = lazy(() => import("./C4Admin"));
 
 const TAB_KEYS = [
   "general",
@@ -54,6 +57,10 @@ const TAB_KEYS = [
   "servicenow",
   "turbolens",
   "archimate",
+  "aws",
+  "azure",
+  "gcp",
+  "c4",
   "migration",
   "audit-log",
 ];
@@ -1272,6 +1279,10 @@ export default function SettingsAdmin() {
     t("settings.tabs.servicenow"),
     t("settings.tabs.turbolens"),
     "ArchiMate",
+    "AWS",
+    "Azure",
+    "GCP",
+    "C4 Model",
     t("settings.tabs.migration"),
     t("settings.tabs.auditLog", "Audit log"),
   ];
@@ -1344,10 +1355,30 @@ export default function SettingsAdmin() {
       )}
       {tabIndex === 8 && (
         <Suspense fallback={<TabLoader />}>
+          <AwsAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 9 && (
+        <Suspense fallback={<TabLoader />}>
+          <AzureAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 10 && (
+        <Suspense fallback={<TabLoader />}>
+          <GcpAdmin />
+        </Suspense>
+      )}
+      {tabIndex === 11 && (
+        <Suspense fallback={<TabLoader />}>
+          <C4Admin />
+        </Suspense>
+      )}
+      {tabIndex === 12 && (
+        <Suspense fallback={<TabLoader />}>
           <MigrationAdmin />
         </Suspense>
       )}
-      {tabIndex === 8 && (
+      {tabIndex === 13 && (
         <Suspense fallback={<TabLoader />}>
           <AuditLogAdmin />
         </Suspense>

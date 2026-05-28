@@ -1,0 +1,42 @@
+{
+  "pageTitle": "C4 Model-Architekturdiagramme",
+  "newDiagram": "Neues C4-Diagramm",
+  "noDiagrams": "Noch keine C4 Model-Diagramme",
+  "noDiagramsHint": "Erstellen Sie Ihr erstes C4 Model-Architekturdiagramm.",
+  "elementCategories": {
+    "C4:Grouping": "Gruppierung",
+    "C4:Compute": "Computing",
+    "C4:Storage": "Speicher",
+    "C4:Database": "Datenbank",
+    "C4:Networking": "Netzwerk",
+    "C4:Analytics": "Analytik",
+    "C4:Security": "Sicherheit",
+    "C4:Management": "Verwaltung"
+  },
+  "admin": {
+    "title": "C4-Architekturmodellierung",
+    "description": "Modellieren Sie C4 Model (Simon Brown)-Infrastruktur mit 8 Diensttypen.",
+    "activate": "C4-Modellierung aktivieren",
+    "deactivate": "C4-Modellierung deaktivieren",
+    "statusTitle": "Installationsstatus",
+    "statusCardTypes": "{{count}} Elementtypen",
+    "statusRelationTypes": "{{count}} Beziehungstypen",
+    "statusCards": "{{count}} Karten",
+    "statusDiagrams": "{{count}} Diagramme",
+    "dangerZone": "Gefahrenzone",
+    "rollbackButton": "C4-Plugin deinstallieren",
+    "rollbackConfirmTitle": "C4-Plugin deinstallieren?",
+    "rollbackConfirmBody": "Alle C4-Kartentypen, Beziehungstypen, Karten und Diagramme werden dauerhaft gelöscht.",
+    "rollbackConfirm": "Deinstallieren",
+    "rollbackCancel": "Abbrechen",
+    "rollbackSuccess": "C4-Plugin wurde erfolgreich deinstalliert."
+  },
+  "diagramName": "Diagram name",
+  "diagramType": "Diagram type",
+  "diagramTypes": {
+    "context": "System Context",
+    "container": "Container",
+    "component": "Component"
+  },
+  "editorComingSoon": "C4 diagram canvas coming soon."
+}

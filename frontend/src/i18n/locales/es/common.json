@@ -3,14 +3,13 @@
   "actions.cancel": "Cancelar",
   "actions.delete": "Eliminar",
   "actions.create": "Crear",
-  "actions.add": "Añadir",
+  "actions.add": "Agregar",
   "actions.edit": "Editar",
   "actions.close": "Cerrar",
   "actions.confirm": "Confirmar",
   "actions.search": "Buscar",
   "actions.export": "Exportar",
   "actions.import": "Importar",
-  "actions.add": "Agregar",
   "actions.remove": "Eliminar",
   "actions.archive": "Archivar",
   "actions.restore": "Restaurar",
@@ -347,5 +346,9 @@
   "dashboard.workspace.andMore_one": "y {{count}} más",
   "dashboard.workspace.andMore_other": "y {{count}} más",
   "actions.undo": "Deshacer",
-  "dashboard.workspace.favoriteRemoved": "«{{name}}» eliminado de favoritos"
+  "dashboard.workspace.favoriteRemoved": "«{{name}}» eliminado de favoritos",
+  "modules.aws": "AWS",
+  "modules.azure": "Azure",
+  "modules.gcp": "GCP",
+  "modules.c4": "Modelo C4"
 }

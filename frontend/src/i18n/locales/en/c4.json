@@ -1,0 +1,38 @@
+{
+  "pageTitle": "C4 Model Diagrams",
+  "newDiagram": "New C4 Diagram",
+  "noDiagrams": "No C4 diagrams yet",
+  "noDiagramsHint": "Create your first C4 model diagram.",
+  "diagramTypes": {
+    "context": "System Context",
+    "container": "Container",
+    "component": "Component"
+  },
+  "elementCategories": {
+    "C4:Context": "Context",
+    "C4:Container": "Container",
+    "C4:Component": "Component",
+    "C4:Boundary": "Boundary"
+  },
+  "admin": {
+    "title": "C4 Model Diagramming",
+    "description": "Model software architecture using Simon Brown's C4 Model with 8 element types across Context, Container, Component, and Code levels.",
+    "activate": "Enable C4 Model",
+    "deactivate": "Disable C4 Model",
+    "statusTitle": "Installation Status",
+    "statusCardTypes": "{{count}} element types",
+    "statusRelationTypes": "{{count}} relation types",
+    "statusCards": "{{count}} cards",
+    "statusDiagrams": "{{count}} diagrams",
+    "dangerZone": "Danger Zone",
+    "rollbackButton": "Uninstall C4 Plugin",
+    "rollbackConfirmTitle": "Uninstall C4 Plugin?",
+    "rollbackConfirmBody": "This will permanently delete all C4 card types, relation types, cards, and diagrams. This action cannot be undone.",
+    "rollbackConfirm": "Uninstall",
+    "rollbackCancel": "Cancel",
+    "rollbackSuccess": "C4 plugin uninstalled successfully."
+  },
+  "diagramName": "Diagram name",
+  "diagramType": "Diagram type",
+  "editorComingSoon": "C4 diagram canvas coming soon."
+}

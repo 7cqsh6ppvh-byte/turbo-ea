@@ -1,0 +1,42 @@
+{
+  "pageTitle": "Диаграммы архитектуры C4 Model",
+  "newDiagram": "Новая диаграмма C4",
+  "noDiagrams": "Нет диаграмм C4 Model",
+  "noDiagramsHint": "Создайте свою первую диаграмму архитектуры C4 Model.",
+  "elementCategories": {
+    "C4:Grouping": "Группировка",
+    "C4:Compute": "Вычисления",
+    "C4:Storage": "Хранилище",
+    "C4:Database": "База данных",
+    "C4:Networking": "Сеть",
+    "C4:Analytics": "Аналитика",
+    "C4:Security": "Безопасность",
+    "C4:Management": "Управление"
+  },
+  "admin": {
+    "title": "Моделирование архитектуры C4",
+    "description": "Моделируйте инфраструктуру C4 Model (Simon Brown) с 8 типами сервисов.",
+    "activate": "Включить моделирование C4",
+    "deactivate": "Отключить моделирование C4",
+    "statusTitle": "Статус установки",
+    "statusCardTypes": "{{count}} типов элементов",
+    "statusRelationTypes": "{{count}} типов отношений",
+    "statusCards": "{{count}} карточек",
+    "statusDiagrams": "{{count}} диаграмм",
+    "dangerZone": "Опасная зона",
+    "rollbackButton": "Удалить плагин C4",
+    "rollbackConfirmTitle": "Удалить плагин C4?",
+    "rollbackConfirmBody": "Все типы карточек, типы отношений, карточки и диаграммы C4 будут удалены без возможности восстановления.",
+    "rollbackConfirm": "Удалить",
+    "rollbackCancel": "Отмена",
+    "rollbackSuccess": "Плагин C4 успешно удалён."
+  },
+  "diagramName": "Diagram name",
+  "diagramType": "Diagram type",
+  "diagramTypes": {
+    "context": "System Context",
+    "container": "Container",
+    "component": "Component"
+  },
+  "editorComingSoon": "C4 diagram canvas coming soon."
+}

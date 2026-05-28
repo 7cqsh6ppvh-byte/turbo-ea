@@ -1,0 +1,36 @@
+{
+  "pageTitle": "Diagrammes d'architecture GCP",
+  "newDiagram": "Nouveau diagramme GCP",
+  "noDiagrams": "Aucun diagramme GCP",
+  "noDiagramsHint": "Créez votre premier diagramme d'architecture GCP.",
+  "elementCategories": {
+    "GCP:Grouping": "Regroupement",
+    "GCP:Compute": "Calcul",
+    "GCP:Storage": "Stockage",
+    "GCP:Database": "Base de données",
+    "GCP:Networking": "Réseau",
+    "GCP:Analytics": "Analytique",
+    "GCP:Security": "Sécurité",
+    "GCP:Management": "Gestion"
+  },
+  "admin": {
+    "title": "Modélisation d'architecture GCP",
+    "description": "Modélisez l'infrastructure Google Cloud Platform avec 47 types de services.",
+    "activate": "Activer la modélisation GCP",
+    "deactivate": "Désactiver la modélisation GCP",
+    "statusTitle": "Statut d'installation",
+    "statusCardTypes": "{{count}} types d'éléments",
+    "statusRelationTypes": "{{count}} types de relations",
+    "statusCards": "{{count}} cartes",
+    "statusDiagrams": "{{count}} diagrammes",
+    "dangerZone": "Zone de danger",
+    "rollbackButton": "Désinstaller le plugin GCP",
+    "rollbackConfirmTitle": "Désinstaller le plugin GCP ?",
+    "rollbackConfirmBody": "Tous les types de cartes, types de relations, cartes et diagrammes GCP seront supprimés définitivement.",
+    "rollbackConfirm": "Désinstaller",
+    "rollbackCancel": "Annuler",
+    "rollbackSuccess": "Plugin GCP désinstallé avec succès."
+  },
+  "diagramName": "Diagram name",
+  "editorComingSoon": "GCP diagram canvas coming soon."
+}
