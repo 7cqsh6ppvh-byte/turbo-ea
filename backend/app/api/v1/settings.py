@@ -95,6 +95,32 @@ async def _get_or_create_row(db: AsyncSession) -> AppSettings:
     return row
 
 
+async def _get_active_plugins(db: AsyncSession) -> set[str]:
+    """Return the set of currently-enabled plugin keys (excluding bridge/core)."""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "default"))
+    row = result.scalar_one_or_none()
+    general = (row.general_settings if row else None) or {}
+    active: set[str] = set()
+    if general.get("archiMateEnabled"):
+        active.add("archimate")
+    if general.get("awsEnabled"):
+        active.add("aws")
+    if general.get("azureEnabled"):
+        active.add("azure")
+    if general.get("gcpEnabled"):
+        active.add("gcp")
+    if general.get("c4Enabled"):
+        active.add("c4")
+    return active
+
+
+async def _sync_bridge_relations(db: AsyncSession, active_plugins: set[str]) -> None:
+    """Sync bridge relation visibility after a plugin toggle."""
+    from app.plugins.bridge.seed import seed_bridge_relations  # noqa: PLC0415
+
+    await seed_bridge_relations(db, active_plugins)
+
+
 def _apply_to_runtime(email: dict) -> None:
     """Push DB email settings into the runtime config singleton."""
     if email.get("smtp_host"):
@@ -597,7 +623,7 @@ async def update_archimate_enabled(
     hide = not body.enabled
 
     if body.enabled:
-        from app.plugins.archimate.seed import seed_archimate_metamodel
+        from app.plugins.archimate.seed import seed_archimate_metamodel  # noqa: PLC0415
 
         await seed_archimate_metamodel(db)
 
@@ -610,6 +636,22 @@ async def update_archimate_enabled(
     )
     for rt in arch_rt_result.scalars().all():
         rt.is_hidden = hide
+
+    # ArchiMate / standard model mutual exclusivity: hide core types when
+    # ArchiMate is active since ArchiMate's vocabulary covers the same concepts.
+    core_ct_result = await db.execute(
+        select(CardType).where(CardType.plugin_id.is_(None), CardType.built_in.is_(True))
+    )
+    for ct in core_ct_result.scalars().all():
+        ct.is_hidden = body.enabled
+
+    # Sync bridge relation visibility after the plugin state change.
+    active_plugins = await _get_active_plugins(db)
+    if body.enabled:
+        active_plugins.add("archimate")
+    else:
+        active_plugins.discard("archimate")
+    await _sync_bridge_relations(db, active_plugins)
 
     await db.commit()
     return {"ok": True}
